@@ -12,17 +12,17 @@ export default function HomePage() {
   const isCrt = theme === 'crt-green' || theme === 'crt-amber';
 
   return (
-    <div className={`flex-1 flex flex-col p-2 sm:p-4 gap-3 overflow-hidden ${isCrt ? 'crt-screen relative' : ''}`}>
+    <div className={`flex-1 flex flex-col p-2 sm:p-3 gap-2 min-h-0 overflow-hidden ${isCrt ? 'crt-screen relative' : ''}`}>
       {/* Upper Area: Terminal + Training Companion (if in training mode) */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row gap-2 min-h-0 overflow-hidden">
         {/* Terminal Area */}
-        <div className="flex-1 h-full min-h-[420px] flex flex-col overflow-hidden">
+        <div className="flex-1 h-full min-h-0 flex flex-col overflow-hidden">
           <AmadeusTerminal />
         </div>
 
         {/* Training Companion Sidebar (Visible in Training Mode) */}
         {mode === 'training' && (
-          <div className="w-full lg:w-[420px] xl:w-[460px] h-[360px] lg:h-full flex flex-col shrink-0 overflow-hidden">
+          <div className="w-full lg:w-[400px] xl:w-[440px] h-[300px] lg:h-full flex flex-col shrink-0 min-h-0 overflow-hidden">
             <TrainingCompanion />
           </div>
         )}
@@ -30,7 +30,7 @@ export default function HomePage() {
 
       {/* Lower Area: Visual PNR Inspector */}
       {showVisualInspector && (
-        <div className="shrink-0">
+        <div className="shrink-0 max-h-[190px] overflow-y-auto rounded-xl">
           <PnrVisualizer />
         </div>
       )}

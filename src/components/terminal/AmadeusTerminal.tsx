@@ -22,19 +22,21 @@ export default function AmadeusTerminal() {
   const [inputVal, setInputVal] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isExecuting, setIsExecuting] = useState(false);
-  const outputEndRef = useRef<HTMLDivElement>(null);
+  const terminalContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentAreaState = areas[activeArea];
 
-  // Auto-scroll when output updates
+  // Auto-scroll ONLY inside the terminal output buffer (does NOT move outer page)
   useEffect(() => {
-    outputEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (terminalContainerRef.current) {
+      terminalContainerRef.current.scrollTop = terminalContainerRef.current.scrollHeight;
+    }
   }, [currentAreaState.outputLines]);
 
-  // Focus input on mount or area change
+  // Focus input without scrolling the browser window
   useEffect(() => {
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   }, [activeArea]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,7 +98,7 @@ export default function AmadeusTerminal() {
       ]);
     } finally {
       setIsExecuting(false);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 50);
     }
   };
 
@@ -212,8 +214,9 @@ export default function AmadeusTerminal() {
 
       {/* Terminal Screen Body (80-column monospace) */}
       <div
-        className={`flex-1 p-4 font-mono text-xs sm:text-sm overflow-y-auto leading-relaxed select-text space-y-1 ${themeStyles.terminalBody}`}
-        onClick={() => inputRef.current?.focus()}
+        ref={terminalContainerRef}
+        className={`flex-1 min-h-0 p-4 font-mono text-xs sm:text-sm overflow-y-auto leading-relaxed select-text space-y-1 ${themeStyles.terminalBody}`}
+        onClick={() => inputRef.current?.focus({ preventScroll: true })}
       >
         {currentAreaState.outputLines.map((line, idx) => (
           <div
@@ -229,7 +232,6 @@ export default function AmadeusTerminal() {
             {line.text}
           </div>
         ))}
-        <div ref={outputEndRef} />
       </div>
 
       {/* Bottom Command Prompt Line */}
