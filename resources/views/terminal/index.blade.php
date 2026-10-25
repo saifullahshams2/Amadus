@@ -19,20 +19,14 @@
             <span class="hidden sm:inline-block text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
                 1A TRAINING CONNECT
             </span>
+            <a href="/dashboard" class="px-2.5 py-1 rounded-md bg-blue-600/20 hover:bg-blue-600/30 text-sky-300 border border-blue-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span>Dashboard Hub</span>
+            </a>
         </div>
 
-        <!-- Controls: Mode, Inspector, Theme, User -->
+        <!-- Controls: Inspector, Theme, User -->
         <div class="flex items-center space-x-2 sm:space-x-3">
-            <!-- Mode Toggle -->
-            <div class="flex items-center bg-[#131c2e] p-0.5 rounded-lg border border-slate-800">
-                <button @click="mode = 'training'" :class="mode === 'training' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'" class="px-2.5 py-1 rounded-md text-xs font-semibold transition-all">
-                    Training Mode
-                </button>
-                <button @click="mode = 'sandbox'" :class="mode === 'sandbox' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'" class="px-2.5 py-1 rounded-md text-xs font-semibold transition-all">
-                    Free Sandbox
-                </button>
-            </div>
-
             <!-- PNR Inspector Toggle -->
             <button @click="showVisualInspector = !showVisualInspector" :class="showVisualInspector ? 'bg-blue-950/60 border-blue-500/60 text-blue-300' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'" class="px-2.5 py-1 rounded-lg border text-xs flex items-center gap-1.5 transition-colors">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
@@ -72,8 +66,8 @@
 
     <!-- Main Workspace Container -->
     <div :class="{ 'crt-screen relative': theme === 'crt-green' || theme === 'crt-amber' }" class="flex-1 flex flex-col p-2 sm:p-3 gap-2 min-h-0 overflow-hidden">
-        <!-- Upper Area: Terminal + Training Companion -->
-        <div class="flex-1 flex flex-col lg:flex-row gap-2 min-h-0 overflow-hidden">
+        <!-- Upper Area: Cryptic Terminal Workspace -->
+        <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
             <!-- Terminal Component -->
             <div class="flex-1 h-full min-h-0 flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-[#060a12] shadow-2xl">
                 <!-- Terminal Header & Work Area Tabs -->
@@ -143,98 +137,6 @@
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                     </div>
                 </form>
-            </div>
-
-            <!-- Training Companion Sidebar -->
-            <div x-show="mode === 'training'" class="w-full lg:w-[420px] xl:w-[460px] h-[320px] lg:h-full flex flex-col shrink-0 min-h-0 overflow-hidden rounded-xl border border-slate-800 bg-[#0b101c]">
-                <!-- Companion Header -->
-                <div class="p-3 border-b border-slate-800 flex items-center justify-between shrink-0">
-                    <div>
-                        <h2 class="text-sm font-bold text-white tracking-wide" x-text="'Module ' + activeModule.number + ': ' + activeModule.title"></h2>
-                        <span class="text-[10px] text-blue-400 font-semibold uppercase tracking-wider" x-text="activeModule.badge + ' • ' + activeModule.level"></span>
-                    </div>
-                </div>
-
-                <!-- Lesson Content -->
-                <div class="flex-1 p-3 overflow-y-auto space-y-3 min-h-0 text-xs">
-                    <!-- Lesson Selector -->
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-400 mb-1">CURRENT LESSON</label>
-                        <select @change="selectLessonById($event.target.value)" class="w-full bg-[#131c2e] border border-slate-700 text-white rounded-lg p-1.5 text-xs outline-none">
-                            <template x-for="m in modules" :key="m.id">
-                                <optgroup :label="'Module ' + m.number + ': ' + m.title">
-                                    <template x-for="l in m.lessons" :key="l.id">
-                                        <option :value="l.id" :selected="activeLesson.id === l.id" x-text="'Lesson ' + l.lessonNumber + ': ' + l.title"></option>
-                                    </template>
-                                </optgroup>
-                            </template>
-                        </select>
-                    </div>
-
-                    <!-- Scenario Story -->
-                    <div class="bg-[#101726] border border-slate-800/80 rounded-lg p-2.5">
-                        <span class="text-[10px] font-bold text-sky-400 uppercase tracking-wider block mb-1">SCENARIO</span>
-                        <p class="text-slate-300 leading-relaxed text-xs" x-text="activeLesson.scenarioStory"></p>
-                    </div>
-
-                    <!-- Key Commands Reference -->
-                    <div class="bg-[#101726] border border-slate-800/80 rounded-lg p-2.5">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">KEY SYNTAX REFERENCE</span>
-                        <div class="space-y-1.5 font-mono text-[11px]">
-                            <template x-for="(cmd, idx) in activeLesson.keyCommands" :key="idx">
-                                <div class="flex items-center justify-between bg-[#080d17] p-1.5 rounded border border-slate-800">
-                                    <code class="text-emerald-400 font-bold" x-text="cmd.syntax"></code>
-                                    <span class="text-slate-400 text-[10px] truncate max-w-[180px]" x-text="cmd.description"></span>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- Objectives Checklist -->
-                    <div class="space-y-2">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">OBJECTIVES CHECKLIST</span>
-                        <template x-for="(obj, idx) in activeLesson.objectives" :key="obj.id">
-                            <div :class="idx === currentObjectiveIndex ? 'border-blue-500 bg-blue-950/20' : (idx < currentObjectiveIndex ? 'border-emerald-800/40 bg-emerald-950/10' : 'border-slate-800 bg-[#101726] opacity-60')"
-                                 class="p-2.5 rounded-lg border transition-all">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-bold text-xs" :class="idx === currentObjectiveIndex ? 'text-white' : (idx < currentObjectiveIndex ? 'text-emerald-400' : 'text-slate-400')" x-text="(idx + 1) + '. ' + obj.title"></span>
-                                    <template x-if="idx < currentObjectiveIndex">
-                                        <span class="text-emerald-400 font-bold text-[10px] bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800">PASSED ✓</span>
-                                    </template>
-                                    <template x-if="idx === currentObjectiveIndex">
-                                        <span class="text-blue-400 font-bold text-[10px] bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-800 animate-pulse">ACTIVE</span>
-                                    </template>
-                                </div>
-                                <p class="text-[11px] text-slate-300 mt-1" x-text="obj.description"></p>
-                            </div>
-                        </template>
-                    </div>
-
-                    <!-- 3-Tier Progressive Hint Engine -->
-                    <div x-show="currentObjectiveIndex < activeLesson.objectives.length" class="bg-[#101726] border border-slate-800 rounded-lg p-2.5 space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">HINT ENGINE</span>
-                            <button @click="incrementHint()" class="text-[10px] text-amber-300 bg-amber-950/60 hover:bg-amber-900/60 border border-amber-800 px-2 py-0.5 rounded font-semibold transition-colors">
-                                <span x-show="hintLevel === 0">Show Concept Hint (Tier 1)</span>
-                                <span x-show="hintLevel === 1">Show Syntax Guide (Tier 2)</span>
-                                <span x-show="hintLevel >= 2">Show Exact Solution (Tier 3)</span>
-                            </button>
-                        </div>
-
-                        <div x-show="hintLevel >= 1" class="text-[11px] text-slate-300 bg-[#080d17] p-2 rounded border border-slate-800">
-                            <strong class="text-amber-400">Concept:</strong> <span x-text="currentObjective.hint1"></span>
-                        </div>
-                        <div x-show="hintLevel >= 2" class="text-[11px] text-slate-300 bg-[#080d17] p-2 rounded border border-slate-800 font-mono">
-                            <strong class="text-amber-400">Syntax:</strong> <span x-text="currentObjective.hint2"></span>
-                        </div>
-                        <div x-show="hintLevel >= 3" class="text-[11px] bg-emerald-950/30 p-2 rounded border border-emerald-800 flex items-center justify-between">
-                            <code class="text-emerald-300 font-bold font-mono" x-text="currentObjective.solutionCommand"></code>
-                            <button @click="runSolutionInTerminal()" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold transition-colors">
-                                Send to Terminal
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -321,8 +223,6 @@
 
 <script>
 function amadeusApp() {
-    const modulesData = @json($modules);
-
     const initialAreaState = (area) => ({
         area: area,
         isSignedIn: true,
@@ -342,7 +242,6 @@ function amadeusApp() {
 
     return {
         theme: 'modern',
-        mode: 'training',
         showVisualInspector: true,
         activeArea: 'A',
         areas: {
@@ -354,27 +253,15 @@ function amadeusApp() {
             F: initialAreaState('F'),
         },
 
-        modules: modulesData,
-        activeModuleId: modulesData[0].id,
-        activeLesson: modulesData[0].lessons[0],
-        currentObjectiveIndex: 0,
-        hintLevel: 0,
-
         inputVal: '',
         isExecuting: false,
         historyCursor: -1,
 
-        get activeModule() {
-            return this.modules.find(m => m.id === this.activeModuleId) || this.modules[0];
-        },
         get currentArea() {
             return this.areas[this.activeArea];
         },
         get activePnr() {
             return this.currentArea.activePnr;
-        },
-        get currentObjective() {
-            return this.activeLesson.objectives[this.currentObjectiveIndex] || {};
         },
 
         // PRINT status helpers
@@ -402,30 +289,6 @@ function amadeusApp() {
 
         clearTerminal() {
             this.currentArea.outputLines = [];
-        },
-
-        selectLessonById(lessonId) {
-            for (const m of this.modules) {
-                const found = m.lessons.find(l => l.id === lessonId);
-                if (found) {
-                    this.activeModuleId = m.id;
-                    this.activeLesson = found;
-                    this.currentObjectiveIndex = 0;
-                    this.hintLevel = 0;
-                    break;
-                }
-            }
-        },
-
-        incrementHint() {
-            this.hintLevel = Math.min(this.hintLevel + 1, 3);
-        },
-
-        runSolutionInTerminal() {
-            if (this.currentObjective.solutionCommand) {
-                this.inputVal = this.currentObjective.solutionCommand;
-                this.submitCommand();
-            }
         },
 
         navigateHistory(direction) {
@@ -474,15 +337,18 @@ function amadeusApp() {
             state.history.push(command);
             this.scrollToBottom();
 
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
             try {
                 const res = await fetch('/terminal/execute', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
                     body: JSON.stringify({
                         command,
                         state,
-                        activeLessonId: this.activeLesson?.id,
-                        currentObjectiveIndex: this.currentObjectiveIndex,
                     }),
                 });
 
@@ -498,11 +364,6 @@ function amadeusApp() {
                     state.activePnr = data.updatedState.activePnr;
                     state.lastAvailabilityDisplay = data.updatedState.lastAvailabilityDisplay;
                     state.isSignedIn = data.updatedState.isSignedIn;
-                }
-
-                if (data.objectiveCompleted) {
-                    this.currentObjectiveIndex = data.nextObjectiveIndex;
-                    this.hintLevel = 0;
                 }
             } catch (err) {
                 state.outputLines.push({ text: `CONNECTION ERROR: FAILED TO REACH GDS HOST`, isError: true });

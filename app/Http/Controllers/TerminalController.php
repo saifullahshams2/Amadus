@@ -2,60 +2,51 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TerminalActivityLog;
 use App\Services\Amadeus\AmadeusParser;
-use App\Services\Training\CurriculumService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TerminalController extends Controller
 {
     public function __construct(
-        protected AmadeusParser $parser,
-        protected CurriculumService $curriculum
+        protected AmadeusParser $parser
     ) {}
 
     public function index()
     {
-        $modules = $this->curriculum->getModules();
         $user = Auth::user();
-        return view('terminal.index', compact('modules', 'user'));
+
+        return view('terminal.index', compact('user'));
     }
 
     public function execute(Request $request)
     {
         $command = $request->input('command');
         $state = $request->input('state', []);
-        $activeLessonId = $request->input('activeLessonId');
-        $currentObjectiveIndex = $request->input('currentObjectiveIndex');
 
-        if (!is_string($command) || trim($command) === '') {
+        if (! is_string($command) || trim($command) === '') {
             return response()->json(['error' => 'Command string is required'], 400);
         }
 
         $userId = Auth::user()?->username ?? 'guest';
 
+        $startTime = microtime(true);
         $execResult = $this->parser->execute($command, $state, $userId);
+        $durationMs = (int) round((microtime(true) - $startTime) * 1000);
 
-        // Training objective validation
-        $objectiveCompleted = false;
-        $nextObjectiveIndex = $currentObjectiveIndex;
-
-        if ($activeLessonId && is_int($currentObjectiveIndex)) {
-            $lesson = $this->curriculum->findLesson($activeLessonId);
-            if ($lesson && isset($lesson['objectives'][$currentObjectiveIndex])) {
-                $obj = $lesson['objectives'][$currentObjectiveIndex];
-                $passed = $this->curriculum->validateObjective(
-                    $command,
-                    $execResult->outputLines,
-                    $execResult->updatedState['activePnr'] ?? null,
-                    $obj['validate'] ?? []
-                );
-
-                if ($passed && !$execResult->isError) {
-                    $objectiveCompleted = true;
-                    $nextObjectiveIndex = $currentObjectiveIndex + 1;
-                }
-            }
+        // Record terminal activity for classroom spectating & learning analytics
+        try {
+            TerminalActivityLog::create([
+                'user_id' => $userId,
+                'command' => $command,
+                'output_lines' => $execResult->outputLines,
+                'is_error' => $execResult->isError,
+                'command_type' => $execResult->commandType,
+                'execution_time_ms' => $durationMs,
+            ]);
+        } catch (\Throwable $e) {
+            // Silently ignore log write errors during high volume/testing
         }
 
         return response()->json([
@@ -63,8 +54,6 @@ class TerminalController extends Controller
             'updatedState' => $execResult->updatedState,
             'isError' => $execResult->isError,
             'commandType' => $execResult->commandType,
-            'objectiveCompleted' => $objectiveCompleted,
-            'nextObjectiveIndex' => $nextObjectiveIndex,
         ]);
     }
 }

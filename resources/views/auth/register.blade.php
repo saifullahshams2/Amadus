@@ -36,13 +36,6 @@
                        class="w-full bg-[#131c2e] border border-slate-700 text-white rounded-lg p-2.5 text-xs outline-none focus:border-blue-500">
             </div>
 
-            <div>
-                <label class="block text-slate-400 mb-1">ROLE</label>
-                <select name="role" class="w-full bg-[#131c2e] border border-slate-700 text-white rounded-lg p-2.5 text-xs outline-none focus:border-blue-500">
-                    <option value="student">Student / Trainee</option>
-                    <option value="instructor">Instructor / Auditor</option>
-                </select>
-            </div>
 
             <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs tracking-wider transition-colors shadow-lg shadow-blue-600/20">
                 CREATE ACCOUNT

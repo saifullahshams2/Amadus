@@ -43,10 +43,10 @@ class TicketingService
 
         $newTickets = [];
         $outputLines = [];
-        $dateStr = strtoupper(date('dM') . substr(date('Y'), -2));
+        $dateStr = strtoupper(date('dM').substr(date('Y'), -2));
 
         foreach ($pnr['passengers'] as $idx => $pax) {
-            $randomTicketSeq = (string)random_int(1000000000, 9999999999);
+            $randomTicketSeq = (string) random_int(1000000000, 9999999999);
             $fullTicketNumber = "{$prefix}-{$randomTicketSeq}";
 
             $coupons = [];
@@ -62,8 +62,8 @@ class TicketingService
                 ];
             }
 
-            $title = !empty($pax['title']) ? ' ' . $pax['title'] : '';
-            $totalFare = !empty($pnr['tsts'][0]) ? "{$pnr['tsts'][0]['currency']} " . number_format($pnr['tsts'][0]['total'], 2, '.', '') : 'N/A';
+            $title = ! empty($pax['title']) ? ' '.$pax['title'] : '';
+            $totalFare = ! empty($pnr['tsts'][0]) ? "{$pnr['tsts'][0]['currency']} ".number_format($pnr['tsts'][0]['total'], 2, '.', '') : 'N/A';
 
             $ticket = [
                 'ticketNumber' => $fullTicketNumber,
@@ -77,7 +77,7 @@ class TicketingService
             ];
 
             $newTickets[] = $ticket;
-            $outputLines[] = "OK ETICKET / {$fullTicketNumber} / " . strtoupper($pax['lastName']) . " " . strtoupper($pax['firstName']);
+            $outputLines[] = "OK ETICKET / {$fullTicketNumber} / ".strtoupper($pax['lastName']).' '.strtoupper($pax['firstName']);
         }
 
         $count = count($newTickets);
@@ -104,25 +104,25 @@ class TicketingService
 
         $lines = [
             "ELECTRONIC TICKET RECORD: {$ticket['ticketNumber']}",
-            "NAME: " . str_pad($ticket['passengerName'], 26) . "RLOC: {$ticket['pnrLocator']}",
+            'NAME: '.str_pad($ticket['passengerName'], 26)."RLOC: {$ticket['pnrLocator']}",
             "ISSUED: {$ticket['issueDate']}  OFFICE: {$ticket['officeId']}  FOP: {$ticket['fop']}",
             "TOTAL FARE: {$ticket['totalFare']}",
-            "------------------------------------------------------------",
-            "CPN FLIGHT  CLASS DATE   FROM  TO    STATUS",
+            '------------------------------------------------------------',
+            'CPN FLIGHT  CLASS DATE   FROM  TO    STATUS',
         ];
 
         foreach ($ticket['coupons'] as $c) {
             $status = ($c['status'] === 'O') ? 'OPEN' : $c['status'];
-            $lines[] = " " . str_pad((string)$c['couponNo'], 2) . " " .
-                str_pad($c['flight'], 8) . " " .
-                $c['class'] . "   " .
-                str_pad($c['date'], 6) . " " .
-                str_pad($c['from'], 5) . " " .
-                str_pad($c['to'], 5) . " " .
+            $lines[] = ' '.str_pad((string) $c['couponNo'], 2).' '.
+                str_pad($c['flight'], 8).' '.
+                $c['class'].'   '.
+                str_pad($c['date'], 6).' '.
+                str_pad($c['from'], 5).' '.
+                str_pad($c['to'], 5).' '.
                 $status;
         }
 
-        $lines[] = "------------------------------------------------------------";
+        $lines[] = '------------------------------------------------------------';
         $prefix = substr($ticket['ticketNumber'], 0, 3);
         $lines[] = "VALIDATING CARRIER: {$prefix}";
 

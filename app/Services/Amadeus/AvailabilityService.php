@@ -19,7 +19,7 @@ class AvailabilityService
 {
     private const MONTH_MAP = [
         'JAN' => 1, 'FEB' => 2, 'MAR' => 3, 'APR' => 4, 'MAY' => 5, 'JUN' => 6,
-        'JUL' => 7, 'AUG' => 8, 'SEP' => 9, 'OCT' => 10, 'NOV' => 11, 'DEC' => 12
+        'JUL' => 7, 'AUG' => 8, 'SEP' => 9, 'OCT' => 10, 'NOV' => 11, 'DEC' => 12,
     ];
 
     private const DAY_NAMES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
@@ -64,7 +64,7 @@ class AvailabilityService
     {
         $clean = strtoupper(trim($query));
         // Regex for: [DATE: 1-2 digits + 3 letters][ORIG: 3 chars][DEST: 3 chars][/A<carrier>]
-        if (!preg_match('/^(\d{1,2}[A-Z]{3})?([A-Z]{3})([A-Z]{3})(?:\/A([A-Z0-9]{2}))?/', $clean, $matches)) {
+        if (! preg_match('/^(\d{1,2}[A-Z]{3})?([A-Z]{3})([A-Z]{3})(?:\/A([A-Z0-9]{2}))?/', $clean, $matches)) {
             return new AvailabilityResult(
                 '',
                 ['FORMAT: AN[DATE]<ORIGIN><DESTINATION>[/A<AIRLINE>] (E.G. AN15NOVLHRJFK OR AN20DECDXBLHR/AEK)'],
@@ -81,10 +81,10 @@ class AvailabilityService
         $validOrig = Airport::find($orig) ?? (isset(DecodeService::METRO_CODES[$orig]));
         $validDest = Airport::find($dest) ?? (isset(DecodeService::METRO_CODES[$dest]));
 
-        if (!$validOrig) {
+        if (! $validOrig) {
             return new AvailabilityResult('', ["INVALID ORIGIN CITY/AIRPORT CODE: {$orig}"], [], true);
         }
-        if (!$validDest) {
+        if (! $validDest) {
             return new AvailabilityResult('', ["INVALID DESTINATION CITY/AIRPORT CODE: {$dest}"], [], true);
         }
 
@@ -94,25 +94,25 @@ class AvailabilityService
         $dayName = 'FR';
 
         if ($dateStr !== '') {
-            if (!preg_match('/^(\d{1,2})([A-Z]{3})$/', $dateStr, $dMatch)) {
+            if (! preg_match('/^(\d{1,2})([A-Z]{3})$/', $dateStr, $dMatch)) {
                 return new AvailabilityResult('', ["INVALID DATE FORMAT: {$dateStr}. EXPECTED FORMAT: DDMMM (E.G. 15NOV)"], [], true);
             }
-            $day = (int)$dMatch[1];
+            $day = (int) $dMatch[1];
             $monthStr = $dMatch[2];
-            if (!isset(self::MONTH_MAP[$monthStr]) || $day < 1 || $day > 31) {
+            if (! isset(self::MONTH_MAP[$monthStr]) || $day < 1 || $day > 31) {
                 return new AvailabilityResult('', ["INVALID DATE: {$dateStr}"], [], true);
             }
             $monthNum = self::MONTH_MAP[$monthStr];
-            $year = (int)date('Y');
+            $year = (int) date('Y');
             $ts = mktime(0, 0, 0, $monthNum, $day, $year);
-            $dayName = self::DAY_NAMES[(int)date('w', $ts)];
+            $dayName = self::DAY_NAMES[(int) date('w', $ts)];
         } else {
-            $day = (int)date('j');
+            $day = (int) date('j');
             $monthStr = strtoupper(date('M'));
-            $dayName = self::DAY_NAMES[(int)date('w')];
+            $dayName = self::DAY_NAMES[(int) date('w')];
         }
 
-        $formattedDate = str_pad((string)$day, 2, '0', STR_PAD_LEFT) . $monthStr;
+        $formattedDate = str_pad((string) $day, 2, '0', STR_PAD_LEFT).$monthStr;
         $headerLine = "{$formattedDate}-{$dayName}  {$orig}{$dest}                                                        ";
 
         // Carrier selection
@@ -150,7 +150,7 @@ class AvailabilityService
 
         for ($i = 0; $i < count($times); $i++) {
             $carrier = $carriersToUse[$i % count($carriersToUse)];
-            $flightNumber = (string)((($seed * 37 + $i * 43) % 899) + 101);
+            $flightNumber = (string) ((($seed * 37 + $i * 43) % 899) + 101);
             $t = $times[$i];
 
             $classes = [
@@ -191,10 +191,10 @@ class AvailabilityService
                 'departureDate' => $formattedDate,
             ];
 
-            $linePrefix = str_pad((string)$lineNum, 2, ' ', STR_PAD_LEFT);
-            $carrierFlt = $carrier . ' ' . str_pad($flightNumber, 3, ' ', STR_PAD_LEFT);
-            $topClasses = "J9 C9 D9 I9 W9 Y9 B9";
-            $bottomClasses = "M9 H9 K9 L9 V9 Q9 S9";
+            $linePrefix = str_pad((string) $lineNum, 2, ' ', STR_PAD_LEFT);
+            $carrierFlt = $carrier.' '.str_pad($flightNumber, 3, ' ', STR_PAD_LEFT);
+            $topClasses = 'J9 C9 D9 I9 W9 Y9 B9';
+            $bottomClasses = 'M9 H9 K9 L9 V9 Q9 S9';
             $route = "/{$actualOrig} {$actualDest}";
             $offset = isset($t['offset']) ? $t['offset'] : '  ';
             $timesStr = "{$t['dep']}   {$t['arr']}{$offset}";
@@ -207,7 +207,9 @@ class AvailabilityService
             $outputLines[] = $l2;
 
             $lineNum++;
-            if ($lineNum > 6) break;
+            if ($lineNum > 6) {
+                break;
+            }
         }
 
         return new AvailabilityResult($headerLine, $outputLines, $schedules);

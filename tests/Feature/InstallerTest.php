@@ -1,0 +1,160 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Http\Middleware\EnsureAppIsInstalled;
+use App\Models\User;
+use App\Services\Installer\InstallerService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
+use Tests\TestCase;
+
+class InstallerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected InstallerService $installerService;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->installerService = app(InstallerService::class);
+        $this->installerService->uninstall();
+        EnsureAppIsInstalled::$bypassInTesting = true;
+    }
+
+    protected function tearDown(): void
+    {
+        $this->installerService->uninstall();
+        EnsureAppIsInstalled::$bypassInTesting = true;
+        parent::tearDown();
+    }
+
+    public function test_01_requirements_check_returns_satisfied(): void
+    {
+        $results = $this->installerService->checkRequirements();
+
+        $this->assertTrue($results['satisfied']);
+        $this->assertTrue($results['php_version']['satisfied']);
+        $this->assertTrue($results['extensions']['pdo']);
+        $this->assertTrue($results['directories']['storage']);
+    }
+
+    public function test_02_installer_web_wizard_renders_successfully(): void
+    {
+        $response = $this->get('/install');
+
+        $response->assertStatus(200);
+        $response->assertSeeText('Amadeus GDS Platform');
+        $response->assertSeeText('Installer');
+        $response->assertSeeText('System Prerequisites & Permissions');
+        $response->assertSeeText('Provision Primary Flight Instructor');
+    }
+
+    public function test_03_installer_validation_rejects_missing_or_mismatched_password(): void
+    {
+        $response = $this->postJson('/install', [
+            'name' => 'Instructor Test',
+            'username' => 'inst_test',
+            'email' => 'invalid-email',
+            'password' => '12345',
+            'password_confirmation' => 'mismatch',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['email', 'password']);
+    }
+
+    public function test_04_installer_creates_instructor_and_writes_lock_file(): void
+    {
+        $payload = [
+            'name' => 'Chief Flight Instructor',
+            'username' => 'lead_instructor',
+            'email' => 'lead.instructor@amadeus.test',
+            'password' => 'Pass@12345',
+            'password_confirmation' => 'Pass@12345',
+            'office_id' => 'LON1A0980',
+            'agent_id' => 'IN01GS',
+        ];
+
+        $response = $this->postJson('/install', $payload);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'instructor' => [
+                'username' => 'lead_instructor',
+                'role' => 'instructor',
+                'office_id' => 'LON1A0980',
+                'agent_id' => 'IN01GS',
+            ],
+        ]);
+
+        // Verify User was saved in database with instructor role
+        $instructor = User::where('username', 'lead_instructor')->first();
+        $this->assertNotNull($instructor);
+        $this->assertEquals('instructor', $instructor->role);
+        $this->assertTrue(Hash::check('Pass@12345', $instructor->password));
+
+        // Verify installation lock file was written
+        $this->assertTrue($this->installerService->isInstalled());
+        $this->assertFileExists(storage_path('installed'));
+    }
+
+    public function test_05_installer_redirects_away_when_already_installed(): void
+    {
+        // Mark as installed
+        $dummyInstructor = User::factory()->create(['role' => 'instructor']);
+        $this->installerService->markInstalled($dummyInstructor);
+
+        // Attempting to visit /install should redirect
+        $response = $this->get('/install');
+        $response->assertRedirect('/dashboard');
+
+        // JSON post to /install should return 400
+        $jsonResponse = $this->postJson('/install', [
+            'name' => 'Another Instructor',
+            'username' => 'another',
+            'email' => 'another@amadeus.test',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ]);
+        $jsonResponse->assertStatus(400);
+    }
+
+    public function test_06_uninstalled_application_redirects_to_install_when_enforced(): void
+    {
+        EnsureAppIsInstalled::$bypassInTesting = false;
+        $this->installerService->uninstall();
+
+        $response = $this->get('/dashboard');
+        $response->assertRedirect('/install');
+
+        $apiResponse = $this->getJson('/api/dashboard/active-pnr');
+        $apiResponse->assertStatus(503);
+    }
+
+    public function test_07_artisan_app_install_command_executes_successfully(): void
+    {
+        $exitCode = Artisan::call('app:install', [
+            '--name' => 'CLI Flight Instructor',
+            '--username' => 'cli_instructor',
+            '--email' => 'cli.instructor@amadeus.test',
+            '--password' => 'CliPassword123!',
+            '--office' => 'LON1A0980',
+            '--agent' => 'IN01GS',
+            '--force' => true,
+        ]);
+
+        $this->assertEquals(0, $exitCode);
+
+        $cliInstructor = User::where('username', 'cli_instructor')->first();
+        $this->assertNotNull($cliInstructor);
+        $this->assertEquals('instructor', $cliInstructor->role);
+        $this->assertEquals('LON1A0980', $cliInstructor->office_id);
+        $this->assertEquals('IN01GS', $cliInstructor->agent_id);
+        $this->assertTrue($this->installerService->isInstalled());
+    }
+}

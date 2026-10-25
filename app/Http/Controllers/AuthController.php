@@ -14,6 +14,7 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect('/');
         }
+
         return view('auth.login');
     }
 
@@ -22,6 +23,7 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect('/');
         }
+
         return view('auth.register');
     }
 
@@ -34,10 +36,11 @@ class AuthController extends Controller
 
         $user = User::where('username', $credentials['username'])->first();
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             if ($request->wantsJson() || $request->is('api/*')) {
                 return response()->json(['error' => 'Invalid username or password'], 401);
             }
+
             return back()->withErrors(['username' => 'Invalid credentials']);
         }
 
@@ -67,7 +70,6 @@ class AuthController extends Controller
             'username' => 'required|string|min:3|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role' => 'nullable|string|in:student,instructor',
         ]);
 
         $user = User::create([
@@ -75,7 +77,7 @@ class AuthController extends Controller
             'name' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'] ?? 'student',
+            'role' => 'student',
             'office_id' => 'LON1A0980',
             'agent_id' => '1234AB',
         ]);
@@ -114,7 +116,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['user' => null]);
         }
 

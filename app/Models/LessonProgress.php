@@ -8,8 +8,11 @@ use Illuminate\Support\Str;
 class LessonProgress extends Model
 {
     protected $table = 'lesson_progress';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

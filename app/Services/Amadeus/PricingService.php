@@ -81,9 +81,9 @@ class PricingService
         }
 
         $numPax = count($pnr['passengers']);
-        $baseFarePerPax = (int)round($totalBaseUsd * $currencyMultiplier);
-        $taxAirport = (int)round(45 * $currencyMultiplier);
-        $taxFuel = (int)round(85 * $currencyMultiplier);
+        $baseFarePerPax = (int) round($totalBaseUsd * $currencyMultiplier);
+        $taxAirport = (int) round(45 * $currencyMultiplier);
+        $taxFuel = (int) round(85 * $currencyMultiplier);
         $totalTaxPerPax = $taxAirport + $taxFuel;
         $grandTotalPerPax = $baseFarePerPax + $totalTaxPerPax;
 
@@ -106,18 +106,18 @@ class PricingService
             'issuedAt' => date('c'),
         ];
 
-        $paxTitle = !empty($firstPax['title']) ? ' ' . $firstPax['title'] : '';
+        $paxTitle = ! empty($firstPax['title']) ? ' '.$firstPax['title'] : '';
         $fltNum = str_pad($firstSeg['flightNumber'], 4, ' ', STR_PAD_LEFT);
 
         $lines = [
             "--- TST 0000{$tstNumber} ---",
-            "FARESTORED",
-            "1." . strtoupper($firstPax['lastName']) . "/" . strtoupper($firstPax['firstName']) . $paxTitle,
+            'FARESTORED',
+            '1.'.strtoupper($firstPax['lastName']).'/'.strtoupper($firstPax['firstName']).$paxTitle,
             " {$firstSeg['departureAirport']} {$firstSeg['airlineCode']} {$fltNum} {$firstSeg['bookingClass']} {$firstSeg['departureDate']} {$firstSeg['departureTime']} OK {$firstSeg['bookingClass']}IF",
             " {$firstSeg['arrivalAirport']}",
-            "FARE       " . str_pad($currency, 4) . " " . str_pad(number_format($baseFarePerPax, 2, '.', ''), 10, ' ', STR_PAD_LEFT),
-            "TAX        " . str_pad($currency, 4) . " " . str_pad(number_format($taxAirport, 2, '.', ''), 8, ' ', STR_PAD_LEFT) . "AP  {$currency} " . str_pad(number_format($taxFuel, 2, '.', ''), 8, ' ', STR_PAD_LEFT) . "YQ",
-            "TOTAL      " . str_pad($currency, 4) . " " . str_pad(number_format($grandTotalPerPax, 2, '.', ''), 10, ' ', STR_PAD_LEFT),
+            'FARE       '.str_pad($currency, 4).' '.str_pad(number_format($baseFarePerPax, 2, '.', ''), 10, ' ', STR_PAD_LEFT),
+            'TAX        '.str_pad($currency, 4).' '.str_pad(number_format($taxAirport, 2, '.', ''), 8, ' ', STR_PAD_LEFT)."AP  {$currency} ".str_pad(number_format($taxFuel, 2, '.', ''), 8, ' ', STR_PAD_LEFT).'YQ',
+            'TOTAL      '.str_pad($currency, 4).' '.str_pad(number_format($grandTotalPerPax, 2, '.', ''), 10, ' ', STR_PAD_LEFT),
         ];
 
         if ($numPax > 1) {
@@ -126,7 +126,7 @@ class PricingService
         }
 
         if ($storeTst) {
-            $lines[] = "TST RETAINED - TICKET WITH TTP";
+            $lines[] = 'TST RETAINED - TICKET WITH TTP';
         }
 
         return new PricingResult($lines, $storeTst ? $tst : null);
@@ -135,9 +135,9 @@ class PricingService
     public function handleFQD(string $query): PricingResult
     {
         $clean = strtoupper(trim($query));
-        if (!preg_match('/^([A-Z]{6})(?:\/D(\d{1,2}[A-Z]{3}))?(?:\/A([A-Z0-9]{2}))?/', $clean, $matches)) {
+        if (! preg_match('/^([A-Z]{6})(?:\/D(\d{1,2}[A-Z]{3}))?(?:\/A([A-Z0-9]{2}))?/', $clean, $matches)) {
             return new PricingResult([
-                'FORMAT: FQD <CITYPAIR> [/D<DATE>] [/A<CARRIER>] (E.G. FQDDOHLHR/D15NOV/AQR)'
+                'FORMAT: FQD <CITYPAIR> [/D<DATE>] [/A<CARRIER>] (E.G. FQDDOHLHR/D15NOV/AQR)',
             ], null, true);
         }
 
@@ -149,17 +149,17 @@ class PricingService
         $lines = [
             "FQD {$orig}{$dest}/D{$dateStr}/A{$carrier}                      ROE 1.000000",
             "PUBLIC FARES FOR {$orig}-{$dest} ON {$carrier}",
-            "LN FARE BASIS   OW/RT   PEN  DATES    DAYS  CUR      AMOUNT",
-            "------------------------------------------------------------",
-            "01 YIF          RT      NO   -        -     USD     1250.00",
-            "02 BIF          RT      NO   -        -     USD     1080.00",
-            "03 MIF          RT      YES  -        -     USD      890.00",
-            "04 HIF          RT      YES  -        -     USD      740.00",
-            "05 KIF          RT      YES  -        -     USD      620.00",
-            "06 LIF          RT      YES  -        -     USD      530.00",
-            "07 JFF          RT      NO   -        -     USD     3800.00",
-            "08 CFF          RT      NO   -        -     USD     3200.00",
-            "09 FFF          RT      NO   -        -     USD     7500.00",
+            'LN FARE BASIS   OW/RT   PEN  DATES    DAYS  CUR      AMOUNT',
+            '------------------------------------------------------------',
+            '01 YIF          RT      NO   -        -     USD     1250.00',
+            '02 BIF          RT      NO   -        -     USD     1080.00',
+            '03 MIF          RT      YES  -        -     USD      890.00',
+            '04 HIF          RT      YES  -        -     USD      740.00',
+            '05 KIF          RT      YES  -        -     USD      620.00',
+            '06 LIF          RT      YES  -        -     USD      530.00',
+            '07 JFF          RT      NO   -        -     USD     3800.00',
+            '08 CFF          RT      NO   -        -     USD     3200.00',
+            '09 FFF          RT      NO   -        -     USD     7500.00',
         ];
 
         return new PricingResult($lines);

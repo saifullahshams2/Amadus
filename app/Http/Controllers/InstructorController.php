@@ -13,13 +13,15 @@ class InstructorController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'instructor') {
+        if (! $user || $user->role !== 'instructor') {
             return redirect('/login')->withErrors(['error' => 'Instructor access required.']);
         }
 
-        $students = User::where('role', 'student')->get();
+        $students = User::where('role', 'student')
+            ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'created_at'])
+            ->get();
         $progress = LessonProgress::all();
-        $pnrs = Pnr::orderBy('updated_at', 'desc')->get();
+        $pnrs = Pnr::orderBy('updated_at', 'desc')->limit(100)->get();
 
         return view('instructor.index', compact('user', 'students', 'progress', 'pnrs'));
     }
@@ -27,13 +29,15 @@ class InstructorController extends Controller
     public function studentsApi(Request $request)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'instructor') {
+        if (! $user || $user->role !== 'instructor') {
             return response()->json(['error' => 'Instructor role required'], 403);
         }
 
-        $students = User::where('role', 'student')->get();
+        $students = User::where('role', 'student')
+            ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'created_at'])
+            ->get();
         $progressRecords = LessonProgress::all();
-        $pnrs = Pnr::orderBy('updated_at', 'desc')->get();
+        $pnrs = Pnr::orderBy('updated_at', 'desc')->limit(100)->get();
 
         return response()->json([
             'students' => $students,

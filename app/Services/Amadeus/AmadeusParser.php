@@ -3,6 +3,7 @@
 namespace App\Services\Amadeus;
 
 use App\Models\Pnr;
+use App\Models\User;
 
 class CommandExecutionResult
 {
@@ -21,13 +22,17 @@ class AmadeusParser
         protected AvailabilityService $availability,
         protected PnrService $pnr,
         protected PricingService $pricing,
-        protected TicketingService $ticketing
+        protected TicketingService $ticketing,
+        protected QueueService $queue
     ) {}
 
     public function execute(string $rawInput, array $currentState, string $userId = 'guest'): CommandExecutionResult
     {
         $input = strtoupper(trim($rawInput));
         $state = $currentState;
+
+        $user = ($userId !== 'guest') ? User::where('username', $userId)->first() : null;
+        $isInstructor = $user?->role === 'instructor';
 
         // Initialize PNR if not present
         if (empty($state['activePnr'])) {
@@ -65,6 +70,7 @@ class AmadeusParser
             $area = $state['area'] ?? 'A';
             $off = $state['officeId'] ?? 'LON1A0980';
             $agt = $state['agentId'] ?? '1234AB';
+
             return new CommandExecutionResult(
                 ["OK SIGN-IN TO WORK AREA {$area} / OFFICE {$off} / AGENT {$agt}"],
                 $state,
@@ -75,6 +81,7 @@ class AmadeusParser
         if ($input === 'JO' || $input === 'SO') {
             $state['isSignedIn'] = false;
             $area = $state['area'] ?? 'A';
+
             return new CommandExecutionResult(
                 ["SIGNED OUT OF AMADEUS GDS - WORK AREA {$area}"],
                 $state,
@@ -86,18 +93,22 @@ class AmadeusParser
         // 3. ENCODE & DECODE: DAN, DAC, DNA, DNE
         if (str_starts_with($input, 'DAN')) {
             $res = $this->decode->handleDAN(substr($input, 3));
+
             return new CommandExecutionResult($res->lines, $state, $res->isError, 'DECODE_DAN');
         }
         if (str_starts_with($input, 'DAC')) {
             $res = $this->decode->handleDAC(substr($input, 3));
+
             return new CommandExecutionResult($res->lines, $state, $res->isError, 'DECODE_DAC');
         }
         if (str_starts_with($input, 'DNA')) {
             $res = $this->decode->handleDNA(substr($input, 3));
+
             return new CommandExecutionResult($res->lines, $state, $res->isError, 'DECODE_DNA');
         }
         if (str_starts_with($input, 'DNE')) {
             $res = $this->decode->handleDNE(substr($input, 3));
+
             return new CommandExecutionResult($res->lines, $state, $res->isError, 'DECODE_DNE');
         }
 
@@ -129,10 +140,11 @@ class AmadeusParser
                 return new CommandExecutionResult(['NO PREVIOUS AVAILABILITY DISPLAY TO PAGE'], $state, true, 'PAGING');
             }
             $pageStr = ($input === 'MD') ? '2 OF 2' : '1 OF 2';
+
             return new CommandExecutionResult(
                 [
                     "PAGE {$pageStr} (END OF DISPLAY)",
-                    "NO FURTHER FLIGHTS IN THIS PERIOD",
+                    'NO FURTHER FLIGHTS IN THIS PERIOD',
                 ],
                 $state,
                 false,
@@ -142,13 +154,13 @@ class AmadeusParser
 
         // 6. SHORT SELL: SS
         if (str_starts_with($input, 'SS')) {
-            if (!preg_match('/^SS(\d+)([A-Z])(\d+)$/', $input, $match)) {
+            if (! preg_match('/^SS(\d+)([A-Z])(\d+)$/', $input, $match)) {
                 return new CommandExecutionResult(['FORMAT: SS<SEATS><CLASS><LINE> (E.G. SS1Y1 OR SS2J3)'], $state, true, 'SELL_SEAT_ERROR');
             }
 
-            $seats = (int)$match[1];
+            $seats = (int) $match[1];
             $bookingClass = $match[2];
-            $lineNumber = (int)$match[3];
+            $lineNumber = (int) $match[3];
 
             if (empty($state['lastAvailabilityDisplay']['lines'])) {
                 return new CommandExecutionResult(['NO ACTIVE AVAILABILITY DISPLAY. CHECK FLIGHTS FIRST WITH AN...'], $state, true, 'SELL_SEAT_ERROR');
@@ -162,7 +174,7 @@ class AmadeusParser
                 }
             }
 
-            if (!$selectedLine) {
+            if (! $selectedLine) {
                 return new CommandExecutionResult(["LINE NUMBER {$lineNumber} NOT FOUND IN ACTIVE AVAILABILITY DISPLAY"], $state, true, 'SELL_SEAT_ERROR');
             }
 
@@ -201,7 +213,7 @@ class AmadeusParser
             $stdMatch = preg_match('/^(\d+)([A-Z]+)\/([A-Z]+)(?:\s+([A-Z]+))?$/', $rawName, $sm);
 
             if ($chdMatch) {
-                $pId = (count($state['activePnr']['passengers']) + 1) . '.1';
+                $pId = (count($state['activePnr']['passengers']) + 1).'.1';
                 $state['activePnr']['passengers'][] = [
                     'id' => $pId,
                     'type' => 'CHD',
@@ -209,11 +221,12 @@ class AmadeusParser
                     'firstName' => $cm[2],
                     'dateOfBirth' => $cm[3],
                 ];
+
                 return new CommandExecutionResult(["  {$pId}.{$cm[1]}/{$cm[2]}(CHD/{$cm[3]})"], $state, false, 'NAME_ELEMENT');
             }
 
             if ($infMatch) {
-                $pId = (count($state['activePnr']['passengers']) + 1) . '.1';
+                $pId = (count($state['activePnr']['passengers']) + 1).'.1';
                 $state['activePnr']['passengers'][] = [
                     'id' => $pId,
                     'type' => 'INF',
@@ -222,11 +235,12 @@ class AmadeusParser
                     'dateOfBirth' => $im[3],
                     'accompaniedBy' => '1.1',
                 ];
+
                 return new CommandExecutionResult(["  {$pId}.{$im[1]}/{$im[2]}(INF/{$im[3]})"], $state, false, 'NAME_ELEMENT');
             }
 
             if ($stdMatch) {
-                $pId = (count($state['activePnr']['passengers']) + 1) . '.1';
+                $pId = (count($state['activePnr']['passengers']) + 1).'.1';
                 $title = $sm[4] ?? '';
                 $state['activePnr']['passengers'][] = [
                     'id' => $pId,
@@ -236,6 +250,7 @@ class AmadeusParser
                     'title' => $title,
                 ];
                 $titleStr = $title ? " {$title}" : '';
+
                 return new CommandExecutionResult(["  {$pId}.{$sm[2]}/{$sm[3]}{$titleStr}"], $state, false, 'NAME_ELEMENT');
             }
 
@@ -260,11 +275,12 @@ class AmadeusParser
                 'type' => 'EMAIL',
                 'detail' => $email,
             ];
+
             return new CommandExecutionResult(["OK APE {$email}"], $state, false, 'CONTACT_ELEMENT');
         }
         if (str_starts_with($input, 'AP')) {
             $contact = trim(substr($input, 2));
-            if (!$contact) {
+            if (! $contact) {
                 return new CommandExecutionResult(['FORMAT: AP <PHONE> (E.G. AP DOH 974-555-1234-A)'], $state, true, 'CONTACT_ERROR');
             }
             $state['activePnr']['contacts'][] = [
@@ -272,6 +288,7 @@ class AmadeusParser
                 'type' => 'PHONE',
                 'detail' => $contact,
             ];
+
             return new CommandExecutionResult(["OK AP {$contact}"], $state, false, 'CONTACT_ELEMENT');
         }
 
@@ -279,15 +296,18 @@ class AmadeusParser
         if (str_starts_with($input, 'TK')) {
             if ($input === 'TKOK') {
                 $state['activePnr']['ticketing'] = ['type' => 'TKOK', 'raw' => 'TKOK'];
+
                 return new CommandExecutionResult(['OK TKOK'], $state, false, 'TICKETING_ELEMENT');
             }
             if (str_starts_with($input, 'TKTL')) {
                 $rest = trim(substr($input, 4));
                 $state['activePnr']['ticketing'] = ['type' => 'TKTL', 'raw' => $input, 'date' => $rest];
+
                 return new CommandExecutionResult(["OK {$input}"], $state, false, 'TICKETING_ELEMENT');
             }
             if ($input === 'TKXL') {
                 $state['activePnr']['ticketing'] = ['type' => 'TKXL', 'raw' => 'TKXL'];
+
                 return new CommandExecutionResult(['OK TKXL'], $state, false, 'TICKETING_ELEMENT');
             }
         }
@@ -295,10 +315,11 @@ class AmadeusParser
         // 10. RECEIVED FROM: RF
         if (str_starts_with($input, 'RF')) {
             $name = trim(substr($input, 2));
-            if (!$name) {
+            if (! $name) {
                 return new CommandExecutionResult(['FORMAT: RF <NAME> (E.G. RF PASSENGER OR RF MR SMITH)'], $state, true, 'RF_ERROR');
             }
             $state['activePnr']['receivedFrom'] = $name;
+
             return new CommandExecutionResult(["RF {$name} - RETAINED"], $state, false, 'RECEIVED_FROM');
         }
 
@@ -306,6 +327,7 @@ class AmadeusParser
         if (str_starts_with($input, 'RM') || str_starts_with($input, 'RC')) {
             $remark = trim(substr($input, 2));
             $state['activePnr']['remarks'][] = $remark;
+
             return new CommandExecutionResult(["OK RM {$remark}"], $state, false, 'REMARK_ELEMENT');
         }
 
@@ -317,6 +339,7 @@ class AmadeusParser
                 'code' => substr($raw, 0, 4),
                 'text' => $raw,
             ];
+
             return new CommandExecutionResult(["OK SSR {$raw} HK1"], $state, false, 'SSR_ELEMENT');
         }
         if (str_starts_with($input, 'OSI')) {
@@ -326,12 +349,14 @@ class AmadeusParser
                 'code' => 'OSI',
                 'text' => $raw,
             ];
+
             return new CommandExecutionResult(["OK OSI {$raw}"], $state, false, 'OSI_ELEMENT');
         }
 
         // 13. FARE QUOTE DISPLAY: FQD
         if (str_starts_with($input, 'FQD')) {
             $res = $this->pricing->handleFQD(substr($input, 3));
+
             return new CommandExecutionResult($res->lines, $state, $res->isError, 'FQD');
         }
 
@@ -345,6 +370,7 @@ class AmadeusParser
             if ($res->tst && $storeTst) {
                 $state['activePnr']['tsts'][] = $res->tst;
             }
+
             return new CommandExecutionResult($res->lines, $state, false, $input);
         }
 
@@ -355,6 +381,7 @@ class AmadeusParser
                 'type' => str_starts_with($fopText, 'CC') ? 'CC' : 'CASH',
                 'details' => $fopText,
             ];
+
             return new CommandExecutionResult(["OK FP {$fopText}"], $state, false, 'FORM_OF_PAYMENT');
         }
 
@@ -362,13 +389,14 @@ class AmadeusParser
         if (str_starts_with($input, 'FM')) {
             $comm = trim(substr($input, 2));
             $state['activePnr']['commission'] = $comm;
+
             return new CommandExecutionResult(["OK FM {$comm}"], $state, false, 'COMMISSION');
         }
 
         // 17. END TRANSACTION: ET, ER
         if ($input === 'ET' || $input === 'ER') {
             $val = $this->pnr->validateMandatoryPrintElements($state['activePnr']);
-            if (!$val->isValid) {
+            if (! $val->isValid) {
                 return new CommandExecutionResult($val->errors, $state, true, 'ET_ERROR');
             }
 
@@ -377,16 +405,23 @@ class AmadeusParser
             }
 
             $rloc = $state['activePnr']['recordLocator'];
+
+            // Authorization check before modifying existing record locator
+            $existingPnr = Pnr::find($rloc);
+            if ($existingPnr && ! $isInstructor && $existingPnr->user_id !== $userId) {
+                return new CommandExecutionResult(["UNAUTHORIZED TO OVERWRITE RECORD LOCATOR: {$rloc}"], $state, true, 'ET_UNAUTHORIZED');
+            }
+
             $office = $state['officeId'] ?? 'LON1A0980';
             $agent = $state['agentId'] ?? '1234AB';
-            $status = !empty($state['activePnr']['tickets']) ? 'TICKETED' : 'CONFIRMED';
+            $status = ! empty($state['activePnr']['tickets']) ? 'TICKETED' : 'CONFIRMED';
 
             // Commit to database
             try {
                 Pnr::updateOrCreate(
                     ['record_locator' => $rloc],
                     [
-                        'user_id' => $userId,
+                        'user_id' => $existingPnr ? $existingPnr->user_id : $userId,
                         'office_id' => $office,
                         'status' => $status,
                         'data_json' => $state['activePnr'],
@@ -405,7 +440,7 @@ class AmadeusParser
             $fltPad = str_pad($firstSeg['flightNumber'], 3, ' ', STR_PAD_LEFT);
             $etLines = [
                 '--- RLR ---',
-                "1." . strtoupper($firstPax['lastName']) . "/" . strtoupper($firstPax['firstName']),
+                '1.'.strtoupper($firstPax['lastName']).'/'.strtoupper($firstPax['firstName']),
                 " 1  {$firstSeg['airlineCode']} {$fltPad} {$firstSeg['bookingClass']} {$firstSeg['departureDate']} {$firstSeg['departureAirport']}{$firstSeg['arrivalAirport']} HK{$firstSeg['seats']}  {$firstSeg['departureTime']} {$firstSeg['arrivalTime']}",
                 "{$office}/{$agent}  {$rloc}",
             ];
@@ -416,17 +451,20 @@ class AmadeusParser
         // 18. IGNORE: IG, IR
         if ($input === 'IG') {
             $state['activePnr'] = $this->pnr->createEmptyPnr($state['officeId'] ?? 'LON1A0980', $state['agentId'] ?? '1234AB');
+
             return new CommandExecutionResult(['IGNORED'], $state, false, 'IG');
         }
         if ($input === 'IR') {
-            if (!empty($state['activePnr']['recordLocator'])) {
+            if (! empty($state['activePnr']['recordLocator'])) {
                 $dbPnr = Pnr::find($state['activePnr']['recordLocator']);
-                if ($dbPnr) {
+                if ($dbPnr && ($isInstructor || $dbPnr->user_id === $userId)) {
                     $state['activePnr'] = $dbPnr->data_json;
+
                     return new CommandExecutionResult($this->pnr->formatPnrDisplay($state['activePnr']), $state, false, 'IR');
                 }
             }
             $state['activePnr'] = $this->pnr->createEmptyPnr($state['officeId'] ?? 'LON1A0980', $state['agentId'] ?? '1234AB');
+
             return new CommandExecutionResult(['IGNORED'], $state, false, 'IR');
         }
 
@@ -439,19 +477,28 @@ class AmadeusParser
             if (strlen($arg) === 6) {
                 $dbPnr = Pnr::find($arg);
                 if ($dbPnr) {
+                    if (! $isInstructor && $dbPnr->user_id !== $userId) {
+                        return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER USER'], $state, true, 'RT_UNAUTHORIZED');
+                    }
                     $state['activePnr'] = $dbPnr->data_json;
+
                     return new CommandExecutionResult($this->pnr->formatPnrDisplay($state['activePnr']), $state, false, 'RT_LOCATOR');
                 }
             }
 
-            // Search by surname
-            $all = Pnr::orderBy('updated_at', 'desc')->limit(50)->get();
+            // Search by surname (restricted to caller's records unless instructor)
+            $query = Pnr::orderBy('updated_at', 'desc');
+            if (! $isInstructor) {
+                $query->where('user_id', $userId);
+            }
+            $all = $query->limit(50)->get();
             foreach ($all as $item) {
                 $p = $item->data_json;
-                if (!empty($p['passengers'])) {
+                if (! empty($p['passengers'])) {
                     foreach ($p['passengers'] as $pax) {
                         if (strtoupper($pax['lastName']) === $arg) {
                             $state['activePnr'] = $p;
+
                             return new CommandExecutionResult($this->pnr->formatPnrDisplay($state['activePnr']), $state, false, 'RT_SURNAME');
                         }
                     }
@@ -463,16 +510,17 @@ class AmadeusParser
 
         // 20. CANCEL ELEMENT / SEGMENT: XE
         if (str_starts_with($input, 'XE')) {
-            $lineNum = (int)trim(substr($input, 2));
+            $lineNum = (int) trim(substr($input, 2));
             if ($lineNum <= 0) {
                 return new CommandExecutionResult(['FORMAT: XE<LINE NUMBER> (E.G. XE 1)'], $state, true, 'XE_ERROR');
             }
 
-            if (!empty($state['activePnr']['segments']) && $lineNum <= count($state['activePnr']['segments'])) {
+            if (! empty($state['activePnr']['segments']) && $lineNum <= count($state['activePnr']['segments'])) {
                 array_splice($state['activePnr']['segments'], $lineNum - 1, 1);
                 foreach ($state['activePnr']['segments'] as $idx => &$s) {
                     $s['segmentNumber'] = $idx + 1;
                 }
+
                 return new CommandExecutionResult(["SEGMENT {$lineNum} CANCELLED"], $state, false, 'XE');
             }
 
@@ -481,16 +529,23 @@ class AmadeusParser
 
         // 21. ISSUE TICKET: TTP
         if ($input === 'TTP') {
+            if (! empty($state['activePnr']['recordLocator'])) {
+                $existingPnr = Pnr::find($state['activePnr']['recordLocator']);
+                if ($existingPnr && ! $isInstructor && $existingPnr->user_id !== $userId) {
+                    return new CommandExecutionResult(["UNAUTHORIZED TO TICKET RECORD: {$state['activePnr']['recordLocator']}"], $state, true, 'TTP_UNAUTHORIZED');
+                }
+            }
+
             $res = $this->ticketing->issueTicketTTP($state['activePnr'], $state['officeId'] ?? 'LON1A0980');
             if ($res->isError) {
                 return new CommandExecutionResult($res->lines, $state, true, 'TTP_ERROR');
             }
 
-            if (!empty($res->tickets)) {
+            if (! empty($res->tickets)) {
                 $state['activePnr']['tickets'] = array_merge($state['activePnr']['tickets'] ?? [], $res->tickets);
                 $state['activePnr']['ticketing'] = ['type' => 'TKOK', 'raw' => 'TKOK'];
 
-                if (!empty($state['activePnr']['recordLocator'])) {
+                if (! empty($state['activePnr']['recordLocator'])) {
                     Pnr::where('record_locator', $state['activePnr']['recordLocator'])->update([
                         'status' => 'TICKETED',
                         'data_json' => $state['activePnr'],
@@ -505,7 +560,49 @@ class AmadeusParser
         if (str_starts_with($input, 'TWD')) {
             $arg = trim(substr($input, 3));
             $res = $this->ticketing->displayTicketTWD($state['activePnr'], $arg ?: null);
+
             return new CommandExecutionResult($res->lines, $state, $res->isError, 'TWD');
+        }
+
+        // 23. QUEUE COMMANDS: QS, QD, QN, QI
+        if ($input === 'QS' || $input === 'QS/ALL') {
+            $office = $state['officeId'] ?? 'LON1A0980';
+            $lines = $this->queue->formatQueueSummaryLines($office, $userId !== 'guest' ? $userId : null);
+
+            return new CommandExecutionResult($lines, $state, false, 'QUEUE_SUMMARY');
+        }
+
+        if (str_starts_with($input, 'QD')) {
+            $office = $state['officeId'] ?? 'LON1A0980';
+            $arg = trim(substr($input, 2));
+            $qNum = is_numeric($arg) ? (int) $arg : 1;
+            $res = $this->queue->displayQueue($qNum, $office, $userId !== 'guest' ? $userId : null);
+
+            return new CommandExecutionResult($res['lines'], $state, false, 'QUEUE_DISPLAY');
+        }
+
+        if ($input === 'QN') {
+            return new CommandExecutionResult(
+                [
+                    'QN - QUEUE NEXT ITEM',
+                    'NO FURTHER PNRS REQUIRING IMMEDIATE ATTENTION IN ACTIVE QUEUE',
+                ],
+                $state,
+                false,
+                'QUEUE_NEXT'
+            );
+        }
+
+        if ($input === 'QI') {
+            return new CommandExecutionResult(
+                [
+                    'QI - EXITED QUEUE WORKING MODE',
+                    'ACTIVE WORK AREA RETURNED TO GENERAL TERMINAL SESSION',
+                ],
+                $state,
+                false,
+                'QUEUE_EXIT'
+            );
         }
 
         // UNRECOGNIZED COMMAND

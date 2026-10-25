@@ -1,0 +1,720 @@
+@extends('layouts.dashboard')
+
+@section('title', 'Instructor Operations Hub - Amadeus GDS Training Platform')
+
+@section('content')
+<div x-data="instructorDashboard()" x-init="init()" class="space-y-6 max-w-7xl mx-auto pb-12">
+
+    <!-- KPI Summary Row -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-[#0b101d] border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div>
+                <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Enrolled Trainees</div>
+                <div class="text-2xl font-black text-white mt-1">{{ count($students) }}</div>
+                <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Live Classroom Active</span>
+                </div>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-950/60 border border-blue-800/60 flex items-center justify-center text-blue-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </div>
+        </div>
+
+        <div class="bg-[#0b101d] border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div>
+                <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Active Drills</div>
+                <div class="text-2xl font-black text-sky-400 mt-1">{{ count($scenarios) }}</div>
+                <div class="text-[11px] text-slate-400 mt-1">Available assignments</div>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-sky-950/60 border border-sky-800/60 flex items-center justify-center text-sky-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            </div>
+        </div>
+
+        <div class="bg-[#0b101d] border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div>
+                <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Submissions</div>
+                <div class="text-2xl font-black text-purple-400 mt-1">{{ count($submissions) }}</div>
+                <div class="text-[11px] text-slate-400 mt-1">Graded & Audited</div>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-purple-950/60 border border-purple-800/60 flex items-center justify-center text-purple-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+        </div>
+
+        <div class="bg-[#0b101d] border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div>
+                <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Queue Bank</div>
+                <div class="text-2xl font-black text-amber-400 mt-1">{{ array_sum(array_column($queueSummary, 'count')) }} PNRs</div>
+                <div class="text-[11px] text-amber-300 mt-1">Simulated agency queues</div>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-950/60 border border-amber-800/60 flex items-center justify-center text-amber-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 1: Live Classroom Overview & Student Grid -->
+    <section id="classroom" class="bg-[#0b101d] border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-slate-800 bg-[#0d1322] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="text-sm font-bold text-white tracking-wide">Live Classroom Grid & Spectator</h2>
+                <p class="text-xs text-slate-400">Real-time status monitoring, keystroke streaming, and student command audits</p>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <input type="text"
+                       x-model="studentFilter"
+                       placeholder="Filter by name, agent..."
+                       class="bg-[#060a14] border border-slate-700 text-white rounded-lg px-3 py-1.5 text-xs outline-none w-48 sm:w-60 focus:border-blue-500 font-mono">
+            </div>
+        </div>
+
+        <!-- Student Cards Grid -->
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <template x-for="st in filteredStudents" :key="st.id">
+                <div class="bg-[#080d19] border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition-all shadow-md">
+                    <div>
+                        <!-- Header: Name, Status Badge -->
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-white uppercase" x-text="st.username.substring(0, 2)"></div>
+                                <div>
+                                    <div class="text-xs font-bold text-white" x-text="st.name || st.username"></div>
+                                    <div class="text-[10px] font-mono text-slate-400" x-text="'Agent: ' + st.agent_id + ' • ' + st.office_id"></div>
+                                </div>
+                            </div>
+
+                            <!-- Live Session Status Badge -->
+                            <span :class="sessionStatusClass(st.status)" class="px-2 py-0.5 rounded text-[10px] font-bold font-mono tracking-wider flex items-center gap-1 uppercase">
+                                <span class="w-1.5 h-1.5 rounded-full" :class="sessionDotClass(st.status)"></span>
+                                <span x-text="st.status"></span>
+                            </span>
+                        </div>
+
+                        <!-- Mini Details -->
+                        <div class="bg-[#050811] p-2.5 rounded-lg border border-slate-800/80 font-mono text-[11px] space-y-1 my-3">
+                            <div class="flex items-center justify-between text-slate-400">
+                                <span>LAST COMMAND:</span>
+                                <span class="text-emerald-400 font-bold truncate max-w-[140px]" x-text="st.last_command"></span>
+                            </div>
+                            <div class="flex items-center justify-between text-slate-400">
+                                <span>LAST ACTIVE:</span>
+                                <span class="text-slate-300" x-text="st.last_active"></span>
+                            </div>
+                            <div class="flex items-center justify-between text-slate-400">
+                                <span>ACTIVE PNR:</span>
+                                <span class="text-sky-400 font-bold" x-text="st.active_pnr_locator || 'NONE'"></span>
+                            </div>
+                            <div class="flex items-center justify-between text-slate-400">
+                                <span>RECENT ERROR RATE:</span>
+                                <span :class="st.error_rate > 30 ? 'text-rose-400 font-bold' : 'text-slate-300'" x-text="st.error_rate + '%'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action: Spectate Button -->
+                    <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                        <span class="text-[10px] text-slate-400" x-text="st.total_commands + ' total cmds • ' + st.submissions_count + ' submissions'"></span>
+                        <button @click="spectateStudent(st.username)" class="px-2.5 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/30 rounded text-xs font-semibold flex items-center gap-1 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            <span>Inspect / Spectate</span>
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </section>
+
+    <!-- Section 2: Scenario & Drill Builder (Form Interface) -->
+    <section id="builder" class="bg-[#0b101d] border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-slate-800 bg-[#0d1322] flex items-center justify-between">
+            <div>
+                <h2 class="text-sm font-bold text-white tracking-wide">Scenario & Drill Builder</h2>
+                <p class="text-xs text-slate-400">Configure new mock booking assignments, passenger profiles, and validation rules</p>
+            </div>
+            <button @click="showBuilderForm = !showBuilderForm" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5">
+                <span x-text="showBuilderForm ? 'Hide Builder Form' : '+ New Scenario'"></span>
+            </button>
+        </div>
+
+        <!-- Builder Form Body (Toggleable) -->
+        <div x-show="showBuilderForm" class="p-6 border-b border-slate-800 bg-[#080d19]">
+            <form @submit.prevent="saveNewScenario()" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-mono text-slate-400 mb-1">SCENARIO ID</label>
+                        <input type="text" x-model="newScenario.id" placeholder="e.g. SCN-MC-05" required class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-2 rounded-lg font-mono outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-slate-400 mb-1">SCENARIO TITLE</label>
+                        <input type="text" x-model="newScenario.title" placeholder="e.g. Open-Jaw Transpacific Booking" required class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-2 rounded-lg outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-slate-400 mb-1">CATEGORY</label>
+                        <select x-model="newScenario.category" class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-2 rounded-lg outline-none focus:border-blue-500">
+                            <option value="Round-trip">Round-trip</option>
+                            <option value="Multi-city">Multi-city</option>
+                            <option value="Infant-in-lap">Infant-in-lap</option>
+                            <option value="Schedule Exchange">Schedule Exchange</option>
+                            <option value="Urgent Ticketing">Urgent Ticketing</option>
+                            <option value="Tariff & Pricing">Tariff & Pricing</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-mono text-slate-400 mb-1">DIFFICULTY LEVEL</label>
+                        <select x-model="newScenario.difficulty" class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-2 rounded-lg outline-none">
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-slate-400 mb-1">TIME LIMIT (MINUTES)</label>
+                        <input type="number" x-model="newScenario.time_limit_minutes" min="5" max="120" required class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-2 rounded-lg font-mono outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-mono text-slate-400 mb-1">SCENARIO DESCRIPTION & INSTRUCTIONS</label>
+                    <textarea x-model="newScenario.description" rows="2" placeholder="Describe the traveler journey, objectives, and any special airline requirements..." required class="w-full bg-[#050811] border border-slate-700 text-white text-xs p-3 rounded-lg outline-none"></textarea>
+                </div>
+
+                <!-- Passenger Profile -->
+                <div class="p-3.5 bg-[#050811] rounded-lg border border-slate-800 space-y-3">
+                    <span class="text-xs font-mono font-bold text-slate-300 block">PASSENGER PROFILE & MANDATORY CRITERIA</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Passenger Name & Title</label>
+                            <input type="text" x-model="newScenario.passengerName" placeholder="e.g. MILLER/DAVID MR" class="w-full bg-[#080d19] border border-slate-700 text-white text-xs px-3 py-1.5 rounded font-mono outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Route & Carrier</label>
+                            <input type="text" x-model="newScenario.route" placeholder="e.g. LHR-DXB on EK" class="w-full bg-[#080d19] border border-slate-700 text-white text-xs px-3 py-1.5 rounded font-mono outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Validation Options</label>
+                            <div class="flex items-center space-x-3 pt-1 text-xs">
+                                <label class="flex items-center space-x-1.5 text-slate-300">
+                                    <input type="checkbox" x-model="newScenario.requireTst" class="rounded bg-slate-900 border-slate-700 text-blue-600">
+                                    <span>Require FXP (TST)</span>
+                                </label>
+                                <label class="flex items-center space-x-1.5 text-slate-300">
+                                    <input type="checkbox" x-model="newScenario.requireETicket" class="rounded bg-slate-900 border-slate-700 text-blue-600">
+                                    <span>Require TTP (Ticket)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" @click="showBuilderForm = false" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs shadow-md transition-colors">Save & Publish Assignment</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Existing Scenarios List -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs font-mono">
+                <thead class="bg-[#131c2e] text-slate-400 uppercase text-[10px]">
+                    <tr>
+                        <th class="px-4 py-2.5">ID</th>
+                        <th class="px-4 py-2.5">Title</th>
+                        <th class="px-4 py-2.5">Category</th>
+                        <th class="px-4 py-2.5">Difficulty</th>
+                        <th class="px-4 py-2.5">Time Limit</th>
+                        <th class="px-4 py-2.5">Created By</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800">
+                    @foreach($scenarios as $sc)
+                        <tr class="hover:bg-[#131c2e]/50">
+                            <td class="px-4 py-2.5 font-bold text-sky-400">{{ $sc->id }}</td>
+                            <td class="px-4 py-2.5 text-white font-sans font-medium">{{ $sc->title }}</td>
+                            <td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px]">{{ $sc->category }}</span></td>
+                            <td class="px-4 py-2.5 text-slate-300">{{ $sc->difficulty }}</td>
+                            <td class="px-4 py-2.5 text-slate-400">{{ $sc->time_limit_minutes }} mins</td>
+                            <td class="px-4 py-2.5 text-slate-500">{{ $sc->created_by }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 3: Submissions & Gradebook -->
+    <section id="gradebook" class="bg-[#0b101d] border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-slate-800 bg-[#0d1322] flex items-center justify-between">
+            <div>
+                <h2 class="text-sm font-bold text-white tracking-wide">Submissions & Gradebook</h2>
+                <p class="text-xs text-slate-400">Automated grading audit results, chronological playback, and score overrides</p>
+            </div>
+            <div class="text-xs text-slate-400 font-mono">
+                Total Submissions: <strong class="text-white">{{ count($submissions) }}</strong>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs font-mono">
+                <thead class="bg-[#131c2e] text-slate-400 uppercase text-[10px]">
+                    <tr>
+                        <th class="px-4 py-2.5">Trainee</th>
+                        <th class="px-4 py-2.5">Scenario</th>
+                        <th class="px-4 py-2.5">Status</th>
+                        <th class="px-4 py-2.5">Auto Score</th>
+                        <th class="px-4 py-2.5">Final Score</th>
+                        <th class="px-4 py-2.5">Submitted</th>
+                        <th class="px-4 py-2.5">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800">
+                    <template x-for="sub in submissions" :key="sub.id">
+                        <tr class="hover:bg-[#131c2e]/50">
+                            <td class="px-4 py-2.5 font-bold text-white" x-text="sub.user_id"></td>
+                            <td class="px-4 py-2.5 text-sky-400" x-text="sub.scenario_id + ' - ' + (sub.scenario?.title || '')"></td>
+                            <td class="px-4 py-2.5">
+                                <span :class="sub.status === 'reviewed' ? 'bg-emerald-950 text-emerald-400 border-emerald-800' : 'bg-amber-950 text-amber-400 border-amber-800'" class="px-2 py-0.5 rounded border text-[10px] font-bold uppercase" x-text="sub.status"></span>
+                            </td>
+                            <td class="px-4 py-2.5 text-slate-300" x-text="sub.score + ' / 100'"></td>
+                            <td class="px-4 py-2.5 font-bold text-emerald-400" x-text="(sub.manual_override_score !== null ? sub.manual_override_score : sub.score) + ' / 100'"></td>
+                            <td class="px-4 py-2.5 text-slate-500" x-text="sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : 'N/A'"></td>
+                            <td class="px-4 py-2.5">
+                                <button @click="openGradeModal(sub)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-[11px] transition-colors">
+                                    Audit & Override
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 4: Simulated Queue & Sandbox Management -->
+    <section id="queues" class="bg-[#0b101d] border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-slate-800 bg-[#0d1322] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="text-sm font-bold text-white tracking-wide">Simulated Queue & Sandbox Management</h2>
+                <p class="text-xs text-slate-400">Broadcast test PNRs directly to student agency queues or reset sandbox environments</p>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button @click="showBroadcastModal = true" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    <span>Broadcast PNR to Queue</span>
+                </button>
+                <button @click="resetSandbox(null)" class="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 border border-rose-800 text-rose-300 rounded-lg text-xs font-bold transition-colors">
+                    Reset Entire Classroom Sandbox
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            @foreach($queueSummary as $q)
+                <div class="bg-[#080d19] border border-slate-800 rounded-xl p-4 flex flex-col justify-between shadow">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="px-2 py-0.5 rounded bg-blue-950 text-sky-400 border border-blue-900 font-mono text-xs font-bold">Queue {{ $q['queueNumber'] }}</span>
+                            <span class="text-lg font-black text-white font-mono">{{ $q['count'] }}</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-white mt-1">{{ $q['name'] }}</h4>
+                        <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">{{ $q['description'] }}</p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800 mt-3 flex items-center justify-between text-[11px] font-mono">
+                        <span class="text-slate-500">Amadeus Entry:</span>
+                        <span class="text-emerald-400 font-bold">QD {{ $q['queueNumber'] }}</span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </section>
+
+    <!-- Student Live Spectate Modal (Command Stream & Playback) -->
+    <div x-show="spectateData" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" style="display: none;">
+        <div @click.away="spectateData = null" class="bg-[#0b101d] border border-slate-800 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+            <!-- Modal Header -->
+            <div class="p-4 border-b border-slate-800 bg-[#0d1322] flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <span>Live Terminal Spectator:</span>
+                            <span class="text-sky-400 font-mono" x-text="spectateData?.student?.name + ' (' + spectateData?.student?.username + ')'"></span>
+                        </h3>
+                        <span class="text-[11px] text-slate-400 font-mono" x-text="'Office: ' + spectateData?.student?.office_id + ' • Agent: ' + spectateData?.student?.agent_id"></span>
+                    </div>
+                </div>
+                <button @click="spectateData = null" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <!-- Terminal Keystroke / Command Stream Timeline -->
+            <div class="p-4 overflow-y-auto flex-1 font-mono text-xs space-y-3 bg-[#050811]">
+                <div class="text-slate-500 text-[11px] pb-2 border-b border-slate-800 flex items-center justify-between">
+                    <span>CHRONOLOGICAL TERMINAL LOG STREAM</span>
+                    <span x-text="(spectateData?.logs?.length || 0) + ' events recorded'"></span>
+                </div>
+
+                <div class="space-y-2">
+                    <template x-for="log in (spectateData?.logs || [])" :key="log.id">
+                        <div class="p-2.5 rounded bg-[#090e1a] border border-slate-800/80">
+                            <div class="flex items-center justify-between text-[11px]">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-slate-500" x-text="'[' + log.timestamp + ']'"></span>
+                                    <span class="font-bold" :class="log.is_error ? 'text-rose-400' : 'text-emerald-400'" x-text="'&gt; ' + log.command"></span>
+                                </div>
+                                <span class="text-[10px] px-1.5 py-0.2 rounded bg-black text-slate-400" x-text="log.command_type"></span>
+                            </div>
+
+                            <!-- Output lines -->
+                            <div class="mt-1.5 pl-3 border-l-2 text-[11px] text-slate-300 space-y-0.5" :class="log.is_error ? 'border-rose-700 text-rose-300' : 'border-slate-700 text-emerald-300/80'">
+                                <template x-for="(line, idx) in (log.output_lines || [])" :key="idx">
+                                    <div class="whitespace-pre" x-text="line"></div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-3 border-t border-slate-800 bg-[#0d1322] flex items-center justify-between text-xs">
+                <span class="text-slate-400">Viewing active keystroke and response playback buffer.</span>
+                <button @click="spectateData = null" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded">Close Stream</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit & Override Modal -->
+    <div x-show="selectedSubModal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" style="display: none;">
+        <div @click.away="selectedSubModal = null" class="bg-[#0b101d] border border-slate-800 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-slate-800 bg-[#0d1322] flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-white">Submission Audit & Manual Score Override</h3>
+                    <div class="text-[11px] font-mono text-slate-400" x-text="'Student: ' + selectedSubModal?.user_id + ' • Scenario: ' + selectedSubModal?.scenario_id"></div>
+                </div>
+                <button @click="selectedSubModal = null" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <div class="p-5 overflow-y-auto space-y-4 text-xs">
+                <!-- Auto Grade Criteria Checklist -->
+                <div class="bg-[#070b14] p-3.5 rounded-lg border border-slate-800 space-y-2">
+                    <span class="font-bold text-white font-mono text-xs block mb-1">AUTOMATED PRINT & SEGMENT VALIDATION RESULTS</span>
+                    <div class="space-y-1.5 font-mono text-[11px]">
+                        <template x-for="chk in (selectedSubModal?.auto_grade_results?.checks || [])" :key="chk.code">
+                            <div class="flex items-center justify-between p-1.5 rounded bg-black/40">
+                                <span class="flex items-center gap-1.5">
+                                    <span :class="chk.passed ? 'text-emerald-400' : 'text-rose-400'" x-text="chk.passed ? '✓' : '✗'"></span>
+                                    <span class="text-slate-200" x-text="chk.name"></span>
+                                </span>
+                                <span :class="chk.passed ? 'text-emerald-400' : 'text-rose-400'" x-text="chk.pointsAwarded + ' / ' + chk.maxPoints + ' pts'"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Score Override Form -->
+                <div class="p-3.5 bg-[#070b14] rounded-lg border border-slate-800 space-y-3">
+                    <span class="font-bold text-white font-mono text-xs block">INSTRUCTOR EVALUATION & OVERRIDE</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Override Score (0 - 100)</label>
+                            <input type="number" min="0" max="100" x-model="overrideScore" class="w-full bg-[#050811] border border-slate-700 text-white font-mono text-xs px-3 py-1.5 rounded outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Inline Instructor Feedback</label>
+                        <textarea rows="3" x-model="instructorFeedback" placeholder="Enter actionable feedback for the trainee..." class="w-full bg-[#050811] border border-slate-700 text-white text-xs p-2.5 rounded outline-none"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-800 bg-[#0d1322] flex items-center justify-end space-x-2">
+                <button @click="selectedSubModal = null" class="px-3.5 py-1.5 bg-slate-800 text-slate-300 rounded text-xs">Cancel</button>
+                <button @click="submitGradeOverride()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs transition-colors">Save Score & Feedback</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Broadcast PNR to Queue Modal -->
+    <div x-show="showBroadcastModal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" style="display: none;">
+        <div @click.away="showBroadcastModal = false" class="bg-[#0b101d] border border-slate-800 rounded-xl max-w-lg w-full flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-slate-800 bg-[#0d1322] flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white">Broadcast Test PNR to Queue</h3>
+                <button @click="showBroadcastModal = false" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <form @submit.prevent="broadcastPnr()" class="p-5 space-y-3.5 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 font-mono mb-1">TARGET QUEUE</label>
+                        <select x-model="broadcastForm.queue_number" class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-2 rounded outline-none font-mono">
+                            <option value="1">Queue 1 - Ticketing Time Limit</option>
+                            <option value="7">Queue 7 - Schedule Changes</option>
+                            <option value="8">Queue 8 - Waitlist Confirmations</option>
+                            <option value="9">Queue 9 - General Messages</option>
+                            <option value="87">Queue 87 - Exchange & Reissue</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-mono mb-1">URGENCY</label>
+                        <select x-model="broadcastForm.urgency" class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-2 rounded outline-none">
+                            <option value="NORMAL">NORMAL</option>
+                            <option value="HIGH">HIGH</option>
+                            <option value="CRITICAL">CRITICAL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 font-mono mb-1">RECORD LOCATOR (6-CHAR)</label>
+                        <input type="text" x-model="broadcastForm.pnr_locator" maxlength="6" placeholder="e.g. M7K2R9" required class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-2 rounded font-mono uppercase outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-mono mb-1">TARGET STUDENT (OR ALL)</label>
+                        <select x-model="broadcastForm.target_user_id" class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-2 rounded outline-none font-mono">
+                            <option value="">Broadcast to All Students</option>
+                            <template x-for="st in students" :key="st.username">
+                                <option :value="st.username" x-text="st.username + ' (' + st.name + ')'"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 font-mono mb-1">PASSENGER NAME & ITINERARY</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" x-model="broadcastForm.passenger" placeholder="e.g. SMITH/JOHN MR" required class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-1.5 rounded font-mono outline-none">
+                        <input type="text" x-model="broadcastForm.itinerary" placeholder="e.g. LHR-JFK (BA 117)" required class="w-full bg-[#050811] border border-slate-700 text-white text-xs px-3 py-1.5 rounded font-mono outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 font-mono mb-1">QUEUE ADVISORY MESSAGE</label>
+                    <textarea rows="2" x-model="broadcastForm.message" placeholder="e.g. TTL EXPIRING IN 1 HOUR. ISSUE TICKET OR AUTO-CANCEL..." required class="w-full bg-[#050811] border border-slate-700 text-white text-xs p-2.5 rounded outline-none"></textarea>
+                </div>
+
+                <div class="p-3 border-t border-slate-800 bg-[#0d1322] flex justify-end space-x-2 -mx-5 -mb-5 mt-4">
+                    <button type="button" @click="showBroadcastModal = false" class="px-4 py-1.5 bg-slate-800 text-slate-300 rounded text-xs">Cancel</button>
+                    <button type="submit" class="px-5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-xs">Broadcast PNR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function instructorDashboard() {
+    const studentsData = @json($students);
+    const submissionsData = @json($submissions);
+
+    return {
+        students: studentsData,
+        submissions: submissionsData,
+        studentFilter: '',
+
+        showBuilderForm: false,
+        newScenario: {
+            id: '',
+            title: '',
+            category: 'Round-trip',
+            difficulty: 'Beginner',
+            time_limit_minutes: 30,
+            description: '',
+            passengerName: '',
+            route: '',
+            requireTst: true,
+            requireETicket: false
+        },
+
+        spectateData: null,
+        selectedSubModal: null,
+        overrideScore: 100,
+        instructorFeedback: '',
+
+        showBroadcastModal: false,
+        broadcastForm: {
+            queue_number: 1,
+            category: 'TICKETING',
+            urgency: 'NORMAL',
+            pnr_locator: '',
+            target_user_id: '',
+            passenger: '',
+            itinerary: '',
+            message: ''
+        },
+
+        init() {},
+
+        get filteredStudents() {
+            if (!this.studentFilter.trim()) return this.students;
+            const q = this.studentFilter.toLowerCase();
+            return this.students.filter(s =>
+                (s.username || '').toLowerCase().includes(q) ||
+                (s.name || '').toLowerCase().includes(q) ||
+                (s.agent_id || '').toLowerCase().includes(q)
+            );
+        },
+
+        sessionStatusClass(status) {
+            switch (status) {
+                case 'In Terminal': return 'bg-sky-950 text-sky-400 border border-sky-800';
+                case 'Online': return 'bg-emerald-950 text-emerald-400 border border-emerald-800';
+                case 'Error Loop': return 'bg-rose-950 text-rose-400 border border-rose-800 animate-pulse';
+                default: return 'bg-slate-800 text-slate-400 border border-slate-700';
+            }
+        },
+
+        sessionDotClass(status) {
+            switch (status) {
+                case 'In Terminal': return 'bg-sky-400';
+                case 'Online': return 'bg-emerald-400';
+                case 'Error Loop': return 'bg-rose-400';
+                default: return 'bg-slate-500';
+            }
+        },
+
+        async spectateStudent(username) {
+            try {
+                const res = await fetch(`/api/instructor/spectate/${username}`);
+                if (!res.ok) throw new Error('Failed to load spectate data');
+                this.spectateData = await res.json();
+            } catch (e) {
+                alert('Could not spectate student: ' + e.message);
+            }
+        },
+
+        openGradeModal(sub) {
+            this.selectedSubModal = sub;
+            this.overrideScore = sub.manual_override_score !== null ? sub.manual_override_score : sub.score;
+            this.instructorFeedback = sub.instructor_feedback || '';
+        },
+
+        async submitGradeOverride() {
+            if (!this.selectedSubModal) return;
+
+            try {
+                const res = await fetch(`/api/instructor/submissions/${this.selectedSubModal.id}/grade`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        score: parseInt(this.overrideScore, 10),
+                        feedback: this.instructorFeedback
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    this.selectedSubModal.manual_override_score = data.submission.manual_override_score;
+                    this.selectedSubModal.instructor_feedback = data.submission.instructor_feedback;
+                    this.selectedSubModal.status = 'reviewed';
+                    this.selectedSubModal = null;
+                    alert('Grade override and instructor feedback saved!');
+                }
+            } catch (e) {
+                alert('Failed to save score override.');
+            }
+        },
+
+        async saveNewScenario() {
+            const payload = {
+                id: this.newScenario.id.toUpperCase(),
+                title: this.newScenario.title,
+                category: this.newScenario.category,
+                difficulty: this.newScenario.difficulty,
+                time_limit_minutes: parseInt(this.newScenario.time_limit_minutes, 10),
+                description: this.newScenario.description,
+                passenger_profile: {
+                    names: [{ lastName: this.newScenario.passengerName || 'SMITH/JOHN MR', firstName: '', title: 'MR', type: 'ADT' }],
+                    contactPhone: 'LON 44-20-7111-2222-A'
+                },
+                flight_segments: [
+                    { origin: 'LHR', destination: 'JFK', date: '15NOV', airline: 'BA' }
+                ],
+                validation_criteria: {
+                    mandatoryPrint: { name: true, itinerary: true, contact: true, ticketing: true, receivedFrom: true },
+                    minSegments: 1,
+                    requireTst: this.newScenario.requireTst,
+                    requireETicket: this.newScenario.requireETicket
+                }
+            };
+
+            try {
+                const res = await fetch('/api/instructor/scenarios', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert('New booking scenario published to students successfully!');
+                    window.location.reload();
+                }
+            } catch (e) {
+                alert('Failed to publish scenario.');
+            }
+        },
+
+        async broadcastPnr() {
+            try {
+                const res = await fetch('/api/instructor/queues/broadcast', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(this.broadcastForm)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert(`PNR ${this.broadcastForm.pnr_locator} broadcasted to Queue ${this.broadcastForm.queue_number}!`);
+                    this.showBroadcastModal = false;
+                    window.location.reload();
+                }
+            } catch (e) {
+                alert('Failed to broadcast PNR to queue.');
+            }
+        },
+
+        async resetSandbox(studentUsername) {
+            if (!confirm(studentUsername ? `Reset sandbox for ${studentUsername}?` : 'Are you sure you want to reset the entire classroom sandbox? All pending queue items and logs will be purged.')) {
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/instructor/sandbox/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ target_user_id: studentUsername })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                }
+            } catch (e) {
+                alert('Sandbox reset failed.');
+            }
+        }
+    };
+}
+</script>
+@endsection

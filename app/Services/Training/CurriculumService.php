@@ -2,8 +2,6 @@
 
 namespace App\Services\Training;
 
-use App\Models\LessonProgress;
-
 class CurriculumService
 {
     public function getModules(): array
@@ -415,44 +413,45 @@ class CurriculumService
                 }
             }
         }
+
         return null;
     }
 
     public function validateObjective(string $command, array $outputLines, ?array $pnr, array $validate): bool
     {
         // 1. Check command regex pattern
-        if (!empty($validate['commandPattern'])) {
-            if (!preg_match("/{$validate['commandPattern']}/i", trim($command))) {
+        if (! empty($validate['commandPattern'])) {
+            if (! preg_match("/{$validate['commandPattern']}/i", trim($command))) {
                 return false;
             }
         }
 
         // 2. Check expected output contains
-        if (!empty($validate['expectedOutputContains'])) {
+        if (! empty($validate['expectedOutputContains'])) {
             $fullOutput = strtoupper(implode(' ', $outputLines));
             foreach ($validate['expectedOutputContains'] as $str) {
-                if (!str_contains($fullOutput, strtoupper($str))) {
+                if (! str_contains($fullOutput, strtoupper($str))) {
                     return false;
                 }
             }
         }
 
         // 3. Check PNR state
-        if (!empty($validate['pnrCheck'])) {
+        if (! empty($validate['pnrCheck'])) {
             $check = $validate['pnrCheck'];
             $pass = match ($check) {
                 'has_segments' => count($pnr['segments'] ?? []) >= 1,
-                'has_doe_john' => !empty($pnr['passengers']) && array_filter($pnr['passengers'], fn($p) => ($p['lastName'] ?? '') === 'DOE' && ($p['firstName'] ?? '') === 'JOHN'),
+                'has_doe_john' => ! empty($pnr['passengers']) && array_filter($pnr['passengers'], fn ($p) => ($p['lastName'] ?? '') === 'DOE' && ($p['firstName'] ?? '') === 'JOHN'),
                 'has_contacts' => count($pnr['contacts'] ?? []) >= 1,
-                'has_ticketing' => !empty($pnr['ticketing']),
-                'has_rf' => !empty($pnr['receivedFrom']),
-                'has_locator' => !empty($pnr['recordLocator']),
+                'has_ticketing' => ! empty($pnr['ticketing']),
+                'has_rf' => ! empty($pnr['receivedFrom']),
+                'has_locator' => ! empty($pnr['recordLocator']),
                 'has_tst' => count($pnr['tsts'] ?? []) >= 1,
                 'has_fop_cash' => ($pnr['fop']['details'] ?? '') === 'CASH',
                 'has_tickets' => count($pnr['tickets'] ?? []) >= 1,
                 default => true,
             };
-            if (!$pass) {
+            if (! $pass) {
                 return false;
             }
         }

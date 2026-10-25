@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Pnr extends Model
 {
     protected $primaryKey = 'record_locator';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

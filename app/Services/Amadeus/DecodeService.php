@@ -44,8 +44,8 @@ class DecodeService
             if ($ap) {
                 return new DecodeResult([
                     "AIRPORT/CITY DECODE FOR: {$clean}",
-                    "{$ap->iata}  " . str_pad($ap->icao ?? '', 5) . " " . strtoupper($ap->name),
-                    "     CITY: " . strtoupper($ap->city) . "   COUNTRY: " . strtoupper($ap->country),
+                    "{$ap->iata}  ".str_pad($ap->icao ?? '', 5).' '.strtoupper($ap->name),
+                    '     CITY: '.strtoupper($ap->city).'   COUNTRY: '.strtoupper($ap->country),
                     "     TIMEZONE: {$ap->tz}",
                 ]);
             }
@@ -60,17 +60,23 @@ class DecodeService
             $lines = [
                 "METROPOLITAN AREA DECODE FOR: {$clean}",
                 "CITY: {$city} (MULTI-AIRPORT METRO)",
-                "AIRPORTS SERVING THIS AREA:",
+                'AIRPORTS SERVING THIS AREA:',
             ];
             foreach ($airports as $ap) {
-                $lines[] = "  {$ap->iata}  " . str_pad($ap->icao ?? '', 5) . " " . strtoupper($ap->name);
+                $lines[] = "  {$ap->iata}  ".str_pad($ap->icao ?? '', 5).' '.strtoupper($ap->name);
             }
+
             return new DecodeResult($lines);
         }
 
+        $escaped = addcslashes($clean, '%_');
+        if (strlen(trim($clean, '%_ ')) < 2) {
+            return new DecodeResult(['MINIMUM 2 CHARACTERS REQUIRED FOR LOCATION SEARCH'], true);
+        }
+
         // Search by city or airport name
-        $matches = Airport::where('city', 'like', "%{$clean}%")
-            ->orWhere('name', 'like', "%{$clean}%")
+        $matches = Airport::where('city', 'like', "%{$escaped}%")
+            ->orWhere('name', 'like', "%{$escaped}%")
             ->limit(12)
             ->get();
 
@@ -80,8 +86,8 @@ class DecodeService
 
         $lines = [
             "LOCATION ENCODE/DECODE FOR: {$clean}",
-            "CODE  ICAO   CITY             AIRPORT NAME",
-            "------------------------------------------------------------",
+            'CODE  ICAO   CITY             AIRPORT NAME',
+            '------------------------------------------------------------',
         ];
 
         foreach ($matches as $ap) {
@@ -112,18 +118,24 @@ class DecodeService
             if ($al) {
                 $lines = [
                     "AIRLINE DECODE FOR: {$clean}",
-                    "IATA: {$al->iata}   ICAO: " . str_pad($al->icao ?? '', 4) . " TICKET PREFIX: {$al->ticket_prefix}",
-                    "NAME: " . strtoupper($al->name),
-                    "COUNTRY: " . strtoupper($al->country ?: 'UNKNOWN'),
+                    "IATA: {$al->iata}   ICAO: ".str_pad($al->icao ?? '', 4)." TICKET PREFIX: {$al->ticket_prefix}",
+                    'NAME: '.strtoupper($al->name),
+                    'COUNTRY: '.strtoupper($al->country ?: 'UNKNOWN'),
                 ];
                 if ($al->callsign) {
-                    $lines[] = "CALLSIGN: " . strtoupper($al->callsign);
+                    $lines[] = 'CALLSIGN: '.strtoupper($al->callsign);
                 }
+
                 return new DecodeResult($lines);
             }
         }
 
-        $matches = Airline::where('name', 'like', "%{$clean}%")
+        $escaped = addcslashes($clean, '%_');
+        if (strlen(trim($clean, '%_ ')) < 2) {
+            return new DecodeResult(['MINIMUM 2 CHARACTERS REQUIRED FOR AIRLINE SEARCH'], true);
+        }
+
+        $matches = Airline::where('name', 'like', "%{$escaped}%")
             ->orWhere('iata', $clean)
             ->orWhere('icao', $clean)
             ->limit(10)
@@ -135,14 +147,14 @@ class DecodeService
 
         $lines = [
             "AIRLINE ENCODE/DECODE FOR: {$clean}",
-            "IATA  ICAO  NUM   AIRLINE NAME",
-            "------------------------------------------------------------",
+            'IATA  ICAO  NUM   AIRLINE NAME',
+            '------------------------------------------------------------',
         ];
 
         foreach ($matches as $al) {
-            $lines[] = str_pad($al->iata, 6) .
-                str_pad($al->icao ?? '', 6) .
-                str_pad($al->ticket_prefix ?? '', 6) .
+            $lines[] = str_pad($al->iata, 6).
+                str_pad($al->icao ?? '', 6).
+                str_pad($al->ticket_prefix ?? '', 6).
                 substr(strtoupper($al->name), 0, 40);
         }
 
@@ -161,25 +173,31 @@ class DecodeService
             return new DecodeResult([
                 "EQUIPMENT DECODE FOR: {$clean}",
                 "CODE: {$eq->code}",
-                "AIRCRAFT: " . strtoupper($eq->name),
-                "MANUFACTURER: " . strtoupper($eq->manufacturer),
+                'AIRCRAFT: '.strtoupper($eq->name),
+                'MANUFACTURER: '.strtoupper($eq->manufacturer),
                 "CATEGORY: {$eq->category}",
             ]);
         }
 
-        $matches = Aircraft::where('name', 'like', "%{$clean}%")
-            ->orWhere('code', 'like', "%{$clean}%")
+        $escaped = addcslashes($clean, '%_');
+        if (strlen(trim($clean, '%_ ')) < 2) {
+            return new DecodeResult(['MINIMUM 2 CHARACTERS REQUIRED FOR EQUIPMENT SEARCH'], true);
+        }
+
+        $matches = Aircraft::where('name', 'like', "%{$escaped}%")
+            ->orWhere('code', 'like', "%{$escaped}%")
             ->get();
 
         if ($matches->isNotEmpty()) {
             $lines = [
                 "EQUIPMENT ENCODE/DECODE FOR: {$clean}",
-                "CODE   AIRCRAFT TYPE             CATEGORY",
-                "----------------------------------------------------",
+                'CODE   AIRCRAFT TYPE             CATEGORY',
+                '----------------------------------------------------',
             ];
             foreach ($matches as $a) {
-                $lines[] = str_pad($a->code, 7) . str_pad($a->name, 26) . $a->category;
+                $lines[] = str_pad($a->code, 7).str_pad($a->name, 26).$a->category;
             }
+
             return new DecodeResult($lines);
         }
 
