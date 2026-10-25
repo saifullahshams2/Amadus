@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✈️ Amadeus GDS Training Simulator (1A) - Laravel Edition
+# ✈️ Amadeus GDS Training Simulator (1A)
 
 **A high-fidelity, browser-based Amadeus Global Distribution System (GDS) simulator built for aviation academies, ticketing agents, travel agencies, and students.**
 
