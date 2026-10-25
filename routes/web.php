@@ -17,7 +17,7 @@ Route::get('/install/requirements', [InstallerController::class, 'requirements']
 Route::get('/', [TerminalController::class, 'index'])->name('terminal.index');
 Route::post('/terminal/execute', [TerminalController::class, 'execute'])->name('terminal.execute')->middleware('throttle:60,1,terminal');
 
-// Dual-Role Dashboard & Demo Role Switcher
+// Unified Role-Secured Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::post('/dashboard/switch-role', [DashboardController::class, 'switchRole'])->name('dashboard.switch-role');
 
@@ -27,7 +27,12 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1,login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/instructor', [InstructorController::class, 'index'])->name('instructor.index');
+// Web Instructor Operations (Strictly restricted to instructors)
+Route::middleware('instructor')->group(function () {
+    Route::get('/instructor', [InstructorController::class, 'index'])->name('instructor.index');
+    Route::post('/instructor/students', [InstructorController::class, 'storeStudent'])->name('instructor.students.store');
+    Route::delete('/instructor/scenarios/{id}', [DashboardController::class, 'deleteScenario'])->name('instructor.scenarios.destroy');
+});
 
 // API Routes (Identical contract to Next.js API for tests & client integrations)
 Route::prefix('api')->group(function () {
@@ -45,17 +50,21 @@ Route::prefix('api')->group(function () {
         Route::post('/training/progress', [TrainingController::class, 'saveProgress']);
     });
 
-    Route::get('/instructor/students', [InstructorController::class, 'studentsApi']);
-
     // Dual-Role Dashboard APIs
     Route::get('/dashboard/active-pnr', [DashboardController::class, 'getActivePnrApi']);
     Route::post('/dashboard/validate-syntax', [DashboardController::class, 'validateSyntaxApi']);
     Route::post('/dashboard/scenarios/{id}/submit', [DashboardController::class, 'submitScenarioApi']);
 
-    // Instructor Hub APIs
-    Route::get('/instructor/spectate/{username}', [DashboardController::class, 'spectateStudentApi']);
-    Route::post('/instructor/scenarios', [DashboardController::class, 'createScenarioApi']);
-    Route::post('/instructor/submissions/{id}/grade', [DashboardController::class, 'gradeSubmissionApi']);
-    Route::post('/instructor/queues/broadcast', [DashboardController::class, 'broadcastQueueApi']);
-    Route::post('/instructor/sandbox/reset', [DashboardController::class, 'resetSandboxApi']);
+    // Instructor Hub APIs (Strictly restricted to instructors)
+    Route::middleware('instructor')->prefix('instructor')->group(function () {
+        Route::get('/students', [InstructorController::class, 'studentsApi']);
+        Route::post('/students', [InstructorController::class, 'storeStudent']);
+        Route::post('/students/batch', [InstructorController::class, 'batchStoreStudents']);
+        Route::get('/spectate/{username}', [DashboardController::class, 'spectateStudentApi']);
+        Route::post('/scenarios', [DashboardController::class, 'createScenarioApi']);
+        Route::delete('/scenarios/{id}', [DashboardController::class, 'deleteScenario']);
+        Route::post('/submissions/{id}/grade', [DashboardController::class, 'gradeSubmissionApi']);
+        Route::post('/queues/broadcast', [DashboardController::class, 'broadcastQueueApi']);
+        Route::post('/sandbox/reset', [DashboardController::class, 'resetSandboxApi']);
+    });
 });

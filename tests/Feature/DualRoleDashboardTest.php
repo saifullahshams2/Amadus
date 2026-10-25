@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Pnr;
 use App\Models\QueueItem;
+use App\Models\Scenario;
 use App\Models\Submission;
 use App\Models\TerminalActivityLog;
 use App\Models\User;
@@ -30,7 +31,9 @@ class DualRoleDashboardTest extends TestCase
         $response->assertSee('Syntax Accuracy');
         $response->assertSee('Current Active PNR Status');
         $response->assertSeeText('Assigned Booking Scenarios & Drills');
-        $response->assertSee('Amadeus Cryptic Cheat Sheet');
+        $response->assertSee('Interactive Cryptic Entry Validator');
+        $response->assertDontSee('Amadeus Cryptic Cheat Sheet');
+        $response->assertDontSee('Essential entries by operational domain');
     }
 
     public function test_02_instructor_dashboard_renders_successfully(): void
@@ -44,6 +47,8 @@ class DualRoleDashboardTest extends TestCase
         $response->assertSeeText('Scenario & Drill Builder');
         $response->assertSeeText('Submissions & Gradebook');
         $response->assertSeeText('Simulated Queue & Sandbox Management');
+        $response->assertDontSee('Amadeus Cryptic Cheat Sheet');
+        $response->assertDontSee('Essential entries by operational domain');
     }
 
     public function test_03_dev_demo_role_switcher_redirects_and_updates_role(): void
@@ -318,5 +323,50 @@ class DualRoleDashboardTest extends TestCase
         $resetRes->assertStatus(200);
         $resetRes->assertJson(['success' => true]);
         $this->assertDatabaseMissing('queue_items', ['pnr_locator' => 'DEL123']);
+    }
+
+    public function test_12_instructor_can_delete_scenario_and_drill(): void
+    {
+        $instructor = User::where('role', 'instructor')->first();
+
+        // 1. Create a drill with submission
+        $scenario = Scenario::create([
+            'id' => 'SCN-DELETE-ME',
+            'title' => 'Temporary Drill To Remove',
+            'category' => 'Round-trip',
+            'difficulty' => 'Beginner',
+            'description' => 'Test scenario deletion.',
+            'time_limit_minutes' => 15,
+            'passenger_profile' => ['names' => []],
+            'flight_segments' => [],
+            'validation_criteria' => ['minSegments' => 1],
+            'created_by' => 'instructor',
+        ]);
+
+        Submission::create([
+            'scenario_id' => 'SCN-DELETE-ME',
+            'user_id' => 'student',
+            'status' => 'submitted',
+            'score' => 85,
+        ]);
+
+        $this->assertDatabaseHas('scenarios', ['id' => 'SCN-DELETE-ME']);
+        $this->assertDatabaseHas('submissions', ['scenario_id' => 'SCN-DELETE-ME']);
+
+        // 2. Instructor deletes the scenario
+        $deleteRes = $this->actingAs($instructor)->deleteJson('/api/instructor/scenarios/SCN-DELETE-ME');
+        $deleteRes->assertStatus(200);
+        $deleteRes->assertJson([
+            'success' => true,
+            'deleted_id' => 'SCN-DELETE-ME',
+        ]);
+
+        // 3. Confirm scenario and related submissions are removed
+        $this->assertDatabaseMissing('scenarios', ['id' => 'SCN-DELETE-ME']);
+        $this->assertDatabaseMissing('submissions', ['scenario_id' => 'SCN-DELETE-ME']);
+
+        // 4. Deleting again returns 404
+        $repeatDeleteRes = $this->actingAs($instructor)->deleteJson('/api/instructor/scenarios/SCN-DELETE-ME');
+        $repeatDeleteRes->assertStatus(404);
     }
 }

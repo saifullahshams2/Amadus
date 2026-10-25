@@ -228,8 +228,8 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
                     <span>Open Full Practice Terminal</span>
                 </a>
-                <a href="#cheatsheet" class="w-full py-2 px-4 bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 font-semibold text-xs rounded-lg border border-slate-700 flex items-center justify-center gap-1.5 transition-colors">
-                    <span>Open Command Cheat Sheet</span>
+                <a href="#validator" class="w-full py-2 px-4 bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 font-semibold text-xs rounded-lg border border-slate-700 flex items-center justify-center gap-1.5 transition-colors">
+                    <span>Open Syntax Validator</span>
                 </a>
             </div>
         </div>
@@ -294,109 +294,79 @@
         </div>
     </section>
 
-    <!-- Section 4: Interactive Command Reference Cheat Sheet & Live Syntax Validator -->
-    <section id="cheatsheet" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Live Syntax Validator & Error Summary -->
-        <div class="bg-[#0b101d] border border-slate-800 rounded-xl p-5 flex flex-col justify-between shadow-xl space-y-4">
-            <div>
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                    <div>
-                        <h2 class="text-sm font-bold text-white tracking-wide">Interactive Cryptic Entry Validator</h2>
-                        <p class="text-xs text-slate-400">Test and validate any Amadeus cryptic entry in real-time</p>
-                    </div>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-950 text-sky-400 border border-sky-800">SANDBOX TESTER</span>
-                </div>
-
-                <!-- Input Field -->
-                <div class="space-y-2">
-                    <label class="block text-xs font-mono text-slate-300">ENTER AMADEUS CRYPTIC COMMAND:</label>
-                    <div class="relative">
-                        <input type="text"
-                               x-model="validatorInput"
-                               @input.debounce.300ms="validateCommand()"
-                               placeholder="e.g. AN15NOVLHRJFK, NM1SMITH/JOHN MR, TKTL15NOV..."
-                               class="w-full bg-[#060a14] border border-slate-700 text-emerald-400 font-mono text-xs px-3.5 py-2.5 rounded-lg outline-none focus:border-blue-500 transition-colors uppercase">
-                    </div>
-                </div>
-
-                <!-- Live Validation Feedback Box -->
-                <div class="mt-4 p-3.5 rounded-lg border text-xs font-mono transition-all"
-                     :class="validationResult.isValid ? 'bg-emerald-950/30 border-emerald-800/80 text-emerald-300' : (validatorInput.trim() ? 'bg-rose-950/30 border-rose-800/80 text-rose-300' : 'bg-[#080d19] border-slate-800 text-slate-400')">
-                    <div class="flex items-center justify-between mb-1.5 font-bold">
-                        <div class="flex items-center gap-1.5">
-                            <span :class="validationResult.isValid ? 'bg-emerald-500' : (validatorInput.trim() ? 'bg-rose-500' : 'bg-slate-600')" class="w-2 h-2 rounded-full"></span>
-                            <span x-text="validationResult.isValid ? 'VALID AMADEUS SYNTAX' : (validatorInput.trim() ? 'SYNTAX ERROR / INCOMPLETE' : 'AWAITING INPUT')"></span>
-                        </div>
-                        <span class="text-[10px] px-1.5 py-0.2 rounded bg-black/40 text-slate-400 font-sans uppercase" x-text="validationResult.category || 'GENERAL'"></span>
-                    </div>
-                    <p class="font-sans text-[11px] leading-relaxed text-slate-300" x-text="validationResult.explanation"></p>
-                    <template x-if="validationResult.correctionHint">
-                        <div class="mt-2 pt-2 border-t border-slate-800/60 text-amber-300 text-[11px] font-sans">
-                            <strong class="text-amber-400 font-mono">CORRECTION HINT:</strong> <span x-text="validationResult.correctionHint"></span>
-                        </div>
-                    </template>
-                    <template x-if="validationResult.example">
-                        <div class="mt-1 text-slate-400 text-[10px]">
-                            Example: <span class="text-sky-300 font-bold" x-text="validationResult.example"></span>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <!-- Recent Syntax Errors & Hints Summary -->
-            <div class="border-t border-slate-800 pt-3">
-                <h3 class="text-xs font-bold text-slate-300 mb-2 flex items-center justify-between">
-                    <span>Recent Syntax Mistakes & Correction Hints</span>
-                    <span class="text-[10px] font-mono text-slate-500">AUDIT LOG</span>
-                </h3>
-                <div class="space-y-1.5">
-                    @forelse($analytics['recentErrors'] as $err)
-                        <div class="p-2 rounded bg-[#070b14] border border-slate-800/80 text-[11px]">
-                            <div class="flex items-center justify-between font-mono">
-                                <span class="text-rose-400 font-bold">&gt; {{ $err['command'] }}</span>
-                                <span class="text-slate-500 text-[10px]">{{ $err['time'] }}</span>
-                            </div>
-                            <div class="text-slate-400 text-[10px] mt-0.5">
-                                <strong class="text-amber-400">Action:</strong> {{ $err['hint'] }}
-                            </div>
-                        </div>
-                    @empty
-                        <div class="text-slate-500 text-[11px] italic py-1">No recent syntax errors logged. Excellent accuracy!</div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-
-        <!-- Filterable Command Cheat Sheet -->
-        <div class="bg-[#0b101d] border border-slate-800 rounded-xl overflow-hidden shadow-xl flex flex-col">
-            <div class="px-5 py-3.5 border-b border-slate-800 bg-[#0d1322] flex items-center justify-between">
+    <!-- Section 4: Live Syntax Validator & Error Log -->
+    <section id="validator" class="bg-[#0b101d] border border-slate-800 rounded-xl p-5 shadow-xl space-y-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Column: Interactive Cryptic Entry Validator -->
+            <div class="flex flex-col justify-between space-y-4">
                 <div>
-                    <h2 class="text-sm font-bold text-white tracking-wide">Amadeus Cryptic Cheat Sheet</h2>
-                    <p class="text-xs text-slate-400">Essential entries by operational domain</p>
-                </div>
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-white tracking-wide">Interactive Cryptic Entry Validator</h2>
+                            <p class="text-xs text-slate-400">Test and validate any Amadeus cryptic entry in real-time</p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-950 text-sky-400 border border-sky-800">SANDBOX TESTER</span>
+                    </div>
 
-                <!-- Tabs -->
-                <div class="flex items-center space-x-1 bg-[#060a14] p-1 rounded-lg border border-slate-800 text-[11px] font-semibold">
-                    <button @click="cheatCategory = 'Availability'" :class="cheatCategory === 'Availability' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'" class="px-2 py-0.5 rounded">Avail</button>
-                    <button @click="cheatCategory = 'PNR Elements'" :class="cheatCategory === 'PNR Elements' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'" class="px-2 py-0.5 rounded">PRINT</button>
-                    <button @click="cheatCategory = 'Pricing'" :class="cheatCategory === 'Pricing' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'" class="px-2 py-0.5 rounded">Pricing</button>
-                    <button @click="cheatCategory = 'Ticketing'" :class="cheatCategory === 'Ticketing' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'" class="px-2 py-0.5 rounded">Ticketing</button>
-                    <button @click="cheatCategory = 'Queues'" :class="cheatCategory === 'Queues' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'" class="px-2 py-0.5 rounded">Queues</button>
+                    <!-- Input Field -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-mono text-slate-300">ENTER AMADEUS CRYPTIC COMMAND:</label>
+                        <div class="relative">
+                            <input type="text"
+                                   x-model="validatorInput"
+                                   @input.debounce.300ms="validateCommand()"
+                                   placeholder="e.g. AN15NOVLHRJFK, NM1SMITH/JOHN MR, TKTL15NOV..."
+                                   class="w-full bg-[#060a14] border border-slate-700 text-emerald-400 font-mono text-xs px-3.5 py-2.5 rounded-lg outline-none focus:border-blue-500 transition-colors uppercase">
+                        </div>
+                    </div>
+
+                    <!-- Live Validation Feedback Box -->
+                    <div class="mt-4 p-3.5 rounded-lg border text-xs font-mono transition-all"
+                         :class="validationResult.isValid ? 'bg-emerald-950/30 border-emerald-800/80 text-emerald-300' : (validatorInput.trim() ? 'bg-rose-950/30 border-rose-800/80 text-rose-300' : 'bg-[#080d19] border-slate-800 text-slate-400')">
+                        <div class="flex items-center justify-between mb-1.5 font-bold">
+                            <div class="flex items-center gap-1.5">
+                                <span :class="validationResult.isValid ? 'bg-emerald-500' : (validatorInput.trim() ? 'bg-rose-500' : 'bg-slate-600')" class="w-2 h-2 rounded-full"></span>
+                                <span x-text="validationResult.isValid ? 'VALID AMADEUS SYNTAX' : (validatorInput.trim() ? 'SYNTAX ERROR / INCOMPLETE' : 'AWAITING INPUT')"></span>
+                            </div>
+                            <span class="text-[10px] px-1.5 py-0.2 rounded bg-black/40 text-slate-400 font-sans uppercase" x-text="validationResult.category || 'GENERAL'"></span>
+                        </div>
+                        <p class="font-sans text-[11px] leading-relaxed text-slate-300" x-text="validationResult.explanation"></p>
+                        <template x-if="validationResult.correctionHint">
+                            <div class="mt-2 pt-2 border-t border-slate-800/60 text-amber-300 text-[11px] font-sans">
+                                <strong class="text-amber-400 font-mono">CORRECTION HINT:</strong> <span x-text="validationResult.correctionHint"></span>
+                            </div>
+                        </template>
+                        <template x-if="validationResult.example">
+                            <div class="mt-1 text-slate-400 text-[10px]">
+                                Example: <span class="text-sky-300 font-bold" x-text="validationResult.example"></span>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
 
-            <!-- Cheat Sheet Items Table -->
-            <div class="p-4 flex-1 overflow-y-auto max-h-[380px]">
-                <div class="space-y-2">
-                    <template x-for="(item, idx) in cheatSheet[cheatCategory]" :key="idx">
-                        <div class="p-2.5 rounded-lg bg-[#070b14] border border-slate-800/80 hover:border-slate-700 transition-colors">
-                            <div class="flex items-center justify-between font-mono text-xs">
-                                <span class="px-2 py-0.5 rounded bg-blue-950 text-sky-400 border border-blue-900/60 font-bold" x-text="item.syntax"></span>
-                                <span class="text-[10px] text-slate-400">e.g. <strong class="text-slate-300" x-text="item.example"></strong></span>
+            <!-- Right Column: Recent Syntax Errors & Hints Summary -->
+            <div class="flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 pt-4 lg:pt-0 lg:pl-6">
+                <div>
+                    <h3 class="text-xs font-bold text-slate-300 mb-2 flex items-center justify-between pb-3 border-b border-slate-800">
+                        <span>Recent Syntax Mistakes & Correction Hints</span>
+                        <span class="text-[10px] font-mono text-slate-500">AUDIT LOG</span>
+                    </h3>
+                    <div class="space-y-2 mt-3">
+                        @forelse($analytics['recentErrors'] as $err)
+                            <div class="p-2.5 rounded bg-[#070b14] border border-slate-800/80 text-[11px]">
+                                <div class="flex items-center justify-between font-mono">
+                                    <span class="text-rose-400 font-bold">&gt; {{ $err['command'] }}</span>
+                                    <span class="text-slate-500 text-[10px]">{{ $err['time'] }}</span>
+                                </div>
+                                <div class="text-slate-400 text-[10px] mt-1">
+                                    <strong class="text-amber-400">Action:</strong> {{ $err['hint'] }}
+                                </div>
                             </div>
-                            <p class="text-xs text-slate-300 mt-1 font-sans" x-text="item.desc"></p>
-                        </div>
-                    </template>
+                        @empty
+                            <div class="text-slate-500 text-[11px] italic py-4 text-center">No recent syntax errors logged. Excellent accuracy!</div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>
@@ -534,13 +504,11 @@
 <script>
 function studentDashboard() {
     const scenariosData = @json($scenarios);
-    const cheatSheetData = @json($commandCheatSheet);
     const analyticsData = @json($analytics);
     const initialPnr = @json($activePnr);
 
     return {
         scenarios: scenariosData,
-        cheatSheet: cheatSheetData,
         analytics: analyticsData,
         activePnr: initialPnr ? {
             recordLocator: initialPnr.record_locator,
@@ -556,7 +524,6 @@ function studentDashboard() {
         } : null,
 
         selectedCategory: 'ALL',
-        cheatCategory: 'Availability',
         validatorInput: '',
         validationResult: {
             isValid: false,

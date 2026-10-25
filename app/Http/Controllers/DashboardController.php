@@ -30,27 +30,36 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Support demo/dev role query or session toggle
-        $requestedRole = $request->query('role') ?? $request->session()->get('demo_role');
+        // 1. Strict separation: Authenticated students are strictly restricted to student dashboard
+        if ($user && $user->role === 'student') {
+            if ($request->query('role') === 'instructor') {
+                abort(403, 'Forbidden. Students cannot access the instructor dashboard.');
+            }
 
-        if ($requestedRole && in_array($requestedRole, ['student', 'instructor'], true)) {
-            $activeRole = $requestedRole;
-            $request->session()->put('demo_role', $activeRole);
-        } else {
-            $activeRole = $user?->role ?? 'student';
-            $request->session()->put('demo_role', $activeRole);
+            $request->session()->put('demo_role', 'student');
+
+            return $this->studentView($request, $user);
         }
 
-        // If no user is authenticated, retrieve demo user matching role
-        if (! $user) {
-            $user = User::where('role', $activeRole)->first() ?? User::first();
-        }
+        // 2. Strict separation: Authenticated instructors are strictly restricted to instructor dashboard
+        if ($user && $user->role === 'instructor') {
+            $request->session()->put('demo_role', 'instructor');
 
-        if ($activeRole === 'instructor') {
             return $this->instructorView($request, $user);
         }
 
-        return $this->studentView($request, $user);
+        // 3. Unauthenticated / Demo mode (supports dev testing and public sandbox demo)
+        $requestedRole = $request->query('role') ?? $request->session()->get('demo_role', 'student');
+        $activeRole = in_array($requestedRole, ['student', 'instructor'], true) ? $requestedRole : 'student';
+        $request->session()->put('demo_role', $activeRole);
+
+        $demoUser = User::where('role', $activeRole)->first() ?? User::first();
+
+        if ($activeRole === 'instructor') {
+            return $this->instructorView($request, $demoUser);
+        }
+
+        return $this->studentView($request, $demoUser);
     }
 
     /**
@@ -63,16 +72,14 @@ class DashboardController extends Controller
             $role = 'student';
         }
 
-        $request->session()->put('demo_role', $role);
-
-        // If authenticated user's role can be switched in dev/demo
         $user = Auth::user();
-        if ($user && in_array($user->username, ['student', 'instructor'], true)) {
-            $targetUser = User::where('role', $role)->first();
-            if ($targetUser) {
-                Auth::login($targetUser);
-            }
+
+        // 1. Strict separation: Authenticated users cannot switch roles (each has own dedicated dashboard)
+        if ($user) {
+            abort(403, 'Forbidden. Role switching is not permitted for authenticated accounts.');
         }
+
+        $request->session()->put('demo_role', $role);
 
         return redirect()->route('dashboard', ['role' => $role]);
     }
@@ -91,10 +98,7 @@ class DashboardController extends Controller
         // 2. Assigned Scenarios with student progress
         $scenarioList = $this->scenarios->getScenariosForStudent($username);
 
-        // 3. Command Reference Cheat Sheet
-        $commandCheatSheet = $this->getCommandReference();
-
-        // 4. Learning Analytics & Recent Errors
+        // 3. Learning Analytics & Recent Errors
         $recentLogs = TerminalActivityLog::where('user_id', $username)
             ->orderBy('created_at', 'desc')
             ->limit(50)
@@ -133,7 +137,6 @@ class DashboardController extends Controller
             'activeRole' => 'student',
             'activePnr' => $activePnr,
             'scenarios' => $scenarioList,
-            'commandCheatSheet' => $commandCheatSheet,
             'queueSummary' => $queueSummary,
             'analytics' => [
                 'accuracyRate' => $accuracyRate,
@@ -364,6 +367,41 @@ class DashboardController extends Controller
             'success' => true,
             'scenario' => $scenario,
         ], 201);
+    }
+
+    /**
+     * API / Web: Delete Scenario & Drill.
+     */
+    public function deleteScenario(Request $request, string $id): JsonResponse|RedirectResponse
+    {
+        $user = Auth::user();
+        if (! $user || $user->role !== 'instructor') {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'Instructor access required.'], 403);
+            }
+
+            abort(403, 'Forbidden. Instructor access required.');
+        }
+
+        $deleted = $this->scenarios->deleteScenario($id);
+
+        if (! $deleted) {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => "Scenario '{$id}' not found."], 404);
+            }
+
+            return redirect()->back()->withErrors(['error' => "Scenario '{$id}' not found."]);
+        }
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => "Scenario '{$id}' deleted successfully.",
+                'deleted_id' => $id,
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Scenario '{$id}' deleted successfully.");
     }
 
     /**
@@ -641,7 +679,7 @@ class DashboardController extends Controller
             'isValid' => false,
             'category' => 'Unknown',
             'explanation' => "Command \"{$input}\" not recognized in standard Amadeus GDS format.",
-            'correctionHint' => 'Check the Cheat Sheet tab or type "HE" for full command reference.',
+            'correctionHint' => 'Type "HE" for full command reference.',
             'example' => 'AN15NOVLHRJFK',
         ];
     }
@@ -685,50 +723,5 @@ class DashboardController extends Controller
         }
 
         return $lines;
-    }
-
-    /**
-     * Helper: Structured Amadeus Command Reference.
-     */
-    protected function getCommandReference(): array
-    {
-        return [
-            'Availability' => [
-                ['code' => 'AN', 'syntax' => 'AN<DATE><ORIG><DEST>', 'desc' => 'Neutral availability display with live seat counts across classes.', 'example' => 'AN15NOVLHRJFK'],
-                ['code' => 'AN/A', 'syntax' => 'AN<DATE><ORIG><DEST>/A<AIRLINE>', 'desc' => 'Availability filtered to a specific carrier.', 'example' => 'AN15NOVLONNYC/ABA'],
-                ['code' => 'SN', 'syntax' => 'SN<DATE><ORIG><DEST>', 'desc' => 'Timetable schedules display without seat inventory.', 'example' => 'SN15NOVDOHLHR'],
-                ['code' => 'MD/MU', 'syntax' => 'MD / MU', 'desc' => 'Move Down / Move Up pagination for availability screens.', 'example' => 'MD'],
-            ],
-            'PNR Elements' => [
-                ['code' => 'NM', 'syntax' => 'NM1<SURNAME>/<FIRSTNAME> <TITLE>', 'desc' => 'Passenger name element (Mandatory PRINT).', 'example' => 'NM1DOE/JOHN MR'],
-                ['code' => 'SS', 'syntax' => 'SS<SEATS><CLASS><LINE>', 'desc' => 'Sell seat segment directly from availability screen.', 'example' => 'SS1Y1'],
-                ['code' => 'AP', 'syntax' => 'AP <CITY> <PHONE>-<TYPE>', 'desc' => 'Contact phone element (Mandatory PRINT).', 'example' => 'AP LON 44-20-7123-4567-A'],
-                ['code' => 'APE', 'syntax' => 'APE <EMAIL>', 'desc' => 'Contact email element (// represents @).', 'example' => 'APE JOHN.DOE//GMAIL.COM'],
-                ['code' => 'TKTL', 'syntax' => 'TKTL<DATE>/<OFFICE>', 'desc' => 'Ticketing Time Limit arrangement (Mandatory PRINT).', 'example' => 'TKTL15NOV/LON1A0980'],
-                ['code' => 'RF', 'syntax' => 'RF <NAME>', 'desc' => 'Received From booking verification (Mandatory PRINT).', 'example' => 'RF PASSENGER'],
-                ['code' => 'RM', 'syntax' => 'RM <TEXT>', 'desc' => 'General internal remark element.', 'example' => 'RM VIP CLIENT REQ WINDOW'],
-                ['code' => 'SR', 'syntax' => 'SR <SSR_CODE>', 'desc' => 'Special Service Request to carrier (e.g. Meals, Wheelchair).', 'example' => 'SR VGML (Vegetarian meal)'],
-            ],
-            'Pricing' => [
-                ['code' => 'FQD', 'syntax' => 'FQD<PAIR>/D<DATE>/A<CARRIER>', 'desc' => 'Fare Quote Display published tariffs.', 'example' => 'FQDDOHLHR/D15NOV/AQR'],
-                ['code' => 'FXP', 'syntax' => 'FXP', 'desc' => 'Price active itinerary and store Transitional Stored Ticket (TST).', 'example' => 'FXP'],
-                ['code' => 'FXX', 'syntax' => 'FXX', 'desc' => 'Price itinerary without storing TST record.', 'example' => 'FXX'],
-                ['code' => 'FXB', 'syntax' => 'FXB', 'desc' => 'Best buy pricing: automatically rebooks to lowest available fare.', 'example' => 'FXB'],
-            ],
-            'Ticketing' => [
-                ['code' => 'FP', 'syntax' => 'FP <METHOD>', 'desc' => 'Form of Payment (CASH, CC, CHECK, INVOICE).', 'example' => 'FP CASH or FP CCVI4111222233334444/1226'],
-                ['code' => 'FM', 'syntax' => 'FM<PERCENT>', 'desc' => 'Commission indicator (e.g. FM0 or FM7).', 'example' => 'FM0'],
-                ['code' => 'TTP', 'syntax' => 'TTP', 'desc' => 'Issue Electronic Tickets (13-digit IATA e-ticket).', 'example' => 'TTP'],
-                ['code' => 'TWD', 'syntax' => 'TWD', 'desc' => 'Display electronic ticket image and coupon status.', 'example' => 'TWD'],
-            ],
-            'Queues' => [
-                ['code' => 'QS', 'syntax' => 'QS', 'desc' => 'Queue summary count across all agency queues (1, 7, 8, 9, 87).', 'example' => 'QS'],
-                ['code' => 'QD', 'syntax' => 'QD <QUEUE_NUMBER>', 'desc' => 'Display list of PNRs placed in a specific queue.', 'example' => 'QD 1 (Ticketing) or QD 7 (Schedule Change)'],
-                ['code' => 'QN', 'syntax' => 'QN', 'desc' => 'Queue Next item in active queue.', 'example' => 'QN'],
-                ['code' => 'QI', 'syntax' => 'QI', 'desc' => 'Queue Ignore / Exit queue processing mode.', 'example' => 'QI'],
-                ['code' => 'ET / ER', 'syntax' => 'ET / ER', 'desc' => 'End Transaction / End and Redisplay to commit changes.', 'example' => 'ER'],
-                ['code' => 'RT', 'syntax' => 'RT <LOCATOR>', 'desc' => 'Retrieve PNR by record locator.', 'example' => 'RT K7G8X2'],
-            ],
-        ];
     }
 }

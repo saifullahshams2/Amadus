@@ -29,4 +29,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Determine if the user has an instructor role.
+     */
+    public function isInstructor(): bool
+    {
+        return $this->role === 'instructor';
+    }
+
+    /**
+     * Determine if the user has a student role.
+     */
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
+    }
 }

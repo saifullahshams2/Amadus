@@ -278,4 +278,20 @@ class ScenarioService
 
         return $sub;
     }
+
+    /**
+     * Delete a scenario and all associated student submissions.
+     */
+    public function deleteScenario(string $scenarioId): bool
+    {
+        $scenario = Scenario::find($scenarioId);
+        if (! $scenario) {
+            return false;
+        }
+
+        // Purge associated student submissions
+        Submission::where('scenario_id', $scenarioId)->delete();
+
+        return (bool) $scenario->delete();
+    }
 }
