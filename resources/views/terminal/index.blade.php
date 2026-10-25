@@ -103,12 +103,13 @@
 
                 <!-- Monospaced Terminal Output Console -->
                 <div x-ref="terminalContainer"
+                     @click="if (!window.getSelection()?.toString()) $refs.cmdInput?.focus()"
                      :class="{
                         'bg-black text-emerald-400': theme === 'crt-green',
                         'bg-black text-amber-400': theme === 'crt-amber',
                         'bg-[#060a12] text-slate-200': theme === 'modern'
                      }"
-                     class="flex-1 p-3 overflow-y-auto font-mono text-[13px] sm:text-[14px] leading-relaxed whitespace-pre-wrap select-text">
+                     class="flex-1 p-3 overflow-y-auto font-mono text-[13px] sm:text-[14px] leading-relaxed whitespace-pre-wrap select-text cursor-text">
                     <template x-for="(line, idx) in currentArea.outputLines" :key="idx">
                         <div :class="{
                             'text-sky-400 font-bold': line.isInput && theme === 'modern',
@@ -133,7 +134,7 @@
                            x-model="inputVal"
                            @keydown.up.prevent="navigateHistory('up')"
                            @keydown.down.prevent="navigateHistory('down')"
-                           :disabled="isExecuting"
+                           :readonly="isExecuting"
                            placeholder="ENTER CRYPTIC COMMAND (E.G. AN15NOVLHRJFK, SS1Y1, NM1DOE/JOHN MR, FXP, ET)..."
                            autocomplete="off"
                            spellcheck="false"
@@ -507,8 +508,10 @@ function amadeusApp() {
                 state.outputLines.push({ text: `CONNECTION ERROR: FAILED TO REACH GDS HOST`, isError: true });
             } finally {
                 this.isExecuting = false;
-                this.scrollToBottom();
-                this.$refs.cmdInput?.focus();
+                this.$nextTick(() => {
+                    this.scrollToBottom();
+                    this.$refs.cmdInput?.focus();
+                });
             }
         },
 
