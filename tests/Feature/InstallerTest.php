@@ -49,7 +49,7 @@ class InstallerTest extends TestCase
         $response = $this->get('/install');
 
         $response->assertStatus(200);
-        $response->assertSeeText('Amadeus GDS Platform');
+        $response->assertSeeText('AMADEUS GDS SIM');
         $response->assertSeeText('Installer');
         $response->assertSeeText('System Prerequisites & Permissions');
         $response->assertSeeText('Provision Primary Flight Instructor');
@@ -106,6 +106,41 @@ class InstallerTest extends TestCase
         // Verify installation lock file was written
         $this->assertTrue($this->installerService->isInstalled());
         $this->assertFileExists(storage_path('installed'));
+    }
+
+    public function test_04b_installer_handles_both_db_credentials_and_instructor_password_without_collision(): void
+    {
+        $payload = [
+            'name' => 'Instructor Alpha',
+            'username' => 'instructor_alpha',
+            'email' => 'alpha@amadeus.test',
+            'password' => 'InstructSecret2026!',
+            'password_confirmation' => 'InstructSecret2026!',
+            'office_id' => 'LON1A0980',
+            'agent_id' => 'IN01GS',
+            'database_driver' => 'sqlite',
+            'db_path' => 'database/database.sqlite',
+            'db_host' => '127.0.0.1',
+            'db_port' => 3306,
+            'db_database' => 'amadeus_gds',
+            'db_username' => 'root',
+            'db_password' => '',
+        ];
+
+        $response = $this->postJson('/install', $payload);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'instructor' => [
+                'username' => 'instructor_alpha',
+                'role' => 'instructor',
+            ],
+        ]);
+
+        $instructor = User::where('username', 'instructor_alpha')->first();
+        $this->assertNotNull($instructor);
+        $this->assertTrue(Hash::check('InstructSecret2026!', $instructor->password));
     }
 
     public function test_05_installer_redirects_away_when_already_installed(): void

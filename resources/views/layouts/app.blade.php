@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Amadeus GDS Training Simulator (1A)')</title>
+    <title>@yield('title', 'AMADEUS GDS SIM')</title>
+    <link rel="icon" type="image/png" href="{{ asset('airplane-ticket.png') }}">
+    <link rel="shortcut icon" href="{{ asset('airplane-ticket.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         :root {
-            --background: #080c14;
-            --foreground: #e2e8f0;
+            --background: #f8fafc;
+            --foreground: #0f172a;
         }
         html, body {
             height: 100%;
@@ -25,7 +27,7 @@
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             z-index: 20;
             background-size: 100% 2px, 3px 100%;
             pointer-events: none;
@@ -35,18 +37,18 @@
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #0a0f1d;
+            background: #f1f5f9;
         }
         ::-webkit-scrollbar-thumb {
-            background: #1e293b;
+            background: #cbd5e1;
             border-radius: 3px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #334155;
+            background: #94a3b8;
         }
     </style>
 </head>
-<body class="h-full flex flex-col bg-[#080c14] text-slate-200">
+<body class="h-full flex flex-col bg-[#f8fafc] text-slate-800">
     @yield('content')
 </body>
 </html>

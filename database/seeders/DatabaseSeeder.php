@@ -67,49 +67,53 @@ class DatabaseSeeder extends Seeder
         // 2. Seed Airports from JSON (if not already seeded)
         if (Airport::count() === 0 && file_exists(database_path('data/airports_full.json'))) {
             $json = json_decode(file_get_contents(database_path('data/airports_full.json')), true);
-            $batch = [];
-            foreach ($json as $code => $ap) {
-                $batch[] = [
-                    'iata' => $ap['iata'] ?? $code,
-                    'icao' => $ap['icao'] ?? null,
-                    'name' => $ap['name'] ?? '',
-                    'city' => $ap['city'] ?? '',
-                    'country' => $ap['country'] ?? '',
-                    'lat' => $ap['lat'] ?? null,
-                    'lon' => $ap['lon'] ?? null,
-                    'tz' => $ap['tz'] ?? null,
-                ];
-                if (count($batch) >= 500) {
-                    DB::table('airports')->insert($batch);
-                    $batch = [];
+            DB::transaction(function () use ($json) {
+                $batch = [];
+                foreach ($json as $code => $ap) {
+                    $batch[] = [
+                        'iata' => $ap['iata'] ?? $code,
+                        'icao' => $ap['icao'] ?? null,
+                        'name' => $ap['name'] ?? '',
+                        'city' => $ap['city'] ?? '',
+                        'country' => $ap['country'] ?? '',
+                        'lat' => $ap['lat'] ?? null,
+                        'lon' => $ap['lon'] ?? null,
+                        'tz' => $ap['tz'] ?? null,
+                    ];
+                    if (count($batch) >= 500) {
+                        DB::table('airports')->insert($batch);
+                        $batch = [];
+                    }
                 }
-            }
-            if (! empty($batch)) {
-                DB::table('airports')->insert($batch);
-            }
+                if (! empty($batch)) {
+                    DB::table('airports')->insert($batch);
+                }
+            });
         }
 
         // 4. Seed Airlines from JSON (if not already seeded)
         if (Airline::count() === 0 && file_exists(database_path('data/airlines_full.json'))) {
             $json = json_decode(file_get_contents(database_path('data/airlines_full.json')), true);
-            $batch = [];
-            foreach ($json as $code => $al) {
-                $batch[] = [
-                    'iata' => $al['iata'] ?? $code,
-                    'icao' => $al['icao'] ?? null,
-                    'name' => $al['name'] ?? '',
-                    'country' => $al['country'] ?? null,
-                    'callsign' => $al['callsign'] ?? null,
-                    'ticket_prefix' => $al['ticketPrefix'] ?? null,
-                ];
-                if (count($batch) >= 500) {
-                    DB::table('airlines')->insert($batch);
-                    $batch = [];
+            DB::transaction(function () use ($json) {
+                $batch = [];
+                foreach ($json as $code => $al) {
+                    $batch[] = [
+                        'iata' => $al['iata'] ?? $code,
+                        'icao' => $al['icao'] ?? null,
+                        'name' => $al['name'] ?? '',
+                        'country' => $al['country'] ?? null,
+                        'callsign' => $al['callsign'] ?? null,
+                        'ticket_prefix' => $al['ticketPrefix'] ?? null,
+                    ];
+                    if (count($batch) >= 500) {
+                        DB::table('airlines')->insert($batch);
+                        $batch = [];
+                    }
                 }
-            }
-            if (! empty($batch)) {
-                DB::table('airlines')->insert($batch);
-            }
+                if (! empty($batch)) {
+                    DB::table('airlines')->insert($batch);
+                }
+            });
         }
 
         // 5. Seed Training Scenarios & Drills

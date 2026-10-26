@@ -88,10 +88,15 @@ class InstallerController extends Controller
         $validated = $request->validate([
             // Database parameters (defaults to current driver if omitted for testing compatibility)
             'database_driver' => 'nullable|string|in:sqlite,mysql',
+            'driver' => 'nullable|string|in:sqlite,mysql',
             'db_path' => 'nullable|string',
+            'database_path' => 'nullable|string',
             'db_host' => 'nullable|string',
+            'host' => 'nullable|string',
             'db_port' => 'nullable|numeric',
+            'port' => 'nullable|numeric',
             'db_database' => 'nullable|string|max:100',
+            'database' => 'nullable|string|max:100',
             'db_username' => 'nullable|string|max:100',
             'db_password' => 'nullable|string',
 
@@ -115,13 +120,13 @@ class InstallerController extends Controller
         }
 
         // 1. Determine & test database configuration
-        $dbDriver = $validated['database_driver'] ?? config('database.default', 'sqlite');
+        $dbDriver = $validated['database_driver'] ?? $validated['driver'] ?? config('database.default', 'sqlite');
         $dbConfig = [
             'driver' => $dbDriver,
-            'database_path' => $validated['db_path'] ?? 'database/database.sqlite',
-            'host' => $validated['db_host'] ?? '127.0.0.1',
-            'port' => $validated['db_port'] ?? 3306,
-            'database' => $validated['db_database'] ?? 'amadeus_gds',
+            'database_path' => $validated['db_path'] ?? $validated['database_path'] ?? 'database/database.sqlite',
+            'host' => $validated['db_host'] ?? $validated['host'] ?? '127.0.0.1',
+            'port' => $validated['db_port'] ?? $validated['port'] ?? 3306,
+            'database' => $validated['db_database'] ?? $validated['database'] ?? 'amadeus_gds',
             'username' => $validated['db_username'] ?? 'root',
             'password' => $validated['db_password'] ?? '',
         ];
@@ -139,6 +144,12 @@ class InstallerController extends Controller
 
         // 2. Configure database environment & runtime connection
         $this->installerService->configureDatabase($dbConfig);
+
+        // Schedule .env update to run on application termination so the HTTP response finishes cleanly
+        // before any server reload triggers (critical when running under `php artisan serve`).
+        app()->terminating(function () use ($dbConfig) {
+            $this->installerService->updateDatabaseEnv($dbConfig);
+        });
 
         // 3. Run database migrations & seed reference catalog
         $this->installerService->runMigrationsAndSeeders();

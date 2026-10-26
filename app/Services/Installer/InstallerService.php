@@ -216,7 +216,7 @@ class InstallerService
     }
 
     /**
-     * Configure environment file and runtime connection for selected database.
+     * Configure runtime connection for selected database.
      *
      * @param array{
      *     driver: string,
@@ -248,11 +248,6 @@ class InstallerService
                 File::put($absolutePath, '');
             }
 
-            $this->updateEnv([
-                'DB_CONNECTION' => 'sqlite',
-                'DB_DATABASE' => $rawPath,
-            ]);
-
             config([
                 'database.default' => 'sqlite',
                 'database.connections.sqlite.database' => $absolutePath,
@@ -260,6 +255,7 @@ class InstallerService
 
             DB::purge('sqlite');
             DB::reconnect('sqlite');
+            DB::setDefaultConnection('sqlite');
 
             return;
         }
@@ -270,15 +266,6 @@ class InstallerService
         $database = trim($config['database'] ?? 'amadeus_gds');
         $username = trim($config['username'] ?? 'root');
         $password = (string) ($config['password'] ?? '');
-
-        $this->updateEnv([
-            'DB_CONNECTION' => 'mysql',
-            'DB_HOST' => $host,
-            'DB_PORT' => $port,
-            'DB_DATABASE' => $database,
-            'DB_USERNAME' => $username,
-            'DB_PASSWORD' => $password,
-        ]);
 
         config([
             'database.default' => 'mysql',
@@ -291,6 +278,52 @@ class InstallerService
 
         DB::purge('mysql');
         DB::reconnect('mysql');
+        DB::setDefaultConnection('mysql');
+    }
+
+    /**
+     * Persist configured database parameters into .env file.
+     *
+     * @param array{
+     *     driver: string,
+     *     database_path?: string,
+     *     host?: string,
+     *     port?: int|string,
+     *     database?: string,
+     *     username?: string,
+     *     password?: string|null
+     * } $config
+     */
+    public function updateDatabaseEnv(array $config): void
+    {
+        if (app()->environment('testing')) {
+            return;
+        }
+
+        $driver = strtolower(trim($config['driver'] ?? 'sqlite'));
+
+        if ($driver === 'sqlite') {
+            $rawPath = trim($config['database_path'] ?? 'database/database.sqlite');
+            if (empty($rawPath)) {
+                $rawPath = 'database/database.sqlite';
+            }
+
+            $this->updateEnv([
+                'DB_CONNECTION' => 'sqlite',
+                'DB_DATABASE' => $rawPath,
+            ]);
+
+            return;
+        }
+
+        $this->updateEnv([
+            'DB_CONNECTION' => 'mysql',
+            'DB_HOST' => trim($config['host'] ?? '127.0.0.1'),
+            'DB_PORT' => (string) ($config['port'] ?? 3306),
+            'DB_DATABASE' => trim($config['database'] ?? 'amadeus_gds'),
+            'DB_USERNAME' => trim($config['username'] ?? 'root'),
+            'DB_PASSWORD' => (string) ($config['password'] ?? ''),
+        ]);
     }
 
     /**
@@ -315,19 +348,22 @@ class InstallerService
         }
 
         $envContent = File::get($envPath);
+        $newContent = $envContent;
 
         foreach ($keyValues as $key => $value) {
             $escapedValue = $this->formatEnvValue($value);
             $pattern = "/^{$key}=(.*)$/m";
 
-            if (preg_match($pattern, $envContent)) {
-                $envContent = preg_replace($pattern, "{$key}={$escapedValue}", $envContent);
+            if (preg_match($pattern, $newContent)) {
+                $newContent = preg_replace($pattern, "{$key}={$escapedValue}", $newContent);
             } else {
-                $envContent .= "\n{$key}={$escapedValue}";
+                $newContent .= "\n{$key}={$escapedValue}";
             }
         }
 
-        File::put($envPath, $envContent);
+        if (trim($newContent) !== trim($envContent)) {
+            File::put($envPath, $newContent);
+        }
     }
 
     /**
@@ -351,8 +387,20 @@ class InstallerService
      */
     public function runMigrationsAndSeeders(): void
     {
-        Artisan::call('migrate', ['--force' => true]);
-        Artisan::call('db:seed', ['--force' => true]);
+        @set_time_limit(300);
+        @ini_set('max_execution_time', '300');
+
+        $driver = config('database.default', 'sqlite');
+
+        Artisan::call('migrate', [
+            '--database' => $driver,
+            '--force' => true,
+        ]);
+
+        Artisan::call('db:seed', [
+            '--database' => $driver,
+            '--force' => true,
+        ]);
     }
 
     /**
@@ -369,18 +417,41 @@ class InstallerService
      */
     public function createInstructor(array $data): User
     {
-        return User::updateOrCreate(
-            ['username' => $data['username']],
-            [
-                'name' => $data['name'] ?? 'Flight Instructor',
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'role' => 'instructor',
-                'is_approved' => true,
-                'office_id' => $data['office_id'] ?? 'LON1A0980',
-                'agent_id' => $data['agent_id'] ?? 'IN01GS',
-            ]
-        );
+        // Check for any conflicting accounts by username or email
+        $byUsername = User::where('username', $data['username'])->first();
+        $byEmail = User::where('email', $data['email'])->first();
+
+        // If two different existing records conflict with the desired credentials, remove duplicate
+        if ($byUsername && $byEmail && $byUsername->id !== $byEmail->id) {
+            $byEmail->delete();
+        }
+
+        $target = $byUsername ?? $byEmail;
+
+        if ($target) {
+            $target->name = $data['name'] ?? 'Flight Instructor';
+            $target->username = $data['username'];
+            $target->email = $data['email'];
+            $target->password = Hash::make($data['password']);
+            $target->role = 'instructor';
+            $target->is_approved = true;
+            $target->office_id = $data['office_id'] ?? 'LON1A0980';
+            $target->agent_id = $data['agent_id'] ?? 'IN01GS';
+            $target->save();
+
+            return $target;
+        }
+
+        return User::create([
+            'name' => $data['name'] ?? 'Flight Instructor',
+            'username' => $data['username'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'role' => 'instructor',
+            'is_approved' => true,
+            'office_id' => $data['office_id'] ?? 'LON1A0980',
+            'agent_id' => $data['agent_id'] ?? 'IN01GS',
+        ]);
     }
 
     /**

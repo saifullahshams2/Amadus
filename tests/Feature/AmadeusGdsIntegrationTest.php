@@ -20,7 +20,7 @@ class AmadeusGdsIntegrationTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSee('AMADEUS GDS SIMULATOR');
+        $response->assertSee('AMADEUS GDS SIM');
     }
 
     public function test_02_student_authentication_succeeds(): void

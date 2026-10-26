@@ -78,10 +78,10 @@
     "semantic_hash": ""
   },
   "app/Providers/AppServiceProvider.php": {
-    "mtime": 1792931012.6654234,
-    "seen": 1792971246.9648309,
-    "ast_hash": "c0094f35cad6bba7636002a62186dae4",
-    "semantic_hash": "c0094f35cad6bba7636002a62186dae4"
+    "mtime": 1793050513.7334359,
+    "seen": 1793050679.3724988,
+    "ast_hash": "c7b424b34a14bb1a6bd552971b5156fd",
+    "semantic_hash": ""
   },
   "app/Services/Amadeus/AmadeusParser.php": {
     "mtime": 1792956132.4559484,
@@ -132,9 +132,9 @@
     "semantic_hash": "e66bb13691f6184c762c196427d8e685"
   },
   "bootstrap/app.php": {
-    "mtime": 1793016243.3430896,
-    "seen": 1793018942.348252,
-    "ast_hash": "4ab0d4f774b1c5b005e415b93530cb1d",
+    "mtime": 1793050508.908903,
+    "seen": 1793050679.373002,
+    "ast_hash": "658a6f50805ef9b46550597930c43dfa",
     "semantic_hash": ""
   },
   "bootstrap/providers.php": {
@@ -253,9 +253,9 @@
     "semantic_hash": "556ea43eb1a25b268cc6eebd4d50377b"
   },
   "database/seeders/DatabaseSeeder.php": {
-    "mtime": 1793016146.5044153,
-    "seen": 1793018942.349252,
-    "ast_hash": "8d0dacac032fff211c3d5f1f846db8ce",
+    "mtime": 1793050523.7109542,
+    "seen": 1793050679.374006,
+    "ast_hash": "616fab889038fe11d710d718e8353aee",
     "semantic_hash": ""
   },
   "public/index.php": {
@@ -404,9 +404,9 @@
     "semantic_hash": ""
   },
   "app/Http/Controllers/InstallerController.php": {
-    "mtime": 1793016332.269362,
-    "seen": 1793018942.3472521,
-    "ast_hash": "4f4d0fd0655078d4fdab4d55094e7aeb",
+    "mtime": 1793050559.5163722,
+    "seen": 1793050679.3705,
+    "ast_hash": "a2346b2c5146a71684d98c0589613930",
     "semantic_hash": ""
   },
   "app/Http/Middleware/EnsureAppIsInstalled.php": {
@@ -458,9 +458,9 @@
     "semantic_hash": "944dd671d601b196e982dae9d1f85e1e"
   },
   "app/Services/Installer/InstallerService.php": {
-    "mtime": 1793016643.2536976,
-    "seen": 1793018942.348252,
-    "ast_hash": "9693ea665e160856ac27ac578c01dae1",
+    "mtime": 1793050552.978408,
+    "seen": 1793050679.3724988,
+    "ast_hash": "79265b91e77613b4aab3f94848e11649",
     "semantic_hash": ""
   },
   "app/Services/Training/ScenarioService.php": {
@@ -501,9 +501,9 @@
     "semantic_hash": "2261a1f2c958673719da62648a38375f"
   },
   "resources/views/installer/index.blade.php": {
-    "mtime": 1793016387.0704775,
-    "seen": 1793018942.3502524,
-    "ast_hash": "8e1d89ae3f2c360ceed385a8f8e1ccd8",
+    "mtime": 1793050580.951129,
+    "seen": 1793050679.3750067,
+    "ast_hash": "0c937da7c775fbc1d6eb4563203d315e",
     "semantic_hash": ""
   },
   "resources/views/layouts/dashboard.blade.php": {

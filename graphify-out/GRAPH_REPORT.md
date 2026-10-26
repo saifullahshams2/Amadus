@@ -1,22 +1,22 @@
-# Graph Report - gds-amadeus  (2026-10-26)
+# Graph Report - gds-amadeus  (2026-10-27)
 
 ## Corpus Check
-- 147 files · ~242,974 words
+- 147 files · ~243,394 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 22 file(s) not represented in the graph (top: (none) 18, .example 1, .xml 1)
 
 ## Summary
-- 1132 nodes · 1692 edges · 104 communities (64 shown, 40 thin omitted)
-- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 109 edges (avg confidence: 0.89)
+- 1136 nodes · 1697 edges · 97 communities (63 shown, 34 thin omitted)
+- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 110 edges (avg confidence: 0.89)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `22908047`
+- Built from commit: `d6b9cb47`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- Illuminate\Http\Request
+- bootstrap/app.php
 - Submission
 - PHP Package Manifest
 - Database Schema Migrations
@@ -29,10 +29,8 @@
 - Dev Dependencies & Tooling
 - Composer Configuration
 - Service Providers
-- Logging Configuration
 - Detection Checklist
 - Unit Test Suite
-- Illuminate\Foundation\Testing\RefreshDatabase
 - Agent & Developer Guidelines
 - TestCase
 - Instructor Dashboard View
@@ -46,9 +44,8 @@
 - instructor/index.blade.php
 - terminal/index.blade.php
 - Cloud CLI
-- Illuminate\Http\JsonResponse
+- Illuminate\Http\Request
 - confirmed
-- DashboardController
 - ATTACK-CLASSES.md
 - Illuminate\Database\Eloquent\Model
 - Security Audit
@@ -76,15 +73,12 @@
 - Vulnerability Hunting
 - Supply Chain and Release Hunting
 - QueueItem
-- bootstrap/app.php
 - UserFactory.php
 - laravel-best-practices/SKILL.md
 - Blade and View Best Practices
 - Error Handling Best Practices
 - Task Scheduling Best Practices
 - Endpoint Tests
-- QueueService
-- Illuminate\View\View
 - Scenario
 - Collection Best Practices
 - HTTP Client Best Practices
@@ -97,7 +91,6 @@
 - Fakes, Mocks, and Determinism
 - Test Suite Performance
 - Reviewing Tests
-- Pnr
 - Configuration Best Practices
 - Naming and Structure
 - PricingService
@@ -108,7 +101,7 @@
 - pending-approval.blade.php
 
 ## God Nodes (most connected - your core abstractions)
-1. `InstallerService` - 28 edges
+1. `InstallerService` - 29 edges
 2. `confirmed()` - 27 edges
 3. `User` - 26 edges
 4. `TestCase` - 22 edges
@@ -137,14 +130,14 @@
 ## Hyperedges (group relationships)
 - **Amadeus Simulator Core Architecture** — readme_amadeus_gds_training_simulator, readme_work_area_terminal, readme_interactive_curriculum, readme_instructor_hub [EXTRACTED 1.00]
 
-## Communities (104 total, 40 thin omitted)
+## Communities (97 total, 34 thin omitted)
 
-### Community 0 - "Illuminate\Http\Request"
-Cohesion: 0.19
-Nodes (3): AuthController, EnsureUserIsInstructor, SecurityHeadersMiddleware
+### Community 0 - "bootstrap/app.php"
+Cohesion: 0.16
+Nodes (6): EnsureAppIsInstalled, EnsureUserIsInstructor, SecurityHeadersMiddleware, {closure#1}(), {closure#3}(), {closure#4}()
 
 ### Community 1 - "Submission"
-Cohesion: 0.13
+Cohesion: 0.14
 Nodes (3): {closure#1}(), Submission, {closure#1}()
 
 ### Community 2 - "PHP Package Manifest"
@@ -160,12 +153,12 @@ Cohesion: 0.04
 Nodes (48): pestphp/pest-plugin, php-http/discovery, autoload, autoload-dev, psr-4, psr-4, config, allow-plugins (+40 more)
 
 ### Community 5 - ".execute"
-Cohesion: 0.21
+Cohesion: 0.20
 Nodes (4): DecodeResult, DecodeService, PnrService, PnrValidationResult
 
 ### Community 6 - "InstallerService"
 Cohesion: 0.07
-Nodes (5): InstallAppCommand, RemoveInstallerCommand, InstallerService, InstallerTest, UserRequirementsVerificationTest
+Nodes (6): InstallAppCommand, RemoveInstallerCommand, {closure#1}(), InstallerService, InstallerTest, UserRequirementsVerificationTest
 
 ### Community 7 - "Feature Integration Tests"
 Cohesion: 0.09
@@ -195,9 +188,9 @@ Nodes (3): AmadeusGdsIntegrationTest, ExampleTest, TestCase
 Cohesion: 0.06
 Nodes (30): Adding a cache to an existing environment, Adding a database to an existing environment, Checklists for Multi-Step Operations, Custom domain setup, Full environment setup (app + database + cache + domain), New app from scratch, Application Setup, Billing and Usage (+22 more)
 
-### Community 42 - "Illuminate\Http\JsonResponse"
-Cohesion: 0.21
-Nodes (3): Controller, InstallerController, InstructorController
+### Community 42 - "Illuminate\Http\Request"
+Cohesion: 0.06
+Nodes (11): AuthController, Controller, {closure#1}(), DashboardController, InstallerController, InstructorController, LandingController, TrainingController (+3 more)
 
 ### Community 43 - "confirmed"
 Cohesion: 0.24
@@ -208,16 +201,16 @@ Cohesion: 0.14
 Nodes (7): Attack Classes, Attack classes — choose and split based on Phase 1, Architecture summary and companion selection, Deterministic coverage ledger, Phase 1: Map the source and plan coverage, Prior-run input, Reconnaissance
 
 ### Community 46 - "Illuminate\Database\Eloquent\Model"
-Cohesion: 0.20
-Nodes (5): Aircraft, Airline, Airport, LessonProgress, DatabaseSeeder
+Cohesion: 0.13
+Nodes (7): Aircraft, Airline, Airport, LessonProgress, AvailabilityResult, AvailabilityService, DatabaseSeeder
 
 ### Community 47 - "Security Audit"
 Cohesion: 0.14
 Nodes (14): Anti-patterns, Core principles, Full audit setup, Full audit workflow, Operating modes, Platform terminology, Recommend the smallest effective source fix, Require a boundary and result (+6 more)
 
 ### Community 48 - "AmadeusParser"
-Cohesion: 0.23
-Nodes (4): TerminalController, AmadeusParser, AvailabilityResult, AvailabilityService
+Cohesion: 0.28
+Nodes (3): TerminalController, AmadeusParser, CommandExecutionResult
 
 ### Community 49 - "Architecture Best Practices"
 Cohesion: 0.18
@@ -228,7 +221,7 @@ Cohesion: 0.18
 Nodes (11): Apply Cross-Site Request Forgery Protection, Audit Dependencies, Authorize Protected Actions, Bind Query Parameters, Control Mass Assignment, Encrypt Sensitive Attributes When Appropriate, Escape Output in Its Context, Keep Secrets Out of Application Code (+3 more)
 
 ### Community 51 - "HTTP-Protocol and Authentication Hunting"
-Cohesion: 0.18
+Cohesion: 0.20
 Nodes (10): API-key and mTLS attack classes (subagent_type: `general`), Browser-session attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Federated-identity attack classes (subagent_type: `general`), HTTP framing and cache attack classes (subagent_type: `general`), HTTP-Protocol and Authentication Hunting, MFA, passkey, and account-transition attack classes (subagent_type: `general`), Universal moves (apply across the above) (+2 more)
 
 ### Community 52 - "Tailwind CSS Development"
@@ -256,7 +249,7 @@ Cohesion: 0.20
 Nodes (9): AI, LLM, and Agent Hunting, Context, retrieval, and memory attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), MCP and sub-agent trust classes (subagent_type: `general`), Output and disclosure attack classes (subagent_type: `general`), Tool and action attack classes (subagent_type: `general`), Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+1 more)
 
 ### Community 58 - "Client-Side and Browser Hunting"
-Cohesion: 0.20
+Cohesion: 0.18
 Nodes (10): Client-Side and Browser Hunting, Core discipline (include in every agent prompt for this domain), Cross-origin messaging and network attack classes (subagent_type: `general`), Cross-site information leak classes (subagent_type: `general`), DOM and object-state attack classes (subagent_type: `general`), Service-worker and browser-storage attack classes (subagent_type: `general`), UI-redress and navigation attack classes (subagent_type: `general`), Universal moves (apply across the above) (+2 more)
 
 ### Community 59 - "Cloud and Deployment Hunting"
@@ -272,7 +265,7 @@ Cohesion: 0.20
 Nodes (10): Application-state and device-lifecycle attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Deep-link, callback, and navigation attack classes (subagent_type: `general`), Desktop, Mobile, and Local IPC Hunting, Local IPC and exported-component attack classes (subagent_type: `general`), Privileged-helper and local-file attack classes (subagent_type: `general`), Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+2 more)
 
 ### Community 62 - "Memory Safety, Binary, and Kernel Hunting"
-Cohesion: 0.20
+Cohesion: 0.18
 Nodes (10): Binary loading and runtime attack classes (subagent_type: `general`), Bounds, integer, and representation attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), FFI and ABI attack classes (subagent_type: `general`), Kernel and privileged-interface attack classes (subagent_type: `general`), Lifetime, type, and concurrency attack classes (subagent_type: `general`), Memory Safety, Binary, and Kernel Hunting, Universal moves (apply across the above) (+2 more)
 
 ### Community 63 - "Protocols, RPC, and Messaging Hunting"
@@ -280,12 +273,12 @@ Cohesion: 0.20
 Nodes (9): Broker and queue isolation attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Framing, schema, and interpretation attack classes (subagent_type: `general`), Protocols, RPC, and Messaging Hunting, Replay, ordering, and transaction attack classes (subagent_type: `general`), RPC identity and authorization attack classes (subagent_type: `general`), Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+1 more)
 
 ### Community 64 - "Resource Exhaustion and Availability Hunting"
-Cohesion: 0.20
+Cohesion: 0.22
 Nodes (9): Computational amplification attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Failure and recovery attack classes (subagent_type: `general`), Quota and scheduling attack classes (subagent_type: `general`), Resource accumulation attack classes (subagent_type: `general`), Resource Exhaustion and Availability Hunting, Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+1 more)
 
 ### Community 65 - "DashboardController.php"
-Cohesion: 0.24
-Nodes (3): {closure#1}(), {closure#3}(), TerminalActivityLog
+Cohesion: 0.20
+Nodes (3): {closure#3}(), Pnr, TerminalActivityLog
 
 ### Community 67 - "Caching Best Practices"
 Cohesion: 0.22
@@ -306,10 +299,6 @@ Nodes (8): CI and automation attack classes (subagent_type: `general`), Core dis
 ### Community 71 - "QueueItem"
 Cohesion: 0.31
 Nodes (3): {closure#1}(), {closure#2}(), QueueItem
-
-### Community 72 - "bootstrap/app.php"
-Cohesion: 0.28
-Nodes (3): {closure#1}(), {closure#3}(), {closure#4}()
 
 ### Community 74 - "laravel-best-practices/SKILL.md"
 Cohesion: 0.25
@@ -397,20 +386,20 @@ Nodes (4): `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md`, Phase 6: Produce target-
 
 ## Knowledge Gaps
 - **18 isolated node(s):** `php`, `layouts.app`, `layouts.app`, `layouts.app`, `layouts.dashboard` (+13 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 592 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **40 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 594 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **34 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `User` connect `Dev Dependencies & Tooling` to `Illuminate\Http\Request`, `DashboardController.php`, `InstallerService`, `UserFactory.php`, `Illuminate\Http\JsonResponse`, `Detection Checklist`, `Illuminate\View\View`, `Illuminate\Foundation\Testing\RefreshDatabase`, `TestCase`, `Authentication Registration View`, `Pnr`?**
-  _High betweenness centrality (0.157) - this node is a cross-community bridge._
+- **Why does `User` connect `Dev Dependencies & Tooling` to `DashboardController.php`, `InstallerService`, `UserFactory.php`, `Illuminate\Http\Request`, `Detection Checklist`, `AmadeusParser`, `Illuminate\Foundation\Testing\RefreshDatabase`, `TestCase`, `Authentication Registration View`?**
+  _High betweenness centrality (0.159) - this node is a cross-community bridge._
 - **Are the 23 inferred relationships involving `confirmed()` (e.g. with `Validation rules (apply before reporting ANY finding here)` and `Attack classes — choose and split based on Phase 1`) actually correct?**
   _`confirmed()` has 23 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `php`, `layouts.app`, `layouts.app` to the rest of the system?**
   _18 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Submission` be split into smaller, more focused modules?**
-  _Cohesion score 0.13071895424836602 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.13970588235294118 - nodes in this community are weakly interconnected._
 - **Should `PHP Package Manifest` be split into smaller, more focused modules?**
   _Cohesion score 0.08078431372549019 - nodes in this community are weakly interconnected._
 - **Should `Database Schema Migrations` be split into smaller, more focused modules?**
