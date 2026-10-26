@@ -1,0 +1,11 @@
+{
+    "installed_at": "2026-10-26T10:11:39+00:00",
+    "app_version": "1.0.0",
+    "installed_by": {
+        "id": 4,
+        "username": "admin",
+        "email": "instructor@amadeus.training",
+        "office_id": "LON1A0980",
+        "agent_id": "IN01GS"
+    }
+}
