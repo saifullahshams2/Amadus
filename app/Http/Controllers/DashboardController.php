@@ -158,7 +158,8 @@ class DashboardController extends Controller
         $officeId = $user?->office_id ?? 'LON1A0980';
 
         // 1. Enrolled Students with Live Session Status
-        $students = User::where('role', 'student')->get();
+        $students = User::where('role', 'student')->where('is_approved', true)->get();
+        $pendingApprovals = User::where('role', 'student')->where('is_approved', false)->orderBy('created_at', 'desc')->get();
 
         $studentStatuses = $students->map(function (User $st) {
             $recentLogs = TerminalActivityLog::where('user_id', $st->username)
@@ -219,6 +220,7 @@ class DashboardController extends Controller
             'user' => $user,
             'activeRole' => 'instructor',
             'students' => $studentStatuses,
+            'pendingApprovals' => $pendingApprovals,
             'scenarios' => $scenarios,
             'submissions' => $submissions,
             'queueSummary' => $queueSummary,

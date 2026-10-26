@@ -55,6 +55,56 @@
         </div>
     </section>
 
+    <!-- Pending Cadet Approvals Notification Widget (When pending registrations exist) -->
+    <template x-if="pendingApprovals.length > 0">
+        <section class="bg-[#12101e] border-2 border-amber-600/70 rounded-xl overflow-hidden shadow-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-950/80 border border-amber-500/60 flex items-center justify-center text-amber-400">
+                        <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                            <span>Pending Cadet Registrations</span>
+                            <span class="px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-700 text-[11px] font-mono font-bold" x-text="pendingApprovals.length + ' Awaiting Approval'"></span>
+                        </h2>
+                        <p class="text-xs text-amber-200/80">These trainees self-registered and require your authorization before simulator access is activated.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-lg border border-slate-800 bg-[#080d17]">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-[#0f172a] text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
+                        <tr>
+                            <th class="py-2.5 px-4">Cadet Name</th>
+                            <th class="py-2.5 px-4">Username</th>
+                            <th class="py-2.5 px-4">Email</th>
+                            <th class="py-2.5 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/80 font-mono">
+                        <template x-for="cadet in pendingApprovals" :key="cadet.id">
+                            <tr class="hover:bg-slate-900/60 transition-colors">
+                                <td class="py-2.5 px-4 font-sans font-semibold text-white" x-text="cadet.name || cadet.username"></td>
+                                <td class="py-2.5 px-4 text-sky-400 font-bold" x-text="cadet.username"></td>
+                                <td class="py-2.5 px-4 text-slate-300 font-sans" x-text="cadet.email"></td>
+                                <td class="py-2.5 px-4 text-right space-x-2">
+                                    <button @click="approveCadet(cadet.id)" :disabled="isApproving" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded font-bold text-[11px] font-sans transition-colors inline-flex items-center gap-1 shadow">
+                                        <span>✓ Approve Access</span>
+                                    </button>
+                                    <button @click="rejectCadet(cadet.id)" class="px-2.5 py-1 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded font-semibold text-[11px] font-sans transition-colors">
+                                        <span>✕ Reject</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </template>
+
     <!-- Section 1: Live Classroom Overview & Student Grid -->
     <section id="classroom" class="bg-[#0b101d] border border-slate-800 rounded-xl overflow-hidden shadow-xl">
         <div id="students-enrollment" class="px-6 py-4 border-b border-slate-800 bg-[#0d1322] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -711,14 +761,77 @@
 <script>
 function instructorDashboard() {
     const studentsData = @json($students);
+    const pendingApprovalsData = @json($pendingApprovals);
     const submissionsData = @json($submissions);
     const scenariosData = @json($scenarios);
 
     return {
         students: studentsData,
+        pendingApprovals: pendingApprovalsData,
         submissions: submissionsData,
         scenarios: scenariosData,
         studentFilter: '',
+        isApproving: false,
+
+        async approveCadet(cadetId) {
+            this.isApproving = true;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            try {
+                const res = await fetch(`/api/instructor/students/${cadetId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    }
+                });
+                if (res.ok) {
+                    const approvedIndex = this.pendingApprovals.findIndex(c => c.id === cadetId);
+                    if (approvedIndex !== -1) {
+                        const approved = this.pendingApprovals.splice(approvedIndex, 1)[0];
+                        this.students.push({
+                            id: approved.id,
+                            username: approved.username,
+                            name: approved.name || approved.username,
+                            email: approved.email,
+                            office_id: approved.office_id || 'LON1A0980',
+                            agent_id: approved.agent_id || '1234AB',
+                            status: 'Online',
+                            last_command: 'None',
+                            last_active: 'Just now',
+                            total_commands: 0,
+                            submissions_count: 0,
+                            active_pnr_locator: null,
+                            error_rate: 0,
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to approve cadet', err);
+            } finally {
+                this.isApproving = false;
+            }
+        },
+
+        async rejectCadet(cadetId) {
+            if (!confirm('Are you sure you want to reject and remove this cadet registration?')) return;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            try {
+                const res = await fetch(`/api/instructor/students/${cadetId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    }
+                });
+                if (res.ok) {
+                    this.pendingApprovals = this.pendingApprovals.filter(c => c.id !== cadetId);
+                }
+            } catch (err) {
+                console.error('Failed to reject cadet', err);
+            }
+        },
 
         showCreateStudentModal: false,
         isCreatingStudent: false,

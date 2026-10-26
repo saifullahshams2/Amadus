@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstallerController;
 use App\Http\Controllers\InstructorController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\TerminalController;
 use App\Http\Controllers\TrainingController;
 use Illuminate\Support\Facades\Route;
@@ -13,8 +14,11 @@ Route::get('/install', [InstallerController::class, 'show'])->name('installer.sh
 Route::post('/install', [InstallerController::class, 'install'])->name('installer.install');
 Route::get('/install/requirements', [InstallerController::class, 'requirements'])->name('installer.requirements');
 
-// Web Application Views
-Route::get('/', [TerminalController::class, 'index'])->name('terminal.index');
+// Main Landing Page (Public 100vh / 100vw Welcome Portal)
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+
+// Cryptic Terminal Simulator
+Route::get('/terminal', [TerminalController::class, 'index'])->name('terminal.index');
 Route::post('/terminal/execute', [TerminalController::class, 'execute'])->name('terminal.execute')->middleware('throttle:60,1,terminal');
 
 // Unified Role-Secured Dashboard
@@ -25,12 +29,15 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1,login');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1,login');
+Route::get('/pending-approval', [AuthController::class, 'pendingApproval'])->name('auth.pending-approval');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Web Instructor Operations (Strictly restricted to instructors)
 Route::middleware('instructor')->group(function () {
     Route::get('/instructor', [InstructorController::class, 'index'])->name('instructor.index');
     Route::post('/instructor/students', [InstructorController::class, 'storeStudent'])->name('instructor.students.store');
+    Route::post('/instructor/students/{id}/approve', [InstructorController::class, 'approveStudent'])->name('instructor.students.approve');
+    Route::post('/instructor/students/{id}/reject', [InstructorController::class, 'rejectStudent'])->name('instructor.students.reject');
     Route::delete('/instructor/scenarios/{id}', [DashboardController::class, 'deleteScenario'])->name('instructor.scenarios.destroy');
 });
 
@@ -60,6 +67,8 @@ Route::prefix('api')->group(function () {
         Route::get('/students', [InstructorController::class, 'studentsApi']);
         Route::post('/students', [InstructorController::class, 'storeStudent']);
         Route::post('/students/batch', [InstructorController::class, 'batchStoreStudents']);
+        Route::post('/students/{id}/approve', [InstructorController::class, 'approveStudent']);
+        Route::post('/students/{id}/reject', [InstructorController::class, 'rejectStudent']);
         Route::get('/spectate/{username}', [DashboardController::class, 'spectateStudentApi']);
         Route::post('/scenarios', [DashboardController::class, 'createScenarioApi']);
         Route::delete('/scenarios/{id}', [DashboardController::class, 'deleteScenario']);

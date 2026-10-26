@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'student@amadeus-gds.demo',
                 'password' => Hash::make('amadeus123'),
                 'role' => 'student',
+                'is_approved' => true,
                 'office_id' => 'LON1A0980',
                 'agent_id' => '1234AB',
             ]
@@ -38,6 +39,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'instructor@amadeus-gds.demo',
                 'password' => Hash::make('amadeus123'),
                 'role' => 'instructor',
+                'is_approved' => true,
                 'office_id' => 'LON1A0980',
                 'agent_id' => 'IN01GS',
             ]

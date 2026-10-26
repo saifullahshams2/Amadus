@@ -41,7 +41,21 @@ class AuthController extends Controller
                 return response()->json(['error' => 'Invalid username or password'], 401);
             }
 
-            return back()->withErrors(['username' => 'Invalid credentials']);
+            return back()->withInput()->withErrors(['username' => 'Invalid credentials']);
+        }
+
+        // Check if student cadet account has been approved by instructor
+        if ($user->role === 'student' && ! $user->is_approved) {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'error' => 'Your cadet account is awaiting flight instructor approval before access can be granted.',
+                    'pending_approval' => true,
+                ], 403);
+            }
+
+            return back()->withInput()->withErrors([
+                'username' => 'Your cadet account is pending instructor approval. Please contact your flight instructor.',
+            ]);
         }
 
         Auth::login($user, true);
@@ -50,6 +64,7 @@ class AuthController extends Controller
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
+                'redirect' => '/dashboard',
                 'user' => [
                     'id' => $user->id,
                     'username' => $user->username,
@@ -61,43 +76,56 @@ class AuthController extends Controller
             ]);
         }
 
-        return redirect()->intended('/');
+        return redirect()->intended('/dashboard');
     }
 
     public function register(Request $request)
     {
+        $passwordRules = $request->has('password_confirmation')
+            ? 'required|string|min:6|confirmed'
+            : 'required|string|min:6';
+
         $validated = $request->validate([
-            'username' => 'required|string|min:3|unique:users,username',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
+            'name' => 'nullable|string|max:255',
+            'username' => 'required|string|min:3|max:50|alpha_dash|unique:users,username',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => $passwordRules,
         ]);
 
+        $cleanUsername = strtolower(trim($validated['username']));
+
         $user = User::create([
-            'username' => $validated['username'],
-            'name' => $validated['username'],
-            'email' => $validated['email'],
+            'username' => $cleanUsername,
+            'name' => ! empty($validated['name']) ? trim($validated['name']) : $cleanUsername,
+            'email' => strtolower(trim($validated['email'])),
             'password' => Hash::make($validated['password']),
-            'role' => 'student',
+            'role' => 'student', // Strictly enforced as student
+            'is_approved' => false, // Requires instructor approval
             'office_id' => 'LON1A0980',
             'agent_id' => '1234AB',
         ]);
 
-        Auth::login($user, true);
-        $request->session()->regenerate();
-
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
+                'pending_approval' => true,
+                'message' => 'Cadet registration received. Your account is pending instructor approval.',
                 'user' => [
                     'id' => $user->id,
                     'username' => $user->username,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'is_approved' => false,
                 ],
             ], 201);
         }
 
-        return redirect('/');
+        return redirect('/pending-approval')->with('registered_username', $user->username);
+    }
+
+    public function pendingApproval(Request $request)
+    {
+        return view('auth.pending-approval');
     }
 
     public function logout(Request $request)

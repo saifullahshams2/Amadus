@@ -117,6 +117,7 @@ class InstallerService
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
                 'role' => 'instructor',
+                'is_approved' => true,
                 'office_id' => $data['office_id'] ?? 'LON1A0980',
                 'agent_id' => $data['agent_id'] ?? 'IN01GS',
             ]

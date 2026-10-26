@@ -30,12 +30,18 @@ class InstructorController extends Controller
         }
 
         $students = User::where('role', 'student')
-            ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'created_at'])
+            ->where('is_approved', true)
+            ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'is_approved', 'created_at'])
+            ->get();
+        $pendingStudents = User::where('role', 'student')
+            ->where('is_approved', false)
+            ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'is_approved', 'created_at'])
+            ->orderBy('created_at', 'desc')
             ->get();
         $progress = LessonProgress::all();
         $pnrs = Pnr::orderBy('updated_at', 'desc')->limit(100)->get();
 
-        return view('instructor.index', compact('user', 'students', 'progress', 'pnrs'));
+        return view('instructor.index', compact('user', 'students', 'pendingStudents', 'progress', 'pnrs'));
     }
 
     /**
@@ -49,13 +55,20 @@ class InstructorController extends Controller
         }
 
         $students = User::where('role', 'student')
-            ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'created_at'])
+            ->where('is_approved', true)
+            ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'is_approved', 'created_at'])
+            ->get();
+        $pendingStudents = User::where('role', 'student')
+            ->where('is_approved', false)
+            ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'is_approved', 'created_at'])
+            ->orderBy('created_at', 'desc')
             ->get();
         $progressRecords = LessonProgress::all();
         $pnrs = Pnr::orderBy('updated_at', 'desc')->limit(100)->get();
 
         return response()->json([
             'students' => $students,
+            'pendingStudents' => $pendingStudents,
             'progressRecords' => $progressRecords,
             'pnrs' => $pnrs,
         ]);
@@ -99,6 +112,7 @@ class InstructorController extends Controller
             'email' => strtolower(trim($validated['email'])),
             'password' => Hash::make($validated['password']),
             'role' => 'student', // Strictly enforced as student
+            'is_approved' => true,
             'office_id' => $officeId,
             'agent_id' => $agentId,
         ]);
@@ -180,6 +194,7 @@ class InstructorController extends Controller
                 'email' => $candidateEmail,
                 'password' => Hash::make($defaultPassword),
                 'role' => 'student', // Strictly enforced as student
+                'is_approved' => true,
                 'office_id' => $officeId,
                 'agent_id' => $agentId,
             ]);
@@ -210,5 +225,60 @@ class InstructorController extends Controller
             'default_password' => $defaultPassword,
             'students' => $createdStudents,
         ], 201);
+    }
+
+    /**
+     * Approve a pending cadet registration.
+     */
+    public function approveStudent(Request $request, int $id): JsonResponse|RedirectResponse
+    {
+        $user = Auth::user();
+        if (! $user || $user->role !== 'instructor') {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'Instructor role required'], 403);
+            }
+            abort(403, 'Forbidden. Instructor access required.');
+        }
+
+        $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
+        $student->is_approved = true;
+        $student->save();
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => "Cadet '{$student->username}' approved successfully.",
+                'student' => $student,
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Cadet '{$student->username}' approved successfully.");
+    }
+
+    /**
+     * Reject and remove a pending cadet registration.
+     */
+    public function rejectStudent(Request $request, int $id): JsonResponse|RedirectResponse
+    {
+        $user = Auth::user();
+        if (! $user || $user->role !== 'instructor') {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'Instructor role required'], 403);
+            }
+            abort(403, 'Forbidden. Instructor access required.');
+        }
+
+        $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
+        $username = $student->username;
+        $student->delete();
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => "Cadet registration for '{$username}' was rejected and removed.",
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Cadet registration for '{$username}' was rejected.");
     }
 }
