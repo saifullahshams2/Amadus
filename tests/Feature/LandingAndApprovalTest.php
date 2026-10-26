@@ -16,6 +16,7 @@ class LandingAndApprovalTest extends TestCase
     {
         parent::setUp();
         $this->seed();
+        $this->seedTestUsers();
     }
 
     public function test_01_landing_page_renders_with_brand_and_login_button(): void
@@ -31,14 +32,19 @@ class LandingAndApprovalTest extends TestCase
         $response->assertSee('/terminal');
     }
 
-    public function test_02_terminal_simulator_accessible_at_terminal_route(): void
+    public function test_02_terminal_simulator_requires_authentication_and_redirects_guests(): void
     {
-        $response = $this->get('/terminal');
+        // Guests redirect to main landing page
+        $guestResponse = $this->get('/terminal');
+        $guestResponse->assertRedirect('/');
 
-        $response->assertStatus(200);
-        $response->assertSeeText('WORK AREA:');
-        $response->assertSeeText('1A TRAINING CONNECT');
-        $response->assertSeeText('Dashboard Hub');
+        // Authenticated users can access terminal
+        $student = User::where('role', 'student')->first();
+        $authResponse = $this->actingAs($student)->get('/terminal');
+        $authResponse->assertStatus(200);
+        $authResponse->assertSeeText('WORK AREA:');
+        $authResponse->assertSeeText('1A TRAINING CONNECT');
+        $authResponse->assertSeeText('Dashboard Hub');
     }
 
     public function test_03_approved_student_login_redirects_to_dashboard(): void

@@ -40,6 +40,8 @@ class InstallerTest extends TestCase
         $this->assertTrue($results['php_version']['satisfied']);
         $this->assertTrue($results['extensions']['pdo']);
         $this->assertTrue($results['directories']['storage']);
+        $this->assertArrayHasKey('sqlite', $results['database_drivers']);
+        $this->assertArrayHasKey('mysql', $results['database_drivers']);
     }
 
     public function test_02_installer_web_wizard_renders_successfully(): void
@@ -51,6 +53,8 @@ class InstallerTest extends TestCase
         $response->assertSeeText('Installer');
         $response->assertSeeText('System Prerequisites & Permissions');
         $response->assertSeeText('Provision Primary Flight Instructor');
+        $response->assertSeeText('SQLite');
+        $response->assertSeeText('MySQL');
     }
 
     public function test_03_installer_validation_rejects_missing_or_mismatched_password(): void
@@ -70,6 +74,7 @@ class InstallerTest extends TestCase
     public function test_04_installer_creates_instructor_and_writes_lock_file(): void
     {
         $payload = [
+            'database_driver' => 'sqlite',
             'name' => 'Chief Flight Instructor',
             'username' => 'lead_instructor',
             'email' => 'lead.instructor@amadeus.test',
@@ -109,9 +114,9 @@ class InstallerTest extends TestCase
         $dummyInstructor = User::factory()->create(['role' => 'instructor']);
         $this->installerService->markInstalled($dummyInstructor);
 
-        // Attempting to visit /install should redirect
+        // Attempting to visit /install should redirect to landing / main page
         $response = $this->get('/install');
-        $response->assertRedirect('/dashboard');
+        $response->assertRedirect('/');
 
         // JSON post to /install should return 400
         $jsonResponse = $this->postJson('/install', [
@@ -155,6 +160,29 @@ class InstallerTest extends TestCase
         $this->assertEquals('instructor', $cliInstructor->role);
         $this->assertEquals('LON1A0980', $cliInstructor->office_id);
         $this->assertEquals('IN01GS', $cliInstructor->agent_id);
+        $this->assertTrue($this->installerService->isInstalled());
+    }
+
+    public function test_08_installer_tests_database_connection_successfully(): void
+    {
+        $sqliteResponse = $this->postJson('/install/test-db', [
+            'driver' => 'sqlite',
+            'database_path' => 'database/database.sqlite',
+        ]);
+
+        $sqliteResponse->assertStatus(200);
+        $sqliteResponse->assertJson([
+            'success' => true,
+        ]);
+    }
+
+    public function test_09_artisan_remove_installer_command_locks_installer(): void
+    {
+        $this->installerService->uninstall();
+        $this->assertFalse($this->installerService->isInstalled());
+
+        $exitCode = Artisan::call('app:remove-installer');
+        $this->assertEquals(0, $exitCode);
         $this->assertTrue($this->installerService->isInstalled());
     }
 }

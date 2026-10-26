@@ -13,17 +13,18 @@ use Illuminate\Support\Facades\Route;
 Route::get('/install', [InstallerController::class, 'show'])->name('installer.show');
 Route::post('/install', [InstallerController::class, 'install'])->name('installer.install');
 Route::get('/install/requirements', [InstallerController::class, 'requirements'])->name('installer.requirements');
+Route::post('/install/test-db', [InstallerController::class, 'testDatabase'])->name('installer.test-db');
 
 // Main Landing Page (Public 100vh / 100vw Welcome Portal)
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
-// Cryptic Terminal Simulator
-Route::get('/terminal', [TerminalController::class, 'index'])->name('terminal.index');
+// Unified Role-Secured Dashboard & Cryptic Terminal Simulator (Requires authentication)
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/dashboard/switch-role', [DashboardController::class, 'switchRole'])->name('dashboard.switch-role');
+    Route::get('/terminal', [TerminalController::class, 'index'])->name('terminal.index');
+});
 Route::post('/terminal/execute', [TerminalController::class, 'execute'])->name('terminal.execute')->middleware('throttle:60,1,terminal');
-
-// Unified Role-Secured Dashboard
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-Route::post('/dashboard/switch-role', [DashboardController::class, 'switchRole'])->name('dashboard.switch-role');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1,login');

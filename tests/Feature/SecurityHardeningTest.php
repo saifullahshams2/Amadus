@@ -19,6 +19,7 @@ class SecurityHardeningTest extends TestCase
     {
         parent::setUp();
         $this->seed();
+        $this->seedTestUsers();
     }
 
     public function test_registration_cannot_escalate_to_instructor_role(): void

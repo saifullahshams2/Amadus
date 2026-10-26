@@ -16,6 +16,7 @@ class StudentInstructorAccountSeparationTest extends TestCase
     {
         parent::setUp();
         $this->seed();
+        $this->seedTestUsers();
     }
 
     public function test_student_cannot_access_instructor_dashboard_perspective(): void
@@ -106,7 +107,7 @@ class StudentInstructorAccountSeparationTest extends TestCase
         $response->assertStatus(401);
 
         $webResponse = $this->get('/instructor');
-        $webResponse->assertRedirect('/login');
+        $webResponse->assertRedirect('/');
     }
 
     public function test_instructor_has_full_access_to_dashboard_and_web_hub(): void

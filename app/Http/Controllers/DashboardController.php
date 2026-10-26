@@ -30,58 +30,37 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        if (! $user) {
+            return redirect()->route('landing');
+        }
+
         // 1. Strict separation: Authenticated students are strictly restricted to student dashboard
-        if ($user && $user->role === 'student') {
+        if ($user->role === 'student') {
             if ($request->query('role') === 'instructor') {
                 abort(403, 'Forbidden. Students cannot access the instructor dashboard.');
             }
-
-            $request->session()->put('demo_role', 'student');
 
             return $this->studentView($request, $user);
         }
 
         // 2. Strict separation: Authenticated instructors are strictly restricted to instructor dashboard
-        if ($user && $user->role === 'instructor') {
-            $request->session()->put('demo_role', 'instructor');
-
+        if ($user->role === 'instructor') {
             return $this->instructorView($request, $user);
         }
 
-        // 3. Unauthenticated / Demo mode (supports dev testing and public sandbox demo)
-        $requestedRole = $request->query('role') ?? $request->session()->get('demo_role', 'student');
-        $activeRole = in_array($requestedRole, ['student', 'instructor'], true) ? $requestedRole : 'student';
-        $request->session()->put('demo_role', $activeRole);
-
-        $demoUser = User::where('role', $activeRole)->first() ?? User::first();
-
-        if ($activeRole === 'instructor') {
-            return $this->instructorView($request, $demoUser);
-        }
-
-        return $this->studentView($request, $demoUser);
+        return redirect()->route('landing');
     }
 
     /**
-     * Switch Demo Role between Student and Instructor.
+     * Role switching endpoint. Unauthenticated guests are redirected to main page.
      */
     public function switchRole(Request $request): RedirectResponse
     {
-        $role = $request->input('role');
-        if (! in_array($role, ['student', 'instructor'], true)) {
-            $role = 'student';
+        if (! Auth::check()) {
+            return redirect()->route('landing');
         }
 
-        $user = Auth::user();
-
-        // 1. Strict separation: Authenticated users cannot switch roles (each has own dedicated dashboard)
-        if ($user) {
-            abort(403, 'Forbidden. Role switching is not permitted for authenticated accounts.');
-        }
-
-        $request->session()->put('demo_role', $role);
-
-        return redirect()->route('dashboard', ['role' => $role]);
+        abort(403, 'Forbidden. Role switching is not permitted for authenticated accounts.');
     }
 
     /**

@@ -86,34 +86,6 @@
                     <span class="text-[10px] text-slate-500">ADMIN</span>
                 </div>
             </div>
-        @elseif(!Auth::check())
-            <!-- Active Perspective / Role Switcher for Guest/Dev Demo ONLY -->
-            <div class="p-3 border-b border-slate-800/80 bg-[#0c1222]/60">
-                <div class="flex items-center justify-between text-[11px] font-semibold text-slate-400 mb-2">
-                    <span class="uppercase tracking-wider">ACTIVE PERSPECTIVE</span>
-                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-blue-950 text-blue-400 border border-blue-800/60 font-mono">DEV/DEMO</span>
-                </div>
-                <div class="grid grid-cols-2 gap-1.5 bg-[#070b14] p-1 rounded-lg border border-slate-800">
-                    <form action="{{ route('dashboard.switch-role') }}" method="POST" class="w-full">
-                        @csrf
-                        <input type="hidden" name="role" value="student">
-                        <button type="submit"
-                                class="w-full py-1.5 px-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 {{ ($activeRole ?? 'student') === 'student' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path></svg>
-                            <span>Student</span>
-                        </button>
-                    </form>
-                    <form action="{{ route('dashboard.switch-role') }}" method="POST" class="w-full">
-                        @csrf
-                        <input type="hidden" name="role" value="instructor">
-                        <button type="submit"
-                                class="w-full py-1.5 px-2 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 {{ ($activeRole ?? 'student') === 'instructor' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                            <span>Instructor</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
         @endif
 
         <!-- Navigation Menu -->

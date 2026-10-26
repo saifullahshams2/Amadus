@@ -41,7 +41,7 @@
                         <span>Amadeus GDS Platform</span>
                         <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800">Installer</span>
                     </h1>
-                    <p class="text-xs text-slate-400">System initialization & instructor account setup</p>
+                    <p class="text-xs text-slate-400">First-time system setup, database selection & instructor provisioning</p>
                 </div>
             </div>
             <div class="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
@@ -69,7 +69,7 @@
                         <span x-show="step > 2">✓</span>
                         <span x-show="step <= 2">2</span>
                     </div>
-                    <span :class="step === 2 ? 'text-white font-semibold' : 'text-slate-400'" class="text-xs hidden md:inline">Database & Platform</span>
+                    <span :class="step === 2 ? 'text-white font-semibold' : 'text-slate-400'" class="text-xs hidden md:inline">Database (SQLite / MySQL)</span>
                 </div>
                 <div class="h-0.5 flex-1 mx-3 bg-slate-800" :class="step > 2 ? 'bg-blue-600/60' : ''"></div>
 
@@ -88,7 +88,7 @@
                     <div :class="step === 4 ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500'" class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors">
                         4
                     </div>
-                    <span :class="step === 4 ? 'text-white font-semibold' : 'text-slate-400'" class="text-xs hidden md:inline">Finished</span>
+                    <span :class="step === 4 ? 'text-white font-semibold' : 'text-slate-400'" class="text-xs hidden md:inline">Installed & Locked</span>
                 </div>
             </div>
         </div>
@@ -114,7 +114,7 @@
             <div x-show="step === 1" class="space-y-6">
                 <div>
                     <h2 class="text-base font-semibold text-white">System Prerequisites & Permissions</h2>
-                    <p class="text-xs text-slate-400 mt-1">Verifying PHP runtime, core extensions, and directory write permissions.</p>
+                    <p class="text-xs text-slate-400 mt-1">Verifying PHP runtime, database drivers, core extensions, and directory write permissions.</p>
                 </div>
 
                 <!-- PHP Version -->
@@ -139,9 +139,38 @@
                     @endif
                 </div>
 
+                <!-- Database Drivers Grid -->
+                <div class="space-y-2">
+                    <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Database Drivers (At least 1 required)</span>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div class="p-3 rounded-lg bg-[#0b101c] border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="font-bold text-xs text-white block">SQLite Driver (pdo_sqlite)</span>
+                                <span class="text-[10px] text-slate-400">Embedded file database</span>
+                            </div>
+                            @if(!empty($requirements['database_drivers']['sqlite']))
+                                <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">AVAILABLE</span>
+                            @else
+                                <span class="px-2 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800 text-[10px] font-bold">MISSING</span>
+                            @endif
+                        </div>
+                        <div class="p-3 rounded-lg bg-[#0b101c] border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="font-bold text-xs text-white block">MySQL Driver (pdo_mysql)</span>
+                                <span class="text-[10px] text-slate-400">Production SQL server</span>
+                            </div>
+                            @if(!empty($requirements['database_drivers']['mysql']))
+                                <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">AVAILABLE</span>
+                            @else
+                                <span class="px-2 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800 text-[10px] font-bold">MISSING</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Required Extensions Grid -->
                 <div class="space-y-2">
-                    <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">PHP Extensions</span>
+                    <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Core PHP Extensions</span>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         @foreach($requirements['extensions'] as $ext => $loaded)
                             <div class="p-2.5 rounded-lg bg-[#0b101c] border border-slate-800 flex items-center justify-between">
@@ -179,50 +208,125 @@
                             @click="step = 2"
                             :disabled="!{{ $requirements['satisfied'] ? 'true' : 'false' }}"
                             class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-xs flex items-center gap-2 transition-colors">
-                        <span>Continue to Database</span>
+                        <span>Continue to Database Setup</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- STEP 2: Database & Platform Overview -->
+            <!-- STEP 2: Database Configuration (SQLite & MySQL) -->
             <div x-show="step === 2" class="space-y-6">
                 <div>
-                    <h2 class="text-base font-semibold text-white">Database & Initial Data Seeding</h2>
-                    <p class="text-xs text-slate-400 mt-1">Configure database connection and prepare default training entities.</p>
+                    <h2 class="text-base font-semibold text-white">Select & Configure Database</h2>
+                    <p class="text-xs text-slate-400 mt-1">Choose between SQLite (file-based, zero configuration) or MySQL (dedicated database server).</p>
                 </div>
 
-                <div class="p-4 rounded-xl bg-[#0b101c] border border-slate-800 space-y-3">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-400">Database Driver:</span>
-                        <span class="font-mono font-bold text-white uppercase">{{ config('database.default') }}</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-400">Database Name / Path:</span>
-                        <span class="font-mono text-sky-400 text-[11px] truncate max-w-xs">{{ config('database.connections.' . config('database.default') . '.database') }}</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-400">Default Office ID:</span>
-                        <span class="font-mono text-amber-300">LON1A0980 (1A London Training)</span>
+                <!-- Database Engine Selection Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- SQLite Option -->
+                    <label class="relative p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between"
+                           :class="dbConfig.driver === 'sqlite' ? 'bg-blue-950/40 border-blue-500 ring-1 ring-blue-500' : 'bg-[#0b101c] border-slate-800 hover:border-slate-700'">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <input type="radio" name="database_driver" value="sqlite" x-model="dbConfig.driver" @change="resetDbStatus()" class="text-blue-600 focus:ring-0">
+                                <span class="font-bold text-sm text-white">SQLite</span>
+                            </div>
+                            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-800 text-sky-400 border border-slate-700">File Database</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2">Zero setup. Database stored locally in a single file. Perfect for standalone installations & quick setup.</p>
+                    </label>
+
+                    <!-- MySQL Option -->
+                    <label class="relative p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between"
+                           :class="dbConfig.driver === 'mysql' ? 'bg-blue-950/40 border-blue-500 ring-1 ring-blue-500' : 'bg-[#0b101c] border-slate-800 hover:border-slate-700'">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <input type="radio" name="database_driver" value="mysql" x-model="dbConfig.driver" @change="resetDbStatus()" class="text-blue-600 focus:ring-0">
+                                <span class="font-bold text-sm text-white">MySQL / MariaDB</span>
+                            </div>
+                            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-800 text-amber-300 border border-slate-700">SQL Server</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2">High concurrency. Connect to an external or local MySQL / MariaDB server with credentials.</p>
+                    </label>
+                </div>
+
+                <!-- SQLite Configuration Sub-panel -->
+                <div x-show="dbConfig.driver === 'sqlite'" class="p-4 rounded-xl bg-[#0b101c] border border-slate-800 space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">SQLite Database File Path</label>
+                        <input type="text" x-model="dbConfig.database_path" placeholder="database/database.sqlite"
+                               class="w-full px-3 py-2 bg-[#131c2e] border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-blue-500">
+                        <span class="text-[11px] text-slate-400 mt-1 block">Relative to application root. File will be created automatically if missing.</span>
                     </div>
                 </div>
 
-                <div class="space-y-2">
-                    <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Automatic Migration & Seed Assets</span>
-                    <ul class="text-xs text-slate-400 space-y-1.5 list-disc list-inside bg-[#0b101c] p-3.5 rounded-xl border border-slate-800">
-                        <li>Core user authentication & dual-role RBAC schema</li>
-                        <li>Global airport lookup table (IATA / ICAO / City)</li>
-                        <li>Airline carriers & aircraft equipment database</li>
-                        <li>Flight booking practice scenarios & PRINT grading engine</li>
-                        <li>Simulated GDS Queues (1: TTL, 7: Sched Change, 8: Waitlist, 9: General, 87: Exchange)</li>
-                    </ul>
+                <!-- MySQL Configuration Sub-panel -->
+                <div x-show="dbConfig.driver === 'mysql'" class="p-4 rounded-xl bg-[#0b101c] border border-slate-800 space-y-3.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Database Host <span class="text-rose-400">*</span></label>
+                            <input type="text" x-model="dbConfig.host" required placeholder="127.0.0.1 or localhost"
+                                   class="w-full px-3 py-2 bg-[#131c2e] border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Port</label>
+                            <input type="number" x-model="dbConfig.port" placeholder="3306"
+                                   class="w-full px-3 py-2 bg-[#131c2e] border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Database Name <span class="text-rose-400">*</span></label>
+                        <input type="text" x-model="dbConfig.database" required placeholder="amadeus_gds"
+                               class="w-full px-3 py-2 bg-[#131c2e] border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-blue-500">
+                        <span class="text-[11px] text-slate-400 mt-1 block">The database will be automatically created if your MySQL user has CREATE DATABASE permission.</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Username <span class="text-rose-400">*</span></label>
+                            <input type="text" x-model="dbConfig.username" required placeholder="root"
+                                   class="w-full px-3 py-2 bg-[#131c2e] border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Password</label>
+                            <input type="password" x-model="dbConfig.password" placeholder="••••••••"
+                                   class="w-full px-3 py-2 bg-[#131c2e] border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Connection Button & Status Banner -->
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <button type="button" @click="testDatabaseConnection()"
+                                :disabled="isTestingDb"
+                                class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-2 transition-colors border border-slate-700">
+                            <svg x-show="isTestingDb" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span x-text="isTestingDb ? 'Testing Connection...' : 'Test Database Connection'"></span>
+                        </button>
+                        <span class="text-[11px] text-slate-400">Verify connection before proceeding</span>
+                    </div>
+
+                    <!-- Connection Success Prompt -->
+                    <div x-show="dbTestSuccessMessage" class="p-3 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span x-text="dbTestSuccessMessage"></span>
+                    </div>
+
+                    <!-- Connection Error Prompt -->
+                    <div x-show="dbTestErrorMessage" class="p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+                        <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span x-text="dbTestErrorMessage"></span>
+                    </div>
                 </div>
 
                 <div class="pt-4 border-t border-slate-800 flex justify-between">
                     <button type="button" @click="step = 1" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors">
                         Back
                     </button>
-                    <button type="button" @click="step = 3" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center gap-2 transition-colors">
+                    <button type="button" @click="proceedToInstructorStep()"
+                            class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center gap-2 transition-colors">
                         <span>Continue to Instructor Setup</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </button>
@@ -233,7 +337,13 @@
             <form x-show="step === 3" @submit.prevent="submitInstallation()" class="space-y-5">
                 <div>
                     <h2 class="text-base font-semibold text-white">Provision Primary Flight Instructor</h2>
-                    <p class="text-xs text-slate-400 mt-1">This account will hold full administrator and instructor privileges for classroom spectating, scenario grading, and queue simulation.</p>
+                    <p class="text-xs text-slate-400 mt-1">This will be the sole administrative account created during setup. No demo accounts or student accounts will be created.</p>
+                </div>
+
+                <!-- Security Note -->
+                <div class="p-3 rounded-xl bg-blue-950/40 border border-blue-800/80 text-blue-300 text-xs flex items-center gap-2.5">
+                    <svg class="w-5 h-5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    <span><strong>Instructor Exclusivity:</strong> Only this flight instructor account will be generated. Once installed, the installer is locked and cannot be rerun.</span>
                 </div>
 
                 <!-- Form Fields -->
@@ -300,12 +410,12 @@
                             :disabled="isSubmitting"
                             class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-2 transition-colors shadow-lg shadow-emerald-600/20">
                         <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                        <span x-text="isSubmitting ? 'Installing Platform & Creating Account...' : 'Install & Create Instructor Account'"></span>
+                        <span x-text="isSubmitting ? 'Configuring DB & Installing...' : 'Install & Create Instructor Account'"></span>
                     </button>
                 </div>
             </form>
 
-            <!-- STEP 4: Installation Finished -->
+            <!-- STEP 4: Installation Finished & Locked -->
             <div x-show="step === 4" class="text-center py-6 space-y-6">
                 <div class="w-16 h-16 rounded-full bg-emerald-950/80 border-2 border-emerald-500 flex items-center justify-center mx-auto text-emerald-400 shadow-xl shadow-emerald-500/20">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
@@ -314,12 +424,27 @@
                 <div>
                     <h2 class="text-lg font-bold text-white">Amadeus GDS Platform Installed Successfully!</h2>
                     <p class="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-                        Database tables have been migrated, default airport and scenario seeds loaded, and the primary instructor account has been created.
+                        Database migrated, reference airports & scenarios loaded, and your primary flight instructor account is active.
+                    </p>
+                </div>
+
+                <!-- Installer Lock Security Badge -->
+                <div class="max-w-md mx-auto p-3.5 rounded-xl bg-slate-900 border border-slate-700 text-left space-y-1">
+                    <div class="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span>INSTALLER LOCKED & REMOVED</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">
+                        The installer lock file was written to <code class="font-mono text-slate-300">storage/installed</code>. All installer routes are now deactivated to prevent unauthorized re-installation.
                     </p>
                 </div>
 
                 <!-- Summary Details Box -->
                 <div class="max-w-md mx-auto p-4 rounded-xl bg-[#0b101c] border border-slate-800 text-left space-y-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Database Driver:</span>
+                        <span class="font-mono font-bold text-white uppercase" x-text="installedData.database_driver || dbConfig.driver"></span>
+                    </div>
                     <div class="flex justify-between">
                         <span class="text-slate-400">Instructor Name:</span>
                         <span class="font-semibold text-white" x-text="installedInstructor.name"></span>
@@ -346,7 +471,7 @@
                     </a>
                     <a href="/" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs flex items-center gap-2 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        <span>Launch Cryptic Simulator</span>
+                        <span>Main Portal</span>
                     </a>
                 </div>
             </div>
@@ -358,7 +483,21 @@
         return {
             step: 1,
             isSubmitting: false,
+            isTestingDb: false,
+            dbTestSuccessMessage: '',
+            dbTestErrorMessage: '',
             errorMessage: '',
+
+            dbConfig: {
+                driver: '{{ $defaultDriver ?? "sqlite" }}',
+                database_path: 'database/database.sqlite',
+                host: '127.0.0.1',
+                port: 3306,
+                database: 'amadeus_gds',
+                username: 'root',
+                password: '',
+            },
+
             formData: {
                 name: 'Flight Instructor',
                 username: 'instructor',
@@ -368,7 +507,48 @@
                 office_id: 'LON1A0980',
                 agent_id: 'IN01GS',
             },
+
             installedInstructor: {},
+            installedData: {},
+
+            resetDbStatus() {
+                this.dbTestSuccessMessage = '';
+                this.dbTestErrorMessage = '';
+            },
+
+            async testDatabaseConnection() {
+                this.resetDbStatus();
+                this.isTestingDb = true;
+
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+                try {
+                    const res = await fetch('/install/test-db', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify(this.dbConfig)
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        this.dbTestErrorMessage = data.error || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Database test connection failed.');
+                    } else {
+                        this.dbTestSuccessMessage = data.message || 'Database connection verified successfully.';
+                    }
+                } catch (err) {
+                    this.dbTestErrorMessage = 'Network error testing database connection.';
+                } finally {
+                    this.isTestingDb = false;
+                }
+            },
+
+            proceedToInstructorStep() {
+                this.step = 3;
+            },
 
             async submitInstallation() {
                 this.errorMessage = '';
@@ -386,6 +566,17 @@
                 this.isSubmitting = true;
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
+                const payload = {
+                    ...this.formData,
+                    database_driver: this.dbConfig.driver,
+                    db_path: this.dbConfig.database_path,
+                    db_host: this.dbConfig.host,
+                    db_port: this.dbConfig.port,
+                    db_database: this.dbConfig.database,
+                    db_username: this.dbConfig.username,
+                    db_password: this.dbConfig.password,
+                };
+
                 try {
                     const res = await fetch('/install', {
                         method: 'POST',
@@ -394,7 +585,7 @@
                             'Accept': 'application/json',
                             'X-CSRF-TOKEN': csrfToken,
                         },
-                        body: JSON.stringify(this.formData)
+                        body: JSON.stringify(payload)
                     });
 
                     const data = await res.json();
@@ -410,6 +601,9 @@
                         username: data.instructor?.username || this.formData.username,
                         office_id: data.instructor?.office_id || this.formData.office_id,
                         agent_id: data.instructor?.agent_id || this.formData.agent_id,
+                    };
+                    this.installedData = {
+                        database_driver: data.database?.driver || this.dbConfig.driver,
                     };
 
                     this.step = 4;

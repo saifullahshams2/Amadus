@@ -22,7 +22,7 @@ class EnsureUserIsInstructor
                 return response()->json(['error' => 'Unauthenticated. Instructor role required.'], 401);
             }
 
-            return redirect()->guest(route('login'))->withErrors(['error' => 'Instructor access required.']);
+            return redirect()->guest(route('landing'))->withErrors(['error' => 'Instructor access required.']);
         }
 
         // 2. Authenticated user lacks instructor role (e.g. student)

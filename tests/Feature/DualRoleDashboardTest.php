@@ -19,6 +19,7 @@ class DualRoleDashboardTest extends TestCase
     {
         parent::setUp();
         $this->seed();
+        $this->seedTestUsers();
     }
 
     public function test_01_student_dashboard_renders_successfully(): void
@@ -51,15 +52,13 @@ class DualRoleDashboardTest extends TestCase
         $response->assertDontSee('Essential entries by operational domain');
     }
 
-    public function test_03_dev_demo_role_switcher_redirects_and_updates_role(): void
+    public function test_03_unauthenticated_guests_redirect_to_main_page(): void
     {
-        $response = $this->post('/dashboard/switch-role', ['role' => 'instructor']);
-        $response->assertRedirect('/dashboard?role=instructor');
-        $response->assertSessionHas('demo_role', 'instructor');
+        $response = $this->get('/dashboard');
+        $response->assertRedirect('/');
 
-        $response2 = $this->post('/dashboard/switch-role', ['role' => 'student']);
-        $response2->assertRedirect('/dashboard?role=student');
-        $response2->assertSessionHas('demo_role', 'student');
+        $response2 = $this->post('/dashboard/switch-role', ['role' => 'instructor']);
+        $response2->assertRedirect('/');
     }
 
     public function test_04_active_pnr_api_returns_structured_data(): void
@@ -239,8 +238,14 @@ class DualRoleDashboardTest extends TestCase
 
     public function test_09_instructor_can_override_grade_and_add_feedback(): void
     {
-        $submission = Submission::where('user_id', 'student')->first();
-        $this->assertNotNull($submission);
+        $submission = Submission::create([
+            'scenario_id' => 'SCN-RT-01',
+            'user_id' => 'student',
+            'status' => 'submitted',
+            'score' => 90,
+            'auto_grade_results' => ['score' => 90],
+            'terminal_logs' => [],
+        ]);
 
         $instructor = User::where('role', 'instructor')->first();
         $response = $this->actingAs($instructor)->postJson("/api/instructor/submissions/{$submission->id}/grade", [

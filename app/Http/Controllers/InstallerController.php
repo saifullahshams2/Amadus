@@ -21,13 +21,14 @@ class InstallerController extends Controller
     public function show(): View|RedirectResponse
     {
         if ($this->installerService->isInstalled()) {
-            return redirect('/dashboard')->with('info', 'Application is already installed and configured.');
+            return redirect()->route('landing')->with('info', 'Application is already installed and installer is locked.');
         }
 
         $requirements = $this->installerService->checkRequirements();
 
         return view('installer.index', [
             'requirements' => $requirements,
+            'defaultDriver' => config('database.default', 'sqlite'),
         ]);
     }
 
@@ -36,11 +37,43 @@ class InstallerController extends Controller
      */
     public function requirements(): JsonResponse
     {
+        if ($this->installerService->isInstalled()) {
+            return response()->json(['error' => 'Application is already installed and installer is locked.'], 403);
+        }
+
         return response()->json($this->installerService->checkRequirements());
     }
 
     /**
-     * Process installation, migrate database, seed reference data, and create instructor account.
+     * Test database connectivity dynamically from installer wizard.
+     */
+    public function testDatabase(Request $request): JsonResponse
+    {
+        if ($this->installerService->isInstalled()) {
+            return response()->json(['error' => 'Application is already installed and installer is locked.'], 403);
+        }
+
+        $validated = $request->validate([
+            'driver' => 'required|string|in:sqlite,mysql',
+            'database_path' => 'nullable|string',
+            'host' => 'nullable|string',
+            'port' => 'nullable|numeric',
+            'database' => 'nullable|string',
+            'username' => 'nullable|string',
+            'password' => 'nullable|string',
+        ]);
+
+        $result = $this->installerService->testDatabase($validated);
+
+        if (! $result['success']) {
+            return response()->json($result, 422);
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * Process installation, configure database, migrate, seed reference data, and create instructor account.
      */
     public function install(Request $request): JsonResponse|RedirectResponse
     {
@@ -49,10 +82,20 @@ class InstallerController extends Controller
                 return response()->json(['error' => 'Application is already installed.'], 400);
             }
 
-            return redirect('/dashboard')->with('warning', 'Application is already installed.');
+            return redirect()->route('landing')->with('warning', 'Application is already installed.');
         }
 
         $validated = $request->validate([
+            // Database parameters (defaults to current driver if omitted for testing compatibility)
+            'database_driver' => 'nullable|string|in:sqlite,mysql',
+            'db_path' => 'nullable|string',
+            'db_host' => 'nullable|string',
+            'db_port' => 'nullable|numeric',
+            'db_database' => 'nullable|string|max:100',
+            'db_username' => 'nullable|string|max:100',
+            'db_password' => 'nullable|string',
+
+            // Instructor account credentials (ONLY instructor is created)
             'name' => 'required|string|max:255',
             'username' => 'required|string|min:3|max:50|alpha_dash',
             'email' => 'required|email|max:255',
@@ -71,10 +114,36 @@ class InstallerController extends Controller
             return back()->withInput()->withErrors(['requirements' => $errorMessage]);
         }
 
-        // Run migrations & seeders
+        // 1. Determine & test database configuration
+        $dbDriver = $validated['database_driver'] ?? config('database.default', 'sqlite');
+        $dbConfig = [
+            'driver' => $dbDriver,
+            'database_path' => $validated['db_path'] ?? 'database/database.sqlite',
+            'host' => $validated['db_host'] ?? '127.0.0.1',
+            'port' => $validated['db_port'] ?? 3306,
+            'database' => $validated['db_database'] ?? 'amadeus_gds',
+            'username' => $validated['db_username'] ?? 'root',
+            'password' => $validated['db_password'] ?? '',
+        ];
+
+        // Test database connectivity
+        $testResult = $this->installerService->testDatabase($dbConfig);
+        if (! $testResult['success']) {
+            $dbError = $testResult['error'] ?? 'Database connection failed.';
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $dbError, 'database_error' => true], 422);
+            }
+
+            return back()->withInput()->withErrors(['database' => $dbError]);
+        }
+
+        // 2. Configure database environment & runtime connection
+        $this->installerService->configureDatabase($dbConfig);
+
+        // 3. Run database migrations & seed reference catalog
         $this->installerService->runMigrationsAndSeeders();
 
-        // Create the primary instructor account
+        // 4. Create the primary flight instructor account (only account created)
         $instructor = $this->installerService->createInstructor([
             'name' => $validated['name'],
             'username' => $validated['username'],
@@ -84,17 +153,20 @@ class InstallerController extends Controller
             'agent_id' => ! empty($validated['agent_id']) ? strtoupper(trim($validated['agent_id'])) : 'IN01GS',
         ]);
 
-        // Mark installation as completed
-        $this->installerService->markInstalled($instructor);
+        // 5. Mark installation as completed (locks the installer)
+        $this->installerService->markInstalled($instructor, $dbDriver);
 
-        // Authenticate the new instructor
+        // 6. Authenticate the new instructor
         Auth::login($instructor, true);
         $request->session()->regenerate();
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Amadeus GDS Platform installed successfully.',
+                'message' => 'Amadeus GDS Platform installed successfully. Installer is now locked.',
+                'database' => [
+                    'driver' => $dbDriver,
+                ],
                 'instructor' => [
                     'id' => $instructor->id,
                     'username' => $instructor->username,

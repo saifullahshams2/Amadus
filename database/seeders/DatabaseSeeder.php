@@ -7,45 +7,14 @@ use App\Models\Airline;
 use App\Models\Airport;
 use App\Models\QueueItem;
 use App\Models\Scenario;
-use App\Models\Submission;
-use App\Models\TerminalActivityLog;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Seed Demo Users
-        User::updateOrCreate(
-            ['username' => 'student'],
-            [
-                'name' => 'Demo Student',
-                'email' => 'student@amadeus-gds.demo',
-                'password' => Hash::make('amadeus123'),
-                'role' => 'student',
-                'is_approved' => true,
-                'office_id' => 'LON1A0980',
-                'agent_id' => '1234AB',
-            ]
-        );
-
-        User::updateOrCreate(
-            ['username' => 'instructor'],
-            [
-                'name' => 'Lead Flight Instructor',
-                'email' => 'instructor@amadeus-gds.demo',
-                'password' => Hash::make('amadeus123'),
-                'role' => 'instructor',
-                'is_approved' => true,
-                'office_id' => 'LON1A0980',
-                'agent_id' => 'IN01GS',
-            ]
-        );
-
-        // 2. Seed Aircraft Equipment
+        // 1. Seed Aircraft Equipment
         $aircraftList = [
             ['code' => '318', 'name' => 'Airbus A318', 'manufacturer' => 'Airbus', 'category' => 'NARROWBODY'],
             ['code' => '319', 'name' => 'Airbus A319', 'manufacturer' => 'Airbus', 'category' => 'NARROWBODY'],
@@ -95,7 +64,7 @@ class DatabaseSeeder extends Seeder
 
         Aircraft::upsert($aircraftList, ['code'], ['name', 'manufacturer', 'category']);
 
-        // 3. Seed Airports from JSON (if not already seeded)
+        // 2. Seed Airports from JSON (if not already seeded)
         if (Airport::count() === 0 && file_exists(database_path('data/airports_full.json'))) {
             $json = json_decode(file_get_contents(database_path('data/airports_full.json')), true);
             $batch = [];
@@ -259,7 +228,7 @@ class DatabaseSeeder extends Seeder
                 'queue_number' => 1,
                 'category' => 'TICKETING',
                 'office_id' => 'LON1A0980',
-                'target_user_id' => 'student',
+                'target_user_id' => null,
                 'pnr_locator' => 'K9L2M5',
                 'pnr_summary' => ['passenger' => 'DOE/ALEX MR', 'itinerary' => 'LHR-DXB (EK 002)', 'urgency' => 'CRITICAL'],
                 'message' => 'TTL EXPIRING IN 2 HOURS - ISSUE TTP IMMEDIATELY',
@@ -302,68 +271,6 @@ class DatabaseSeeder extends Seeder
                 ['pnr_locator' => $qItem['pnr_locator'], 'queue_number' => $qItem['queue_number']],
                 $qItem
             );
-        }
-
-        // 7. Seed Demo Student Submission & Grade
-        Submission::updateOrCreate(
-            [
-                'scenario_id' => 'SCN-RT-01',
-                'user_id' => 'student',
-            ],
-            [
-                'status' => 'reviewed',
-                'score' => 95,
-                'auto_grade_results' => [
-                    'score' => 95,
-                    'maxScore' => 100,
-                    'passed' => true,
-                    'elementsPassedCount' => 5,
-                    'elementsTotalCount' => 5,
-                    'summary' => '5/5 mandatory PRINT elements met (95% score)',
-                    'checks' => [
-                        ['code' => 'NM', 'name' => 'Passenger Name Element (NM)', 'passed' => true, 'pointsAwarded' => 20, 'maxPoints' => 20, 'details' => '1 passenger registered'],
-                        ['code' => 'SS', 'name' => 'Itinerary Segments (SS)', 'passed' => true, 'pointsAwarded' => 20, 'maxPoints' => 20, 'details' => '2 segments reserved (LHR-JFK-LHR)'],
-                        ['code' => 'AP', 'name' => 'Contact Element (AP / APE)', 'passed' => true, 'pointsAwarded' => 15, 'maxPoints' => 15, 'details' => 'Agency phone contact added'],
-                        ['code' => 'TK', 'name' => 'Ticketing Element (TK)', 'passed' => true, 'pointsAwarded' => 15, 'maxPoints' => 15, 'details' => 'Ticketing limit set: TKTL15NOV/LON1A0980'],
-                        ['code' => 'RF', 'name' => 'Received From Element (RF)', 'passed' => true, 'pointsAwarded' => 15, 'maxPoints' => 15, 'details' => 'Received from PASSENGER validated'],
-                        ['code' => 'FXP', 'name' => 'Fare Calculation & Stored TST', 'passed' => true, 'pointsAwarded' => 10, 'maxPoints' => 10, 'details' => 'Transitional Stored Ticket (TST) created'],
-                    ],
-                ],
-                'manual_override_score' => 95,
-                'instructor_feedback' => 'Exceptional accuracy on mandatory PRINT elements. Clean syntax throughout.',
-                'terminal_logs' => [
-                    ['command' => 'AN15NOVLHRJFK/ABA', 'output_lines' => ['1 BA 117 Y9 B9'], 'is_error' => false, 'command_type' => 'AVAILABILITY'],
-                    ['command' => 'SS1Y1', 'output_lines' => ['1 BA 117 Y 15NOV LHRJFK HK1'], 'is_error' => false, 'command_type' => 'SELL'],
-                    ['command' => 'AN22NOVJFKLHR/ABA', 'output_lines' => ['1 BA 178 Y9 B9'], 'is_error' => false, 'command_type' => 'AVAILABILITY'],
-                    ['command' => 'SS1Y1', 'output_lines' => ['2 BA 178 Y 22NOV JFKLHR HK1'], 'is_error' => false, 'command_type' => 'SELL'],
-                    ['command' => 'NM1SMITH/JOHN MR', 'output_lines' => ['1.SMITH/JOHN MR'], 'is_error' => false, 'command_type' => 'PNR_NAME'],
-                    ['command' => 'AP LON 44-20-7946-0123-A', 'output_lines' => ['1 AP LON 44-20-7946-0123-A'], 'is_error' => false, 'command_type' => 'PNR_CONTACT'],
-                    ['command' => 'TKTL15NOV/LON1A0980', 'output_lines' => ['TK TL15NOV/LON1A0980'], 'is_error' => false, 'command_type' => 'PNR_TICKETING'],
-                    ['command' => 'RF PASSENGER', 'output_lines' => ['RF PASSENGER'], 'is_error' => false, 'command_type' => 'PNR_RECEIVED'],
-                    ['command' => 'FXP', 'output_lines' => ['TST 01 STORED - TOTAL GBP 645.20'], 'is_error' => false, 'command_type' => 'PRICING'],
-                    ['command' => 'ET', 'output_lines' => ['OK LON1A0980 1234AB K7G8X2'], 'is_error' => false, 'command_type' => 'ET'],
-                ],
-                'pnr_record_locator' => 'K7G8X2',
-                'time_elapsed_seconds' => 482,
-                'submitted_at' => now()->subDay(),
-                'reviewed_at' => now()->subHours(12),
-            ]
-        );
-
-        // 8. Seed Activity Logs for Student
-        if (TerminalActivityLog::count() === 0) {
-            $logs = [
-                ['user_id' => 'student', 'command' => 'AN15NOVLHRJFK', 'output_lines' => ['1 BA 117 Y9 B9'], 'is_error' => false, 'command_type' => 'AVAILABILITY'],
-                ['user_id' => 'student', 'command' => 'SS1Y1', 'output_lines' => ['1 BA 117 Y 15NOV LHRJFK HK1'], 'is_error' => false, 'command_type' => 'SELL'],
-                ['user_id' => 'student', 'command' => 'NM1DOE/JANE MRS', 'output_lines' => ['1.DOE/JANE MRS'], 'is_error' => false, 'command_type' => 'PNR_NAME'],
-                ['user_id' => 'student', 'command' => 'APLON', 'output_lines' => ['INVALID FORMAT: SPECIFY PHONE OR EMAIL WITH APE'], 'is_error' => true, 'command_type' => 'PNR_CONTACT'],
-                ['user_id' => 'student', 'command' => 'AP LON 44-20-7123-4567-A', 'output_lines' => ['1 AP LON 44-20-7123-4567-A'], 'is_error' => false, 'command_type' => 'PNR_CONTACT'],
-                ['user_id' => 'student', 'command' => 'FXP', 'output_lines' => ['TST 01 STORED'], 'is_error' => false, 'command_type' => 'PRICING'],
-            ];
-
-            foreach ($logs as $l) {
-                TerminalActivityLog::create(array_merge($l, ['execution_time_ms' => 42, 'created_at' => now()]));
-            }
         }
     }
 }

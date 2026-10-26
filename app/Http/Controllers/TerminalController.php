@@ -15,6 +15,10 @@ class TerminalController extends Controller
 
     public function index()
     {
+        if (! Auth::check()) {
+            return redirect()->route('landing');
+        }
+
         $user = Auth::user();
 
         return view('terminal.index', compact('user'));

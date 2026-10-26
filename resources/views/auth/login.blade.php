@@ -55,7 +55,7 @@
             @csrf
             <div>
                 <label class="block text-slate-400 mb-1">USERNAME OR CALLSIGN</label>
-                <input type="text" name="username" id="usernameInput" value="{{ old('username') }}" required autofocus placeholder="e.g. student or instructor"
+                <input type="text" name="username" id="usernameInput" value="{{ old('username') }}" required autofocus placeholder="e.g. username or email"
                        class="w-full bg-[#131c2e] border border-slate-700 text-white rounded-lg p-2.5 text-xs outline-none focus:border-blue-500 transition-colors">
             </div>
 
@@ -70,25 +70,6 @@
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </button>
         </form>
-
-        @if(app()->isLocal())
-        <!-- 1-Click Demo Logins (Local development only) -->
-        <div class="pt-4 border-t border-slate-800 space-y-2">
-            <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider block text-center">1-CLICK DEMO ACCOUNTS</span>
-            <div class="grid grid-cols-2 gap-2">
-                <button type="button" onclick="fillCredentials('student', 'amadeus123')"
-                        class="p-2 bg-[#131c2e] hover:bg-slate-800 border border-slate-700 rounded-lg text-left transition-colors">
-                    <span class="block text-white font-bold text-xs">Student</span>
-                    <span class="block text-slate-400 text-[10px] font-mono">student / amadeus123</span>
-                </button>
-                <button type="button" onclick="fillCredentials('instructor', 'amadeus123')"
-                        class="p-2 bg-[#131c2e] hover:bg-slate-800 border border-slate-700 rounded-lg text-left transition-colors">
-                    <span class="block text-amber-400 font-bold text-xs">Instructor</span>
-                    <span class="block text-slate-400 text-[10px] font-mono">instructor / amadeus123</span>
-                </button>
-            </div>
-        </div>
-        @endif
 
         <div class="text-center text-xs text-slate-500 space-y-1">
             <div>
@@ -105,12 +86,4 @@
         </div>
     </div>
 </div>
-
-<script>
-function fillCredentials(u, p) {
-    document.getElementById('usernameInput').value = u;
-    document.getElementById('passwordInput').value = p;
-    document.forms[0].submit();
-}
-</script>
 @endsection

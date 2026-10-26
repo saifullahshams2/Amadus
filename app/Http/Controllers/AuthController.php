@@ -138,7 +138,7 @@ class AuthController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect('/login');
+        return redirect('/')->with('info', 'You have been logged out.');
     }
 
     public function me(Request $request)

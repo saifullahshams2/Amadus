@@ -30,13 +30,13 @@ class EnsureAppIsInstalled
         $isInstalled = $this->installerService->isInstalled();
         $isInstallRoute = $request->is('install') || $request->is('install/*');
 
-        // If installed and trying to visit installer, redirect away
+        // If installed and trying to visit installer, redirect away and lock access
         if ($isInstalled && $isInstallRoute) {
             if ($request->wantsJson()) {
-                return response()->json(['message' => 'Application is already installed.'], 400);
+                return response()->json(['message' => 'Application is already installed and installer is locked.'], 403);
             }
 
-            return redirect('/dashboard')->with('info', 'Application is already installed and configured.');
+            return redirect()->route('landing')->with('info', 'Application is already installed and installer is locked.');
         }
 
         // If not installed and trying to access regular application pages, redirect to installer

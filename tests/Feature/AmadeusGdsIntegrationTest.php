@@ -13,6 +13,7 @@ class AmadeusGdsIntegrationTest extends TestCase
     {
         parent::setUp();
         $this->seed();
+        $this->seedTestUsers();
     }
 
     public function test_01_home_page_returns_http_200(): void
