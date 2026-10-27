@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\LessonProgress;
 use App\Models\Pnr;
+use App\Models\QueueItem;
+use App\Models\Submission;
+use App\Models\TerminalActivityLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -280,5 +283,99 @@ class InstructorController extends Controller
         }
 
         return redirect()->back()->with('success', "Cadet registration for '{$username}' was rejected.");
+    }
+
+    /**
+     * Delete an enrolled student account and cascade remove all their simulation data.
+     */
+    public function destroyStudent(Request $request, int $id): JsonResponse|RedirectResponse
+    {
+        $user = Auth::user();
+        if (! $user || $user->role !== 'instructor') {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'Instructor role required'], 403);
+            }
+            abort(403, 'Forbidden. Instructor access required.');
+        }
+
+        $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
+        $username = $student->username;
+
+        // Cascade delete all student simulation and activity records
+        Pnr::where('user_id', $username)->delete();
+        LessonProgress::where('user_id', $username)->delete();
+        Submission::where('user_id', $username)->delete();
+        TerminalActivityLog::where('user_id', $username)->delete();
+        QueueItem::where('target_user_id', $username)->delete();
+
+        $student->delete();
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => "Student account '{$username}' and associated data have been permanently deleted.",
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Student account '{$username}' was permanently deleted.");
+    }
+
+    /**
+     * Direct login into a student's portal without requiring a password.
+     */
+    public function impersonateStudent(Request $request, int $id): JsonResponse|RedirectResponse
+    {
+        $currentUser = Auth::user();
+        if (! $currentUser || $currentUser->role !== 'instructor') {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => 'Instructor role required'], 403);
+            }
+            abort(403, 'Forbidden. Instructor access required.');
+        }
+
+        $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
+        $instructorId = $currentUser->id;
+
+        Auth::login($student);
+        $request->session()->regenerate();
+
+        $request->session()->put('impersonated_by_instructor', $instructorId);
+        $request->session()->put('impersonated_student_id', $student->id);
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => "Logged in directly as cadet '{$student->username}'.",
+                'redirect' => '/dashboard',
+            ]);
+        }
+
+        return redirect()->route('dashboard')->with('success', "Logged into cadet '{$student->username}' portal.");
+    }
+
+    /**
+     * Exit cadet impersonation and restore instructor session.
+     */
+    public function exitImpersonation(Request $request): RedirectResponse
+    {
+        $instructorId = $request->session()->get('impersonated_by_instructor');
+
+        if (! $instructorId) {
+            return redirect()->route('dashboard');
+        }
+
+        $instructor = User::where('id', $instructorId)->where('role', 'instructor')->first();
+
+        if ($instructor) {
+            $request->session()->forget(['impersonated_by_instructor', 'impersonated_student_id']);
+            Auth::login($instructor);
+            $request->session()->regenerate();
+
+            return redirect()->route('dashboard')->with('success', 'Returned to Instructor Operations Hub.');
+        }
+
+        $request->session()->forget(['impersonated_by_instructor', 'impersonated_student_id']);
+
+        return redirect()->route('login');
     }
 }

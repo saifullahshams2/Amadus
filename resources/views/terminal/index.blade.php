@@ -5,13 +5,27 @@
 
 @section('content')
 <div x-data="amadeusApp()" x-init="init()" class="flex-1 flex flex-col h-full overflow-hidden bg-[#f8fafc]">
+    @if(session('impersonated_by_instructor'))
+        <div class="bg-amber-500 text-white px-4 py-2 text-xs flex items-center justify-between shadow-md shrink-0 z-50">
+            <div class="flex items-center space-x-2 font-mono">
+                <svg class="w-4 h-4 text-white shrink-0 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span><strong>INSTRUCTOR MODE:</strong> Viewing cadet terminal as <strong>{{ $user->username ?? Auth::user()->username }}</strong>.</span>
+            </div>
+            <form action="{{ route('impersonation.exit') }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="px-2.5 py-1 bg-white text-amber-900 hover:bg-amber-100 rounded text-xs font-bold font-sans transition-colors shadow-xs">
+                    Exit to Instructor Hub &rarr;
+                </button>
+            </form>
+        </div>
+    @endif
     <!-- Navbar -->
     <header class="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between text-xs text-slate-700 shrink-0 shadow-sm">
         <!-- Brand -->
         <div class="flex items-center space-x-3">
-            <a href="/" class="flex items-center space-x-2 font-bold text-slate-900 tracking-wide text-sm">
+            <a href="/" class="flex items-center space-x-2 font-bold tracking-wide text-sm">
                 <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-7 h-7 object-contain">
-                <span class="font-extrabold text-slate-900">
+                <span class="font-extrabold bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">
                     AMADEUS GDS SIM
                 </span>
             </a>
@@ -80,8 +94,8 @@
                     </div>
 
                     <div class="flex items-center space-x-3 text-xs font-mono text-slate-500">
-                        <span class="hidden md:inline">OFFICE: <strong class="text-slate-800">LON1A0980</strong></span>
-                        <span class="hidden md:inline">AGENT: <strong class="text-slate-800">1234AB</strong></span>
+                        <span class="hidden md:inline">OFFICE: <strong class="text-slate-800">{{ $user->office_id ?? 'LON1A0980' }}</strong></span>
+                        <span class="hidden md:inline">AGENT: <strong class="text-slate-800">{{ $user->agent_id ?? '1234AB' }}</strong></span>
                         <button @click="clearTerminal()" class="hover:text-rose-600 transition-colors" title="Clear Terminal">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>

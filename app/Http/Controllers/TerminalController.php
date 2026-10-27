@@ -21,6 +21,10 @@ class TerminalController extends Controller
 
         $user = Auth::user();
 
+        if ($user->role === 'student' && ! $user->is_approved) {
+            return redirect()->route('auth.pending-approval');
+        }
+
         return view('terminal.index', compact('user'));
     }
 

@@ -21,7 +21,7 @@
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>SYSTEM ACTIVE (SQLite / MySQL / MariaDB)</span>
             </div>
-            <a href="/" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm">
+            <a href="{{ route('terminal.index') }}" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm">
                 Open Simulator
             </a>
         </div>
@@ -90,6 +90,7 @@
                             <th class="px-4 py-2.5">Assigned Office</th>
                             <th class="px-4 py-2.5">Agent ID</th>
                             <th class="px-4 py-2.5">Registered</th>
+                            <th class="px-4 py-2.5 text-right font-sans">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -101,10 +102,20 @@
                                 <td class="px-4 py-2.5 text-slate-500" x-text="st.office_id"></td>
                                 <td class="px-4 py-2.5 text-slate-500" x-text="st.agent_id"></td>
                                 <td class="px-4 py-2.5 text-slate-400" x-text="st.created_at"></td>
+                                <td class="px-4 py-2.5 text-right space-x-1.5 whitespace-nowrap font-sans">
+                                    <button @click="loginAsStudent(st.id)" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded text-xs font-semibold inline-flex items-center gap-1 transition-colors shadow-xs" title="Directly log into student portal">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                                        <span>Login</span>
+                                    </button>
+                                    <button @click="deleteStudent(st.id, st.username)" class="px-2 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-300 rounded text-xs font-semibold inline-flex items-center gap-1 transition-colors shadow-xs" title="Delete student account">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        <span>Delete</span>
+                                    </button>
+                                </td>
                             </tr>
                         </template>
                         <tr x-show="students.length === 0" style="display: none;">
-                            <td colspan="6" class="px-4 py-4 text-center text-slate-400 italic">No students registered yet.</td>
+                            <td colspan="7" class="px-4 py-4 text-center text-slate-400 italic">No students registered yet.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -440,6 +451,47 @@ function instructorHub() {
                 this.studentCreateError = err.message;
             } finally {
                 this.isCreatingStudent = false;
+            }
+        },
+
+        loginAsStudent(studentId) {
+            if (!confirm('Log directly into this student portal without credentials?')) return;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/instructor/students/${studentId}/impersonate`;
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (token) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = '_token';
+                input.value = token;
+                form.appendChild(input);
+            }
+            document.body.appendChild(form);
+            form.submit();
+        },
+
+        async deleteStudent(studentId, username) {
+            if (!confirm(`Are you sure you want to permanently delete student "${username}" and all their simulation data? This action cannot be undone.`)) {
+                return;
+            }
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            try {
+                const res = await fetch(`/api/instructor/students/${studentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    }
+                });
+                if (res.ok) {
+                    this.students = this.students.filter(s => s.id !== studentId);
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to delete student.');
+                }
+            } catch (err) {
+                alert('Network error while deleting student: ' + err.message);
             }
         },
 

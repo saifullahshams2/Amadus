@@ -85,7 +85,7 @@
                         <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         <span>Quick Inspect Drawer</span>
                     </button>
-                    <a href="/" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-1">
+                    <a href="{{ route('terminal.index') }}" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-1">
                         <span>Work on PNR</span>
                         <span>→</span>
                     </a>
@@ -99,7 +99,7 @@
                         <svg class="w-10 h-10 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         <h3 class="text-sm font-semibold text-slate-800">No Active PNR in Workspace</h3>
                         <p class="text-xs text-slate-500 max-w-sm mt-1">Start a practice drill or launch the terminal to sell flight segments and build a reservation.</p>
-                        <a href="/" class="mt-3 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs">Launch Practice Terminal</a>
+                        <a href="{{ route('terminal.index') }}" class="mt-3 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs">Launch Practice Terminal</a>
                     </div>
                 </template>
 
@@ -224,7 +224,7 @@
             </div>
 
             <div class="mt-5 space-y-2">
-                <a href="/" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all">
+                <a href="{{ route('terminal.index') }}" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
                     <span>Open Full Practice Terminal</span>
                 </a>
@@ -487,7 +487,7 @@
 
             <!-- Modal Footer Actions -->
             <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-                <a href="/" class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded text-xs transition-colors shadow-xs">
+                <a href="{{ route('terminal.index') }}" class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded text-xs transition-colors shadow-xs">
                     Practice in Terminal
                 </a>
 

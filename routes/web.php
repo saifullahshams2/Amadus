@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/switch-role', [DashboardController::class, 'switchRole'])->name('dashboard.switch-role');
     Route::get('/terminal', [TerminalController::class, 'index'])->name('terminal.index');
+    Route::match(['get', 'post'], '/instructor/exit-impersonation', [InstructorController::class, 'exitImpersonation'])->name('impersonation.exit');
 });
 Route::post('/terminal/execute', [TerminalController::class, 'execute'])->name('terminal.execute')->middleware('throttle:60,1,terminal');
 
@@ -50,6 +51,8 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
 Route::middleware('instructor')->group(function () {
     Route::get('/instructor', [InstructorController::class, 'index'])->name('instructor.index');
     Route::post('/instructor/students', [InstructorController::class, 'storeStudent'])->name('instructor.students.store');
+    Route::delete('/instructor/students/{id}', [InstructorController::class, 'destroyStudent'])->name('instructor.students.destroy');
+    Route::post('/instructor/students/{id}/impersonate', [InstructorController::class, 'impersonateStudent'])->name('instructor.students.impersonate');
     Route::post('/instructor/students/{id}/approve', [InstructorController::class, 'approveStudent'])->name('instructor.students.approve');
     Route::post('/instructor/students/{id}/reject', [InstructorController::class, 'rejectStudent'])->name('instructor.students.reject');
     Route::delete('/instructor/scenarios/{id}', [DashboardController::class, 'deleteScenario'])->name('instructor.scenarios.destroy');
@@ -82,6 +85,8 @@ Route::prefix('api')->group(function () {
     Route::middleware('instructor')->prefix('instructor')->group(function () {
         Route::get('/students', [InstructorController::class, 'studentsApi']);
         Route::post('/students', [InstructorController::class, 'storeStudent']);
+        Route::delete('/students/{id}', [InstructorController::class, 'destroyStudent']);
+        Route::post('/students/{id}/impersonate', [InstructorController::class, 'impersonateStudent']);
         Route::post('/students/batch', [InstructorController::class, 'batchStoreStudents']);
         Route::post('/students/{id}/approve', [InstructorController::class, 'approveStudent']);
         Route::post('/students/{id}/reject', [InstructorController::class, 'rejectStudent']);

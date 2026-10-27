@@ -41,7 +41,7 @@
         <div class="flex items-center space-x-3">
             <a href="/" class="flex items-center space-x-2.5 group">
                 <img src="{{ asset('airplane-ticket.png') }}" alt="AMADEUS GDS SIM" class="w-8 h-8 object-contain group-hover:scale-105 transition-transform">
-                <span class="font-extrabold text-base sm:text-lg tracking-wider text-slate-900">
+                <span class="font-extrabold text-base sm:text-lg tracking-wider bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">
                     AMADEUS GDS SIM
                 </span>
             </a>
@@ -55,13 +55,9 @@
                     <span>Dashboard</span>
                 </a>
             @else
-                <a href="{{ route('login') }}" class="px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 font-semibold text-xs transition-colors flex items-center gap-1.5">
+                <a href="{{ route('login') }}" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-sm flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
                     <span>Login</span>
-                </a>
-                <a href="{{ route('register') }}" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-sm flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                    <span>Register</span>
                 </a>
             @endauth
         </div>
@@ -263,7 +259,7 @@
             <!-- Left: Copyright and status -->
             <div class="flex items-center space-x-2 text-center md:text-left">
                 <img src="{{ asset('airplane-ticket.png') }}" alt="AMADEUS GDS SIM" class="w-5 h-5 object-contain">
-                <span class="font-bold text-slate-800 tracking-wide">AMADEUS GDS SIM</span>
+                <span class="font-bold tracking-wide bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">AMADEUS GDS SIM</span>
             </div>
 
             <!-- Center: Legal & Purpose -->

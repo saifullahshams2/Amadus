@@ -28,7 +28,7 @@ class LandingAndApprovalTest extends TestCase
         $response->assertSeeText('Access Dashboard');
         $response->assertSee('Login');
         $response->assertSee('/login');
-        $response->assertSee('/register');
+        $response->assertDontSee('/register');
         $response->assertDontSee('Cryptic Terminal Mode');
         $response->assertDontSee('Register as Trainee Cadet');
         $response->assertDontSee('OFFICE ID');

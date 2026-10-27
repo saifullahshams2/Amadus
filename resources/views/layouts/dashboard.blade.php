@@ -46,8 +46,8 @@
             <a href="/dashboard" class="flex items-center space-x-2.5">
                 <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-8 h-8 object-contain">
                 <div>
-                    <div class="text-xs font-black tracking-wider text-slate-800 uppercase flex items-center gap-1.5">
-                        <span>AMADEUS GDS SIM</span>
+                    <div class="text-xs font-black tracking-wider uppercase flex items-center gap-1.5">
+                        <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">AMADEUS GDS SIM</span>
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     </div>
                 </div>
@@ -130,15 +130,6 @@
                     <span>Queue & Sandbox Manager</span>
                 </a>
             @endif
-
-            <div class="pt-4 px-2 pb-1 text-[10px] font-mono text-slate-400 uppercase tracking-wider">TERMINAL EMULATOR</div>
-            <a href="/" class="flex items-center justify-between px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors group">
-                <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-blue-600 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span class="font-bold">Cryptic Terminal</span>
-                </div>
-                <span class="text-[10px] bg-blue-200/60 px-1.5 py-0.5 rounded text-blue-800 font-mono font-bold">1A</span>
-            </a>
         </nav>
 
         <!-- Active Terminal Status Widget -->
@@ -187,6 +178,22 @@
 
     <!-- Main Workspace Area -->
     <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-[#f8fafc]">
+        @if(session('impersonated_by_instructor'))
+            <div class="bg-amber-500 text-white px-6 py-2.5 text-xs flex items-center justify-between shadow-md shrink-0 z-30">
+                <div class="flex items-center space-x-2 font-mono">
+                    <svg class="w-4 h-4 text-white shrink-0 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span><strong>INSTRUCTOR MODE:</strong> Viewing cadet portal as <strong>{{ $user->username ?? Auth::user()->username }}</strong> ({{ $user->name ?? '' }}).</span>
+                </div>
+                <form action="{{ route('impersonation.exit') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="px-3 py-1 bg-white text-amber-900 hover:bg-amber-100 rounded-md text-xs font-bold font-sans transition-colors shadow-xs flex items-center gap-1">
+                        <span>Exit to Instructor Hub</span>
+                        <span>&rarr;</span>
+                    </button>
+                </form>
+            </div>
+        @endif
+
         <!-- Top Application Header -->
         <header class="h-14 px-6 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-sm">
             <!-- Left: View Title & Breadcrumb -->
@@ -209,7 +216,7 @@
                     </div>
                 @endif
 
-                <a href="/" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition-colors shadow-sm">
+                <a href="{{ route('terminal.index') }}" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition-colors shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     <span>Launch Terminal</span>
                 </a>
