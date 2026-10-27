@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'AMADEUS GDS SIM')
+@section('body_class', 'h-screen overflow-hidden')
 
 @section('content')
 <div x-data="amadeusApp()" x-init="init()" class="flex-1 flex flex-col h-full overflow-hidden bg-[#f8fafc]">

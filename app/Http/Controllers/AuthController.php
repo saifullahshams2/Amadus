@@ -34,7 +34,10 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('username', $credentials['username'])->first();
+        $loginInput = trim($credentials['username']);
+        $user = User::where('username', $loginInput)
+            ->orWhere('email', strtolower($loginInput))
+            ->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             if ($request->wantsJson() || $request->is('api/*')) {

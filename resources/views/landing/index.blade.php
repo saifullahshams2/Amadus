@@ -50,14 +50,18 @@
         <!-- Right Header Actions: Login / Dashboard -->
         <div class="flex items-center space-x-2.5 sm:space-x-3">
             @auth
-                <a href="/dashboard" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-sm flex items-center gap-1.5">
+                <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-sm flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                     <span>Dashboard</span>
                 </a>
             @else
-                <a href="/login" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-sm flex items-center gap-1.5">
+                <a href="{{ route('login') }}" class="px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 font-semibold text-xs transition-colors flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
                     <span>Login</span>
+                </a>
+                <a href="{{ route('register') }}" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-sm flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                    <span>Register</span>
                 </a>
             @endauth
         </div>
@@ -85,38 +89,12 @@
                     Designed for flight academies, travel agencies, and aviation training programs. Practice live Amadeus cryptic entries, enforce mandatory <strong class="text-slate-900">P.R.I.N.T.</strong> booking standards, handle simulated queue banks, and spectate cadet keystrokes in real-time.
                 </p>
 
-                <!-- Action CTAs -->
+                <!-- Action CTA -->
                 <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2">
-                    <a href="/login" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm tracking-wide transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 group">
-                        <span>Access Terminal & Dashboard</span>
+                    <a href="{{ route('access-dashboard') }}" class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm tracking-wide transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 group">
+                        <span>Access Dashboard</span>
                         <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
-
-                    <a href="/register" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                        <span>Register as Trainee Cadet</span>
-                    </a>
-
-                    <a href="/terminal" class="w-full sm:w-auto px-4 py-3 rounded-xl hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        <span>Cryptic Terminal Mode</span>
-                    </a>
-                </div>
-
-                <!-- Live Metrics Ticker -->
-                <div class="grid grid-cols-3 gap-3 pt-4 border-t border-slate-200 max-w-md mx-auto lg:mx-0 text-left">
-                    <div class="p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm">
-                        <div class="text-[10px] font-mono text-slate-500 uppercase">OFFICE ID</div>
-                        <div class="text-xs sm:text-sm font-bold font-mono text-blue-600">LON1A0980</div>
-                    </div>
-                    <div class="p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm">
-                        <div class="text-[10px] font-mono text-slate-500 uppercase">SYNTAX ENGINE</div>
-                        <div class="text-xs sm:text-sm font-bold font-mono text-emerald-600">1A ALTÉA</div>
-                    </div>
-                    <div class="p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm">
-                        <div class="text-[10px] font-mono text-slate-500 uppercase">ACCESS GATE</div>
-                        <div class="text-xs sm:text-sm font-bold font-mono text-amber-600">INSTRUCTOR GATED</div>
-                    </div>
                 </div>
             </div>
 
@@ -183,49 +161,97 @@
                 <p class="text-xs sm:text-sm text-slate-600">Complete Amadeus Altéa command processing integrated with instructor-guided learning.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                <!-- Feature 1 -->
-                <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all space-y-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Card 1: Altéa Cryptic Engine -->
+                <div class="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-6">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 font-mono font-bold text-lg select-none">
+                            &gt;_
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mt-5 mb-2.5 tracking-tight">Altéa Cryptic Engine</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                            True-to-life emulation of AN availability, SS segment sell, XE cancellation, SSR special meal assistance (VGML/WCHR), and IATA decoding (DAN/DAC/DNA).
+                        </p>
                     </div>
-                    <h3 class="text-sm font-bold text-slate-900">Cryptic Command Engine</h3>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        Full fidelity parser for availability (AN), segment selling (SS), passenger names (NM), pricing (FXP), and ticketing (TTP) with authentic error codes.
-                    </p>
+                    <div class="space-y-1.5 pt-4 text-xs font-mono font-medium text-sky-600 border-t border-slate-100">
+                        <div class="flex items-center gap-1.5">
+                            <span>✓</span>
+                            <span>AN, SS, NM, AP, TK, RF, ET</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span>✓</span>
+                            <span>FXP Pricing &amp; TTP E-Tickets</span>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Feature 2 -->
-                <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all space-y-3">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <!-- Card 2: Cadet Learning Suite -->
+                <div class="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-6">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 select-none">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM3.45 13.5L12 18.16l8.55-4.66v3.84L12 22l-8.55-4.66v-3.84z"/></svg>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mt-5 mb-2.5 tracking-tight">Cadet Learning Suite</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                            Drill scenarios covering multi-city, infant-in-lap, and schedule disruptions. Includes live syntax corrections, PNR quick inspect, and mistake audit history.
+                        </p>
                     </div>
-                    <h3 class="text-sm font-bold text-slate-900">Mandatory P.R.I.N.T. Compliance</h3>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        Interactive readiness checklist ensuring Phone (AP), Received From (RF), Itinerary (SS), Name (NM), and Ticketing (TK) are satisfied prior to booking close.
-                    </p>
+                    <div class="space-y-1.5 pt-4 text-xs font-mono font-medium text-indigo-600 border-t border-slate-100">
+                        <div class="flex items-center gap-1.5">
+                            <span>✓</span>
+                            <span>Auto-Graded PNR Submissions</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span>✓</span>
+                            <span>KPI Accuracy &amp; Efficiency Rings</span>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Feature 3 -->
-                <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all space-y-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <!-- Card 3: Instructor Control Hub -->
+                <div class="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-6">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 select-none">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2zM12 7a2 2 0 100-4 2 2 0 000 4z"/></svg>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mt-5 mb-2.5 tracking-tight">Instructor Control Hub</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                            Supervise active cadets with live keystroke spectator mode, queue bank broadcasts (Q1, Q7, Q8, Q87), manual score overrides, and 1-click sandbox reset.
+                        </p>
                     </div>
-                    <h3 class="text-sm font-bold text-slate-900">Simulated GDS Queues</h3>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        Simulate live airline operational messages on Queue 1 (TTL), Queue 7 (Schedule Changes), Queue 8 (Waitlists), and Queue 87 (Exchanges).
-                    </p>
+                    <div class="space-y-1.5 pt-4 text-xs font-mono font-medium text-emerald-600 border-t border-slate-100">
+                        <div class="flex items-center gap-1.5">
+                            <span>✓</span>
+                            <span>Live Keystroke Spectator</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span>✓</span>
+                            <span>Queue Simulation (Q1, 7, 87)</span>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Feature 4 -->
-                <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all space-y-3">
-                    <div class="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <!-- Card 4: Secure Architecture -->
+                <div class="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-6">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 select-none">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.5 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm-1.03 9.06a.75.75 0 011.06 0l2.25 2.25a.75.75 0 11-1.06 1.06L12 12.81l-1.72 1.72a.75.75 0 01-1.06-1.06l2.25-2.25z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mt-5 mb-2.5 tracking-tight">Secure Architecture</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                            Fast 4-step web setup wizard (/install), student approval gateway (/pending-approval), rate limiting (10/min auth, 60/min terminal), and batch provisioning of up to 500 cadets.
+                        </p>
                     </div>
-                    <h3 class="text-sm font-bold text-slate-900">Instructor Approval Gate</h3>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        Public registrations require instructor authorization before simulator access is activated. Real-time keystroke spectating and drill grading.
-                    </p>
+                    <div class="space-y-1.5 pt-4 text-xs font-mono font-medium text-amber-700 border-t border-slate-100">
+                        <div class="flex items-center gap-1.5">
+                            <span>✓</span>
+                            <span>Web Installer (/install)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span>✓</span>
+                            <span>Strict CSRF &amp; Rate Limits</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

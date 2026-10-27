@@ -15,12 +15,10 @@
             --foreground: #0f172a;
         }
         html, body {
-            height: 100%;
-            max-height: 100%;
+            min-height: 100%;
             color: var(--foreground);
             background: var(--background);
             font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            overflow: hidden;
         }
         .crt-screen::before {
             content: " ";
@@ -48,7 +46,7 @@
         }
     </style>
 </head>
-<body class="h-full flex flex-col bg-[#f8fafc] text-slate-800">
+<body class="min-h-full flex flex-col bg-[#f8fafc] text-slate-800 antialiased selection:bg-blue-600 selection:text-white @yield('body_class')">
     @yield('content')
 </body>
 </html>

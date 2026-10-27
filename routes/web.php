@@ -5,8 +5,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstallerController;
 use App\Http\Controllers\InstructorController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\TerminalController;
 use App\Http\Controllers\TrainingController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // Application Installer & Primary Instructor Setup
@@ -17,6 +19,11 @@ Route::post('/install/test-db', [InstallerController::class, 'testDatabase'])->n
 
 // Main Landing Page (Public 100vh / 100vw Welcome Portal)
 Route::get('/', [LandingController::class, 'index'])->name('landing');
+
+// Access Dashboard Gateway (Redirects guests to register, authenticated to dashboard)
+Route::get('/access-dashboard', function () {
+    return Auth::check() ? redirect()->route('dashboard') : redirect()->route('register');
+})->name('access-dashboard');
 
 // Unified Role-Secured Dashboard & Cryptic Terminal Simulator (Requires authentication)
 Route::middleware('auth')->group(function () {
@@ -33,6 +40,12 @@ Route::post('/register', [AuthController::class, 'register'])->middleware('throt
 Route::get('/pending-approval', [AuthController::class, 'pendingApproval'])->name('auth.pending-approval');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Password Reset Routes
+Route::get('/forgot-password', [PasswordResetController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:6,1');
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetPassword'])->name('password.reset');
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update')->middleware('throttle:6,1');
+
 // Web Instructor Operations (Strictly restricted to instructors)
 Route::middleware('instructor')->group(function () {
     Route::get('/instructor', [InstructorController::class, 'index'])->name('instructor.index');
@@ -46,6 +59,8 @@ Route::middleware('instructor')->group(function () {
 Route::prefix('api')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1,login');
     Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1,login');
+    Route::post('/auth/forgot-password', [PasswordResetController::class, 'sendResetLink'])->middleware('throttle:6,1');
+    Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:6,1');
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/me', [AuthController::class, 'logout']);
 

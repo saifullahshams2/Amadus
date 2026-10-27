@@ -19,16 +19,37 @@ class LandingAndApprovalTest extends TestCase
         $this->seedTestUsers();
     }
 
-    public function test_01_landing_page_renders_with_brand_and_login_button(): void
+    public function test_01_landing_page_renders_with_brand_and_features(): void
     {
         $response = $this->get('/');
 
         $response->assertStatus(200);
         $response->assertSeeText('AMADEUS GDS SIM');
+        $response->assertSeeText('Access Dashboard');
         $response->assertSee('Login');
         $response->assertSee('/login');
         $response->assertSee('/register');
-        $response->assertSee('/terminal');
+        $response->assertDontSee('Cryptic Terminal Mode');
+        $response->assertDontSee('Register as Trainee Cadet');
+        $response->assertDontSee('OFFICE ID');
+
+        // Check the 4 feature cards
+        $response->assertSeeText('Altéa Cryptic Engine');
+        $response->assertSeeText('Cadet Learning Suite');
+        $response->assertSeeText('Instructor Control Hub');
+        $response->assertSeeText('Secure Architecture');
+    }
+
+    public function test_access_dashboard_redirects_guests_to_register_and_auth_to_dashboard(): void
+    {
+        // 1. Unauthenticated guest redirect to /register
+        $guestResponse = $this->get('/access-dashboard');
+        $guestResponse->assertRedirect('/register');
+
+        // 2. Authenticated user redirect to /dashboard
+        $student = User::where('role', 'student')->first();
+        $authResponse = $this->actingAs($student)->get('/access-dashboard');
+        $authResponse->assertRedirect('/dashboard');
     }
 
     public function test_02_terminal_simulator_requires_authentication_and_redirects_guests(): void

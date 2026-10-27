@@ -3,12 +3,15 @@
 @section('title', 'Sign In - AMADEUS GDS SIM')
 
 @section('content')
-<div class="flex-1 flex flex-col items-center justify-center p-4 relative">
+<div class="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-y-auto">
     <!-- Back to Home Link -->
-    <div class="max-w-md w-full mb-4">
+    <div class="max-w-md w-full mb-4 flex items-center justify-between">
         <a href="/" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             <span>Back to Home</span>
+        </a>
+        <a href="{{ route('register') }}" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">
+            Create Account &rarr;
         </a>
     </div>
 
@@ -21,9 +24,16 @@
         </div>
 
         @if(session('info'))
-            <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs flex items-center gap-2">
+            <div class="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs flex items-center gap-2">
                 <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <span>{{ session('info') }}</span>
+            </div>
+        @endif
+
+        @if(session('status'))
+            <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span>{{ session('status') }}</span>
             </div>
         @endif
 
@@ -53,14 +63,17 @@
             @csrf
             <div>
                 <label class="block text-slate-600 mb-1 font-semibold">USERNAME OR CALLSIGN</label>
-                <input type="text" name="username" id="usernameInput" value="{{ old('username') }}" required autofocus placeholder="e.g. username or email"
-                       class="w-full bg-white border border-slate-300 text-slate-900 rounded-lg p-2.5 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-slate-400">
+                <input type="text" name="username" id="usernameInput" value="{{ old('username') }}" required autofocus placeholder="Enter your username or email"
+                       class="w-full bg-white border border-slate-300 text-slate-900 rounded-lg p-2.5 text-xs sm:text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-slate-400">
             </div>
 
             <div>
-                <label class="block text-slate-600 mb-1 font-semibold">PASSWORD</label>
-                <input type="password" name="password" id="passwordInput" required placeholder="••••••••"
-                       class="w-full bg-white border border-slate-300 text-slate-900 rounded-lg p-2.5 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-slate-400">
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-slate-600 font-semibold">PASSWORD</label>
+                    <a href="{{ route('password.request') }}" class="text-[11px] font-sans text-blue-600 hover:text-blue-800 hover:underline">Forgot password?</a>
+                </div>
+                <input type="password" name="password" id="passwordInput" required placeholder="Enter your password"
+                       class="w-full bg-white border border-slate-300 text-slate-900 rounded-lg p-2.5 text-xs sm:text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-slate-400">
             </div>
 
             <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs tracking-wider transition-colors shadow-sm flex items-center justify-center gap-1.5">
@@ -69,9 +82,12 @@
             </button>
         </form>
 
-        <div class="text-center text-xs text-slate-500 space-y-1">
+        <div class="text-center text-xs text-slate-500 space-y-2 pt-2 border-t border-slate-100">
             <div>
-                Don't have an account? <a href="/register" class="text-blue-600 font-semibold hover:underline">Sign Up as Trainee Cadet</a>.
+                Need to reset your password? <a href="{{ route('password.request') }}" class="text-blue-600 font-semibold hover:underline">Reset Password</a>
+            </div>
+            <div>
+                Don't have an account? <a href="{{ route('register') }}" class="text-blue-600 font-semibold hover:underline">Sign Up as Trainee Cadet</a>
             </div>
             @if(!file_exists(storage_path('installed')))
             <div class="pt-1 text-[11px]">
