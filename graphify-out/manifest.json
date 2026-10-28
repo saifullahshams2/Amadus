@@ -295,10 +295,10 @@
     "semantic_hash": "673316d4534b3f0238c0a1b8351bae2c"
   },
   "resources/views/terminal/index.blade.php": {
-    "mtime": 1793122648.4571645,
-    "seen": 1793127398.0699663,
-    "ast_hash": "7b3d1a3a3d0e2e1a3b6e7858cc422c71",
-    "semantic_hash": "7b3d1a3a3d0e2e1a3b6e7858cc422c71"
+    "mtime": 1793173590.9094727,
+    "seen": 1793180298.3938835,
+    "ast_hash": "2a359a88e66eec9085ecd64b3a0c74d0",
+    "semantic_hash": "2a359a88e66eec9085ecd64b3a0c74d0"
   },
   "routes/console.php": {
     "mtime": 1792910773.2051463,
@@ -307,10 +307,10 @@
     "semantic_hash": "3c6ce2e6d16444282b24a9aa63885563"
   },
   "routes/web.php": {
-    "mtime": 1793120635.0935075,
-    "seen": 1793127398.069968,
-    "ast_hash": "deccd89607885fadeace3363b058f6a6",
-    "semantic_hash": "deccd89607885fadeace3363b058f6a6"
+    "mtime": 1793173358.6620848,
+    "seen": 1793180298.3938866,
+    "ast_hash": "031cfe4ad3f1d4dd3a10025a73345ff7",
+    "semantic_hash": "031cfe4ad3f1d4dd3a10025a73345ff7"
   },
   "tests/Feature/AmadeusGdsIntegrationTest.php": {
     "mtime": 1793080013.066109,
@@ -398,10 +398,10 @@
     "semantic_hash": "0aa975fe2025bb88f85b244930685ae8"
   },
   "app/Http/Controllers/DashboardController.php": {
-    "mtime": 1793080013.0471108,
-    "seen": 1793127398.069909,
-    "ast_hash": "9dd16db414fbdcea15c82cfa0c402816",
-    "semantic_hash": "9dd16db414fbdcea15c82cfa0c402816"
+    "mtime": 1793173403.8879755,
+    "seen": 1793180298.393762,
+    "ast_hash": "2cfb89973d80381d895fee5f0e485567",
+    "semantic_hash": "2cfb89973d80381d895fee5f0e485567"
   },
   "app/Http/Controllers/InstallerController.php": {
     "mtime": 1793080013.0471108,
@@ -489,16 +489,16 @@
     "semantic_hash": "465b3275e8e99f32a649bf4089215439"
   },
   "resources/views/dashboard/instructor.blade.php": {
-    "mtime": 1793120735.0438135,
-    "seen": 1793127398.0699613,
-    "ast_hash": "f7731c7468084378b9c3d0b544c762d3",
-    "semantic_hash": "f7731c7468084378b9c3d0b544c762d3"
+    "mtime": 1793173758.560837,
+    "seen": 1793180298.393867,
+    "ast_hash": "48c426e9347ed4c87a3a0fc873d6a8fc",
+    "semantic_hash": "48c426e9347ed4c87a3a0fc873d6a8fc"
   },
   "resources/views/dashboard/student.blade.php": {
-    "mtime": 1793120710.1822457,
-    "seen": 1793127398.0699618,
-    "ast_hash": "67b9749ef4c7a01eb6929f68b1f698dc",
-    "semantic_hash": "67b9749ef4c7a01eb6929f68b1f698dc"
+    "mtime": 1793173667.4321837,
+    "seen": 1793180298.3938684,
+    "ast_hash": "109bcaa3ae20ddad511072cef2b7deeb",
+    "semantic_hash": "109bcaa3ae20ddad511072cef2b7deeb"
   },
   "resources/views/installer/index.blade.php": {
     "mtime": 1793080013.065109,
@@ -507,10 +507,10 @@
     "semantic_hash": "30652ca179029270a2a26eb9ba9b17f7"
   },
   "resources/views/layouts/dashboard.blade.php": {
-    "mtime": 1793122640.8621647,
-    "seen": 1793127398.0699656,
-    "ast_hash": "2d554fce03e9f512e1c1f966bb10736a",
-    "semantic_hash": "2d554fce03e9f512e1c1f966bb10736a"
+    "mtime": 1793173430.94091,
+    "seen": 1793180298.3938818,
+    "ast_hash": "50080e1d4a87bc72d57d541bd8c0a47c",
+    "semantic_hash": "50080e1d4a87bc72d57d541bd8c0a47c"
   },
   "skills-lock.json": {
     "mtime": 1792945476.734542,
@@ -574,10 +574,10 @@
     "semantic_hash": "cf806902fe191cf435f4726212fc1c38"
   },
   "tests/Feature/LandingAndApprovalTest.php": {
-    "mtime": 1793122677.60617,
-    "seen": 1793127398.0699778,
-    "ast_hash": "88245dc430139b1b6198e17efeac69a7",
-    "semantic_hash": "88245dc430139b1b6198e17efeac69a7"
+    "mtime": 1793173802.945528,
+    "seen": 1793180298.3938997,
+    "ast_hash": "d3d0357919056dcdbdd8a67e1ba22f92",
+    "semantic_hash": "d3d0357919056dcdbdd8a67e1ba22f92"
   },
   "tests/Feature/UserRequirementsVerificationTest.php": {
     "mtime": 1793080013.0671089,
@@ -938,5 +938,11 @@
     "seen": 1793127398.0700278,
     "ast_hash": "f70f071e433190fa1a1bc3ca8a5e09e0",
     "semantic_hash": "f70f071e433190fa1a1bc3ca8a5e09e0"
+  },
+  "tests/Feature/DashboardSubpagesAndTerminalHeaderTest.php": {
+    "mtime": 1793173847.861925,
+    "seen": 1793180298.3938916,
+    "ast_hash": "122327619dd6e80c441094201e3e5ec6",
+    "semantic_hash": "122327619dd6e80c441094201e3e5ec6"
   }
 }
