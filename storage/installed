@@ -1,1 +1,14 @@
-2026-10-25 09:47:00
+{
+    "installed_at": "2026-10-28T07:57:24+00:00",
+    "app_version": "1.0.0",
+    "database_driver": "sqlite",
+    "installer_locked": true,
+    "installed_by": {
+        "id": 4,
+        "username": "admin",
+        "email": "instructor@amadeus.training",
+        "role": "instructor",
+        "office_id": "LON1A0980",
+        "agent_id": "IN01GS"
+    }
+}

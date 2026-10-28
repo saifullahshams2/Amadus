@@ -5,7 +5,31 @@
 @section('content')
 <div x-data="studentDashboard()" x-init="init()" class="space-y-6 max-w-7xl mx-auto pb-12">
 
+    {{-- Breadcrumb header if on a dedicated sub-page --}}
+    @if(($currentSection ?? 'dashboard') !== 'dashboard')
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+            <div class="flex items-center space-x-2 text-xs text-slate-500 font-mono">
+                <a href="{{ route('dashboard') }}" class="hover:text-blue-600 transition-colors font-semibold">DASHBOARD</a>
+                <span>/</span>
+                <span class="font-bold text-slate-900 uppercase">
+                    @switch($currentSection)
+                        @case('workspace') OVERVIEW & ACTIVE PNR @break
+                        @case('drills') ASSIGNMENTS & DRILLS @break
+                        @case('validator') CRYPTIC SYNTAX VALIDATOR @break
+                        @case('analytics') LEARNING ANALYTICS @break
+                        @default {{ strtoupper($currentSection) }}
+                    @endswitch
+                </span>
+            </div>
+            <a href="{{ route('dashboard') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                <span>Back to Dashboard</span>
+            </a>
+        </div>
+    @endif
+
     <!-- Section 1: Top Metrics & KPI Overview -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'analytics')
     <section id="analytics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Accuracy Rate Gauge Card -->
         <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
@@ -66,8 +90,10 @@
             </div>
         </div>
     </section>
+    @endif
 
     <!-- Section 2: Workspace & Current Active PNR Status Widget -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'workspace')
     <section id="workspace" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Current Active PNR Inspector Card (2 columns) -->
         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
@@ -228,14 +254,16 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
                     <span>Open Full Practice Terminal</span>
                 </a>
-                <a href="#validator" class="w-full py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 flex items-center justify-center gap-1.5 transition-colors">
+                <a href="{{ route('dashboard.section', 'validator') }}" class="w-full py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 flex items-center justify-center gap-1.5 transition-colors">
                     <span>Open Syntax Validator</span>
                 </a>
             </div>
         </div>
     </section>
+    @endif
 
     <!-- Section 3: Assigned Scenarios & Practice Drills -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'drills')
     <section id="drills" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -293,8 +321,10 @@
             </template>
         </div>
     </section>
+    @endif
 
     <!-- Section 4: Live Syntax Validator & Error Log -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'validator')
     <section id="validator" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Left Column: Interactive Cryptic Entry Validator -->
@@ -371,6 +401,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     <!-- Quick Inspect Drawer Modal (Slide-out) -->
     <div x-show="openDrawer"

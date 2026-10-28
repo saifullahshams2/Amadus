@@ -5,7 +5,33 @@
 @section('content')
 <div x-data="instructorDashboard()" x-init="init()" class="space-y-6 max-w-7xl mx-auto pb-12">
 
+    {{-- Breadcrumb header if on a dedicated sub-page --}}
+    @if(($currentSection ?? 'dashboard') !== 'dashboard')
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+            <div class="flex items-center space-x-2 text-xs text-slate-500 font-mono">
+                <a href="{{ route('dashboard') }}" class="hover:text-blue-600 transition-colors font-semibold">DASHBOARD</a>
+                <span>/</span>
+                <span class="font-bold text-slate-900 uppercase">
+                    @switch($currentSection)
+                        @case('classroom') LIVE CLASSROOM & SPECTATOR @break
+                        @case('students') ENROLLED STUDENT ROSTER @break
+                        @case('builder') SCENARIO & DRILL BUILDER @break
+                        @case('gradebook') SUBMISSIONS & GRADEBOOK @break
+                        @case('queues') QUEUE & SANDBOX MANAGER @break
+                        @case('analytics') CLASSROOM ANALYTICS & AUDIT TRAIL @break
+                        @default {{ strtoupper($currentSection) }}
+                    @endswitch
+                </span>
+            </div>
+            <a href="{{ route('dashboard') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                <span>Back to Dashboard</span>
+            </a>
+        </div>
+    @endif
+
     <!-- KPI Summary Row -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard')
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div>
@@ -54,8 +80,10 @@
             </div>
         </div>
     </section>
+    @endif
 
     <!-- Pending Cadet Approvals Notification Widget (When pending registrations exist) -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'students')
     <template x-if="pendingApprovals.length > 0">
         <section class="bg-amber-50/70 border-2 border-amber-300 rounded-xl overflow-hidden shadow-sm p-5 space-y-4">
             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -104,8 +132,10 @@
             </div>
         </section>
     </template>
+    @endif
 
     <!-- Section 1: Live Classroom Overview & Student Grid -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'classroom')
     <section id="classroom" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div id="students-enrollment" class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -194,8 +224,81 @@
             </template>
         </div>
     </section>
+    @endif
+
+    <!-- Dedicated Student Roster Section (When viewing /dashboard/students) -->
+    @if(($currentSection ?? '') === 'students')
+    <section id="students" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm space-y-4">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="text-sm font-bold text-slate-900 tracking-wide">Enrolled Student Roster</h2>
+                <p class="text-xs text-slate-500">Manage trainee accounts with full access control, direct login, and batch provisioning</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <input type="text"
+                       x-model="studentFilter"
+                       placeholder="Search student or agent..."
+                       class="bg-white border border-slate-300 text-slate-800 placeholder:text-slate-400 rounded-lg px-3 py-1.5 text-xs outline-none w-48 focus:border-blue-500 font-mono">
+                <button @click="openCreateStudentModal()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                    <span>+ Enroll Student</span>
+                </button>
+                <button @click="openBatchModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span>⚡ Batch Provision</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs font-mono">
+                <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] border-b border-slate-200">
+                    <tr>
+                        <th class="px-4 py-2.5">Username</th>
+                        <th class="px-4 py-2.5">Name</th>
+                        <th class="px-4 py-2.5">Email</th>
+                        <th class="px-4 py-2.5">Office</th>
+                        <th class="px-4 py-2.5">Agent ID</th>
+                        <th class="px-4 py-2.5">Status</th>
+                        <th class="px-4 py-2.5">Commands</th>
+                        <th class="px-4 py-2.5 text-right font-sans">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <template x-for="st in filteredStudents" :key="st.id">
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-4 py-2.5 font-bold text-blue-600" x-text="st.username"></td>
+                            <td class="px-4 py-2.5 text-slate-800 font-sans" x-text="st.name || st.username"></td>
+                            <td class="px-4 py-2.5 text-slate-600 font-sans" x-text="st.email"></td>
+                            <td class="px-4 py-2.5 text-slate-500" x-text="st.office_id"></td>
+                            <td class="px-4 py-2.5 text-slate-500" x-text="st.agent_id"></td>
+                            <td class="px-4 py-2.5">
+                                <span :class="sessionStatusClass(st.status)" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono" x-text="st.status"></span>
+                            </td>
+                            <td class="px-4 py-2.5 text-slate-600" x-text="st.total_commands"></td>
+                            <td class="px-4 py-2.5 text-right space-x-1.5 whitespace-nowrap font-sans">
+                                <button @click="loginAsStudent(st.id)" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded text-xs font-semibold inline-flex items-center gap-1 transition-colors shadow-xs" title="Directly log into cadet portal">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                                    <span>Login</span>
+                                </button>
+                                <button @click="deleteStudent(st.id, st.username)" class="px-2 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-300 rounded text-xs font-semibold inline-flex items-center gap-1 transition-colors shadow-xs" title="Delete cadet account">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    <span>Delete</span>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="filteredStudents.length === 0" style="display: none;">
+                        <td colspan="8" class="px-4 py-4 text-center text-slate-400 italic font-sans">No trainees found matching query.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    @endif
 
     <!-- Section 2: Scenario & Drill Builder (Form Interface) -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'builder')
     <section id="builder" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <div>
@@ -330,8 +433,10 @@
             </table>
         </div>
     </section>
+    @endif
 
     <!-- Section 3: Submissions & Gradebook -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'gradebook')
     <section id="gradebook" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <div>
@@ -378,8 +483,10 @@
             </table>
         </div>
     </section>
+    @endif
 
     <!-- Section 4: Simulated Queue & Sandbox Management -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'queues')
     <section id="queues" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -417,6 +524,107 @@
             @endforeach
         </div>
     </section>
+    @endif
+
+    <!-- Section 5: Classroom Analytics & Audit Trail (Migrated from /instructor) -->
+    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'analytics')
+    <section id="analytics" class="space-y-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-sm font-bold text-slate-900 tracking-wide flex items-center gap-2">
+                    <span>Classroom Analytics & Audit Trail</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-50 text-purple-700 border border-purple-200">ANALYTICS HUB</span>
+                </h2>
+                <p class="text-xs text-slate-500">Live trainee progress monitoring, assessment audits, and PNR inspection</p>
+            </div>
+        </div>
+
+        <!-- KPI Cards from /instructor -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-slate-900" x-text="students.length">{{ count($students) }}</div>
+                    <div class="text-xs text-slate-500">Enrolled Trainees</div>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-slate-900">{{ isset($progress) ? count($progress) : 0 }}</div>
+                    <div class="text-xs text-slate-500">Lessons Attempted</div>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-slate-900" x-text="pnrs.length">{{ isset($allPnrs) ? count($allPnrs) : count($recentPnrs) }}</div>
+                    <div class="text-xs text-slate-500">Committed PNR Records</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student PNR Audit Trail Table (Migrated from /instructor) -->
+        <div class="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 tracking-wide">Student PNR Audit Trail</h3>
+                    <p class="text-xs text-slate-500">Search and inspect all committed trainee records</p>
+                </div>
+                <input type="text"
+                       x-model="auditPnrSearch"
+                       placeholder="Filter by locator, student, office..."
+                       class="bg-white border border-slate-300 text-slate-800 placeholder:text-slate-400 rounded-lg px-3 py-1.5 text-xs outline-none w-full sm:w-64 focus:border-blue-500 font-mono">
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs font-mono">
+                    <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-2.5">Record Locator</th>
+                            <th class="px-4 py-2.5">Trainee</th>
+                            <th class="px-4 py-2.5">Office</th>
+                            <th class="px-4 py-2.5">Status</th>
+                            <th class="px-4 py-2.5">Segments</th>
+                            <th class="px-4 py-2.5">Updated</th>
+                            <th class="px-4 py-2.5 text-right font-sans">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <template x-for="pnr in filteredAuditPnrs" :key="pnr.record_locator">
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-4 py-2.5 font-bold text-blue-600" x-text="pnr.record_locator"></td>
+                                <td class="px-4 py-2.5 text-slate-800" x-text="pnr.user_id"></td>
+                                <td class="px-4 py-2.5 text-slate-500" x-text="pnr.office_id"></td>
+                                <td class="px-4 py-2.5">
+                                    <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold" x-text="pnr.status"></span>
+                                </td>
+                                <td class="px-4 py-2.5 text-slate-600" x-text="pnr.data_json?.segments?.length || 0"></td>
+                                <td class="px-4 py-2.5 text-slate-400" x-text="new Date(pnr.updated_at).toLocaleDateString()"></td>
+                                <td class="px-4 py-2.5 text-right font-sans">
+                                    <button @click="inspectAuditPnr(pnr)" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded font-semibold text-xs transition-colors">
+                                        Inspect
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr x-show="filteredAuditPnrs.length === 0" style="display: none;">
+                            <td colspan="7" class="px-4 py-4 text-center text-slate-400 italic font-sans">No matching PNRs found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    @endif
 
     <!-- Student Live Spectate Modal (Command Stream & Playback) -->
     <div x-show="spectateData" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
@@ -766,6 +974,26 @@
             </div>
         </div>
     </div>
+
+    <!-- PNR Inspect Modal (Classroom Analytics) -->
+    <div x-show="selectedAuditPnr" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
+        <div @click.away="selectedAuditPnr = null" class="bg-white border border-slate-200 rounded-xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900" x-text="'PNR Audit: ' + selectedAuditPnr?.record_locator"></h3>
+                    <span class="text-[11px] text-slate-500 font-mono" x-text="'Agent: ' + selectedAuditPnr?.user_id + ' • Office: ' + selectedAuditPnr?.office_id"></span>
+                </div>
+                <button @click="selectedAuditPnr = null" class="text-slate-400 hover:text-slate-700 text-base font-bold">✕</button>
+            </div>
+            <div class="p-4 overflow-y-auto font-mono text-xs space-y-3">
+                <div class="bg-slate-900 p-3 rounded border border-slate-800 text-emerald-400 whitespace-pre-wrap font-mono" x-text="formatAuditPnr(selectedAuditPnr)"></div>
+                <div>
+                    <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Raw JSON Data</span>
+                    <pre class="bg-slate-100 p-3 rounded border border-slate-200 text-[11px] text-slate-800 overflow-x-auto" x-text="JSON.stringify(selectedAuditPnr?.data_json, null, 2)"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -774,14 +1002,54 @@ function instructorDashboard() {
     const pendingApprovalsData = @json($pendingApprovals);
     const submissionsData = @json($submissions);
     const scenariosData = @json($scenarios);
+    const pnrsData = @json($allPnrs ?? $recentPnrs);
 
     return {
         students: studentsData,
         pendingApprovals: pendingApprovalsData,
         submissions: submissionsData,
         scenarios: scenariosData,
+        pnrs: pnrsData,
         studentFilter: '',
+        auditPnrSearch: '',
+        selectedAuditPnr: null,
         isApproving: false,
+
+        inspectAuditPnr(pnr) {
+            this.selectedAuditPnr = pnr;
+        },
+
+        get filteredAuditPnrs() {
+            if (!this.auditPnrSearch.trim()) return this.pnrs;
+            const q = this.auditPnrSearch.toLowerCase();
+            return this.pnrs.filter(p =>
+                (p.record_locator || '').toLowerCase().includes(q) ||
+                (p.user_id || '').toLowerCase().includes(q) ||
+                (p.office_id || '').toLowerCase().includes(q)
+            );
+        },
+
+        formatAuditPnr(pnr) {
+            if (!pnr || !pnr.data_json) return 'NO DATA';
+            const d = pnr.data_json;
+            const lines = ['--- RLR ---'];
+            lines.push(`RP/${pnr.office_id || 'LON1A0980'}/${d.creationAgent || '1234AB'}   ${pnr.record_locator}`);
+
+            (d.passengers || []).forEach((pax, idx) => {
+                lines.push(`  ${idx + 1}.${pax.lastName}/${pax.firstName} ${pax.title || ''}`);
+            });
+            (d.segments || []).forEach((seg) => {
+                lines.push(`  ${seg.segmentNumber}  ${seg.airlineCode} ${seg.flightNumber} ${seg.bookingClass} ${seg.departureDate} ${seg.departureAirport}${seg.arrivalAirport} HK${seg.seats}  ${seg.departureTime} ${seg.arrivalTime}`);
+            });
+            (d.contacts || []).forEach((c, idx) => {
+                lines.push(`  ${idx + 1} AP ${c.detail}`);
+            });
+            if (d.ticketing) lines.push(`  TK ${d.ticketing.raw || 'OK'}`);
+            if (d.fop) lines.push(`  FP ${d.fop.details}`);
+            if (d.receivedFrom) lines.push(`  RF ${d.receivedFrom}`);
+
+            return lines.join('\n');
+        },
 
         async approveCadet(cadetId) {
             this.isApproving = true;

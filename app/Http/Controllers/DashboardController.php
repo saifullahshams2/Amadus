@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LessonProgress;
 use App\Models\Pnr;
 use App\Models\QueueItem;
 use App\Models\Scenario;
@@ -40,12 +41,44 @@ class DashboardController extends Controller
                 abort(403, 'Forbidden. Students cannot access the instructor dashboard.');
             }
 
-            return $this->studentView($request, $user);
+            return $this->studentView($request, $user, 'dashboard');
         }
 
         // 2. Strict separation: Authenticated instructors are strictly restricted to instructor dashboard
         if ($user->role === 'instructor') {
-            return $this->instructorView($request, $user);
+            return $this->instructorView($request, $user, 'dashboard');
+        }
+
+        return redirect()->route('landing');
+    }
+
+    /**
+     * Dedicated Dashboard Sub-page router.
+     */
+    public function section(Request $request, string $section): View|RedirectResponse
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            return redirect()->route('landing');
+        }
+
+        if ($user->role === 'student') {
+            $allowedStudentSections = ['workspace', 'drills', 'validator', 'analytics'];
+            if (! in_array($section, $allowedStudentSections, true)) {
+                return redirect()->route('dashboard');
+            }
+
+            return $this->studentView($request, $user, $section);
+        }
+
+        if ($user->role === 'instructor') {
+            $allowedInstructorSections = ['classroom', 'students', 'builder', 'gradebook', 'queues', 'analytics'];
+            if (! in_array($section, $allowedInstructorSections, true)) {
+                return redirect()->route('dashboard');
+            }
+
+            return $this->instructorView($request, $user, $section);
         }
 
         return redirect()->route('landing');
@@ -66,7 +99,7 @@ class DashboardController extends Controller
     /**
      * Compile and render Student Dashboard.
      */
-    protected function studentView(Request $request, ?User $user): View
+    protected function studentView(Request $request, ?User $user, string $currentSection = 'dashboard'): View
     {
         $username = $user?->username ?? 'student';
         $officeId = $user?->office_id ?? 'LON1A0980';
@@ -114,6 +147,7 @@ class DashboardController extends Controller
         return view('dashboard.student', [
             'user' => $user,
             'activeRole' => 'student',
+            'currentSection' => $currentSection,
             'activePnr' => $activePnr,
             'scenarios' => $scenarioList,
             'queueSummary' => $queueSummary,
@@ -132,7 +166,7 @@ class DashboardController extends Controller
     /**
      * Compile and render Instructor Dashboard.
      */
-    protected function instructorView(Request $request, ?User $user): View
+    protected function instructorView(Request $request, ?User $user, string $currentSection = 'dashboard'): View
     {
         $officeId = $user?->office_id ?? 'LON1A0980';
 
@@ -194,10 +228,13 @@ class DashboardController extends Controller
 
         // 5. Recent PNR audit trail
         $recentPnrs = Pnr::where('office_id', $officeId)->orderBy('updated_at', 'desc')->limit(20)->get();
+        $allPnrs = Pnr::orderBy('updated_at', 'desc')->limit(100)->get();
+        $progress = LessonProgress::all();
 
         return view('dashboard.instructor', [
             'user' => $user,
             'activeRole' => 'instructor',
+            'currentSection' => $currentSection,
             'students' => $studentStatuses,
             'pendingApprovals' => $pendingApprovals,
             'scenarios' => $scenarios,
@@ -205,6 +242,8 @@ class DashboardController extends Controller
             'queueSummary' => $queueSummary,
             'pendingQueueItems' => $pendingQueueItems,
             'recentPnrs' => $recentPnrs,
+            'allPnrs' => $allPnrs,
+            'progress' => $progress,
         ]);
     }
 

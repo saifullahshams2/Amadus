@@ -28,6 +28,7 @@ Route::get('/access-dashboard', function () {
 // Unified Role-Secured Dashboard & Cryptic Terminal Simulator (Requires authentication)
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/{section}', [DashboardController::class, 'section'])->name('dashboard.section');
     Route::post('/dashboard/switch-role', [DashboardController::class, 'switchRole'])->name('dashboard.switch-role');
     Route::get('/terminal', [TerminalController::class, 'index'])->name('terminal.index');
     Route::match(['get', 'post'], '/instructor/exit-impersonation', [InstructorController::class, 'exitImpersonation'])->name('impersonation.exit');

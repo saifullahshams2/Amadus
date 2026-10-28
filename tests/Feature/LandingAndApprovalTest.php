@@ -64,7 +64,7 @@ class LandingAndApprovalTest extends TestCase
         $authResponse->assertStatus(200);
         $authResponse->assertSeeText('WORK AREA:');
         $authResponse->assertSeeText('AMADEUS GDS SIM');
-        $authResponse->assertSeeText('Dashboard Hub');
+        $authResponse->assertSeeText('Dashboard');
     }
 
     public function test_03_approved_student_login_redirects_to_dashboard(): void

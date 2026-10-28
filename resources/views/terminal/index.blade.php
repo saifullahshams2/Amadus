@@ -29,10 +29,7 @@
                     AMADEUS GDS SIM
                 </span>
             </a>
-            <a href="/dashboard" class="px-2.5 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold flex items-center gap-1.5 transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                <span>Dashboard Hub</span>
-            </a>
+
         </div>
 
         <!-- Controls: Inspector, Theme, User -->
@@ -50,15 +47,16 @@
                 <button @click="theme = 'crt-amber'" :class="theme === 'crt-amber' ? 'bg-amber-950 text-amber-400 font-bold border border-amber-800' : 'text-slate-600 hover:text-amber-700'" class="px-2 py-1 rounded transition-colors">CRT Amber</button>
             </div>
 
+            <!-- Dashboard Link (Renamed from Dashboard Hub and moved to right side) -->
+            <a href="{{ route('dashboard') }}" class="px-2.5 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span>Dashboard</span>
+            </a>
+
             <!-- User Status / Auth -->
             @auth
                 <div class="flex items-center space-x-2 pl-2 border-l border-slate-200">
                     <span class="text-slate-700 font-mono text-xs hidden sm:inline">{{ Auth::user()->username }}</span>
-                    @if(Auth::user()->role === 'instructor')
-                        <a href="/instructor" class="px-2 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded font-semibold text-xs">
-                            Instructor Hub
-                        </a>
-                    @endif
                     <form action="/logout" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="text-slate-400 hover:text-rose-600 p-1" title="Sign Out">
