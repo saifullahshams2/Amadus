@@ -20,6 +20,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/installed
 /vendor
 _ide_helper.php
 Homestead.json
@@ -27,4 +28,3 @@ Homestead.yaml
 Thumbs.db
 database/*.sqlite*
 _legacy_nextjs/
-.phpunit.cache

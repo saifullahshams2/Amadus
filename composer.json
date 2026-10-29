@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "saifullahshams2/gds-amadeus",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Amadus Global Distribution System (GDS) Training Simulator built with Laravel 13, Tailwind CSS v4, and Alpine.js",
+    "keywords": ["amadeus", "gds", "airline-reservation", "laravel", "training-simulator"],
     "license": "MIT",
     "require": {
         "php": "^8.3",

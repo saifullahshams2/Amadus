@@ -12,7 +12,7 @@ Replicates the authentic **Amadeus Selling Platform Connect** cryptic terminal e
 [![Alpine.js](https://img.shields.io/badge/Alpine.js-3.x-8bc0d0?logo=alpine.js)](https://alpinejs.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite)](https://vitejs.dev/)
 [![Database](https://img.shields.io/badge/Database-SQLite%20%7C%20MySQL%20%7C%20MariaDB-green?logo=sqlite)](https://sqlite.org/)
-[![Tests](https://img.shields.io/badge/Tests-99%20Passed%20%2F%20558%20Assertions-emerald.svg)](tests/Feature/)
+[![Tests](https://img.shields.io/badge/Tests-119%20Passed%20%2F%20675%20Assertions-emerald.svg)](tests/Feature/)
 
 </div>
 
@@ -92,7 +92,7 @@ npm -v
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/gds-amadeus.git
+git clone https://github.com/saifullahshams2/gds-amadeus.git
 cd gds-amadeus
 ```
 
@@ -199,7 +199,7 @@ npm run build
 
 ### Running Tests
 
-The test suite contains 99 feature & unit tests covering terminal cryptic commands, PNR lifecycle, pricing, ticketing, instructor classroom controls, and API contracts.
+The test suite contains 119 feature & unit tests covering terminal cryptic commands, PNR lifecycle, pricing, ticketing, instructor classroom controls, installer workflows, and API contracts.
 
 Run the test suite:
 ```bash
@@ -262,7 +262,7 @@ php -v && composer -V && node -v && nginx -v
 Clone the application into `/var/www/gds-amadeus`:
 ```bash
 sudo mkdir -p /var/www/gds-amadeus
-sudo git clone https://github.com/your-username/gds-amadeus.git /var/www/gds-amadeus
+sudo git clone https://github.com/saifullahshams2/gds-amadeus.git /var/www/gds-amadeus
 cd /var/www/gds-amadeus
 ```
 
@@ -376,7 +376,8 @@ sudo -u www-data php artisan app:install --force \
   --email="instructor@yourdomain.com" \
   --password="YourVerySecurePassword123!" \
   --office="LON1A0980" \
-  --agent="IN01GS"
+  --agent="IN01GS" \
+  --app-url="https://gds.yourdomain.com"
 ```
 
 #### 3. Lock & Secure Installer
