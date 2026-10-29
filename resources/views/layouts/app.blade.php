@@ -14,11 +14,13 @@
             --background: #f8fafc;
             --foreground: #0f172a;
         }
+        [x-cloak] { display: none !important; }
         html, body {
             min-height: 100%;
             color: var(--foreground);
             background: var(--background);
             font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-overflow-scrolling: touch;
         }
         .crt-screen::before {
             content: " ";
@@ -48,5 +50,6 @@
 </head>
 <body class="min-h-full flex flex-col bg-[#f8fafc] text-slate-800 antialiased selection:bg-blue-600 selection:text-white @yield('body_class')">
     @yield('content')
+    @include('partials.dynamic-popup')
 </body>
 </html>

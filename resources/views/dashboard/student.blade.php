@@ -92,11 +92,71 @@
     </section>
     @endif
 
-    <!-- Section 2: Workspace & Current Active PNR Status Widget -->
-    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'workspace')
-    <section id="workspace" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Current Active PNR Inspector Card (2 columns) -->
-        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
+    @if(($currentSection ?? 'dashboard') === 'dashboard')
+    <!-- Training Modules Quick Hub on Main Dashboard -->
+    <section class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
+            <div>
+                <h2 class="text-sm font-bold text-slate-900 tracking-wide">Trainee Training Modules & Workspace</h2>
+                <p class="text-xs text-slate-500">Access individual simulator components and dedicated training sub-pages</p>
+            </div>
+            <a href="{{ route('terminal.index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm self-start sm:self-auto">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span>Launch Practice Terminal</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+            <!-- 1. Workspace & Active PNR -->
+            <a href="{{ route('dashboard.section', 'workspace') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-blue-300 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-blue-700">Overview & Active PNR</h3>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">Inspect live PNR segments, passenger names, PRINT status indicators, and TST ticket fares.</p>
+                </div>
+                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-blue-600 font-bold">
+                    <span>Open Workspace &rarr;</span>
+                </div>
+            </a>
+
+            <!-- 2. Assignments & Drills -->
+            <a href="{{ route('dashboard.section', 'drills') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-blue-300 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-blue-700">Assignments & Drills</h3>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">Practice realistic reservation scenarios, check validation rubrics, and submit completed bookings.</p>
+                </div>
+                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-blue-600 font-bold">
+                    <span>View Drills &rarr;</span>
+                </div>
+            </a>
+
+            <!-- 3. Cryptic Validator -->
+            <a href="{{ route('dashboard.section', 'validator') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-blue-300 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-blue-700">Cryptic Syntax Validator</h3>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">Interactive syntax tester with real-time feedback, regular expression validation, and mistake hints.</p>
+                </div>
+                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-blue-600 font-bold">
+                    <span>Test Syntax &rarr;</span>
+                </div>
+            </a>
+        </div>
+    </section>
+    @endif
+
+    <!-- Section 2: Workspace & Current Active PNR Status Widget (Dedicated to /dashboard/workspace) -->
+    @if(($currentSection ?? '') === 'workspace')
+    <section id="workspace" class="w-full">
+        <!-- Current Active PNR Inspector Card -->
+        <div class="w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
             <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
                 <div class="flex items-center space-x-2.5">
                     <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -227,43 +287,11 @@
                 </template>
             </div>
         </div>
-
-        <!-- Quick Terminal Launcher & Command Shortcut Widget (1 column) -->
-        <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between shadow-sm">
-            <div>
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-sm font-bold text-slate-900 tracking-wide">AMADEUS Cryptic Terminal</h3>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">READY</span>
-                </div>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    Access the high-fidelity command console with multi-work-area support (A through F), live IATA databases, and cryptic entry simulation.
-                </p>
-
-                <!-- Mini Cryptic Terminal Preview -->
-                <div class="mt-4 bg-slate-900 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-emerald-400 space-y-1">
-                    <div class="text-slate-500">// Terminal Area A: LON1A0980</div>
-                    <div>&gt; AN15NOVLHRJFK/ABA</div>
-                    <div class="text-slate-400">1 BA 117 Y9 B9 H9 K9 M9 LHRJFK 1030 1345</div>
-                    <div>&gt; SS1Y1</div>
-                    <div class="text-sky-300">1 BA 117 Y 15NOV LHRJFK HK1 1030 1345</div>
-                </div>
-            </div>
-
-            <div class="mt-5 space-y-2">
-                <a href="{{ route('terminal.index') }}" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                    <span>Open Full Practice Terminal</span>
-                </a>
-                <a href="{{ route('dashboard.section', 'validator') }}" class="w-full py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 flex items-center justify-center gap-1.5 transition-colors">
-                    <span>Open Syntax Validator</span>
-                </a>
-            </div>
-        </div>
     </section>
     @endif
 
-    <!-- Section 3: Assigned Scenarios & Practice Drills -->
-    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'drills')
+    <!-- Section 3: Assigned Scenarios & Practice Drills (Dedicated to /dashboard/drills) -->
+    @if(($currentSection ?? '') === 'drills')
     <section id="drills" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -323,8 +351,8 @@
     </section>
     @endif
 
-    <!-- Section 4: Live Syntax Validator & Error Log -->
-    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'validator')
+    <!-- Section 4: Live Syntax Validator & Error Log (Dedicated to /dashboard/validator) -->
+    @if(($currentSection ?? '') === 'validator')
     <section id="validator" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Left Column: Interactive Cryptic Entry Validator -->
@@ -671,10 +699,10 @@ function studentDashboard() {
                     sc.status = 'submitted';
                     sc.score = data.submission.score;
                     sc.auto_grade_results = data.grade;
-                    alert(`Scenario submitted successfully!\nScore: ${data.submission.score}/100\n${data.grade?.summary || ''}`);
+                    await customAlert(`Scenario submitted successfully!\nScore: ${data.submission.score}/100\n${data.grade?.summary || ''}`, 'Scenario Submitted', 'success');
                 }
             } catch (e) {
-                alert('Submission failed. Check network or terminal session.');
+                await customAlert('Submission failed. Check network or terminal session.', 'Submission Error', 'error');
             } finally {
                 this.isSubmitting = false;
             }

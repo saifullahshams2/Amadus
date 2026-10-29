@@ -5,7 +5,7 @@
 @section('content')
 <div x-data="instructorHub()" class="flex-1 flex flex-col h-full overflow-hidden bg-[#f8fafc] text-slate-800">
     <!-- Hub Header -->
-    <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shrink-0 shadow-sm">
+    <header class="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 shadow-sm">
         <div class="flex items-center space-x-3">
             <a href="/dashboard" class="p-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors" title="Back to Dashboard">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -16,10 +16,11 @@
             </div>
         </div>
 
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-2 sm:space-x-4 flex-wrap gap-2">
             <div class="flex items-center space-x-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-mono text-emerald-700 font-semibold">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>SYSTEM ACTIVE (SQLite / MySQL / MariaDB)</span>
+                <span class="hidden sm:inline">SYSTEM ACTIVE (SQLite / MySQL / MariaDB)</span>
+                <span class="sm:hidden">SYSTEM ACTIVE</span>
             </div>
             <a href="{{ route('terminal.index') }}" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm">
                 Open Simulator
@@ -28,9 +29,9 @@
     </header>
 
     <!-- Main Content Grid -->
-    <div class="flex-1 p-6 overflow-y-auto space-y-6">
+    <div class="flex-1 p-3 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6">
         <!-- KPI Summary Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -454,8 +455,8 @@ function instructorHub() {
             }
         },
 
-        loginAsStudent(studentId) {
-            if (!confirm('Log directly into this student portal without credentials?')) return;
+        async loginAsStudent(studentId) {
+            if (!await customConfirm('Log directly into this student portal without credentials?', 'Student Impersonation', { type: 'info', confirmText: 'Proceed to Portal' })) return;
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/instructor/students/${studentId}/impersonate`;
@@ -472,7 +473,7 @@ function instructorHub() {
         },
 
         async deleteStudent(studentId, username) {
-            if (!confirm(`Are you sure you want to permanently delete student "${username}" and all their simulation data? This action cannot be undone.`)) {
+            if (!await customConfirm(`Are you sure you want to permanently delete student "${username}" and all their simulation data? This action cannot be undone.`, 'Permanently Delete Student', { type: 'danger', confirmText: 'Delete Student' })) {
                 return;
             }
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -488,10 +489,10 @@ function instructorHub() {
                     this.students = this.students.filter(s => s.id !== studentId);
                 } else {
                     const data = await res.json();
-                    alert(data.error || 'Failed to delete student.');
+                    await customAlert(data.error || 'Failed to delete student.', 'Deletion Failed', 'error');
                 }
             } catch (err) {
-                alert('Network error while deleting student: ' + err.message);
+                await customAlert('Network error while deleting student: ' + err.message, 'Network Error', 'error');
             }
         },
 
@@ -547,10 +548,10 @@ function instructorHub() {
             const text = this.createdCredentialsList.map(c =>
                 `Username: ${c.username} | Password: ${c.password} | Email: ${c.email} | Office: ${c.office_id} | Agent: ${c.agent_id}`
             ).join('\n');
-            navigator.clipboard.writeText(text).then(() => {
-                alert('All student credentials copied to clipboard!');
-            }).catch(() => {
-                prompt('Copy student credentials below:', text);
+            navigator.clipboard.writeText(text).then(async () => {
+                await customAlert('All student credentials copied to clipboard!', 'Credentials Copied', 'success');
+            }).catch(async () => {
+                await customPrompt('Copy student credentials below:', text, 'Student Credentials');
             });
         },
 

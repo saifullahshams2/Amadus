@@ -7,7 +7,7 @@
 
     {{-- Breadcrumb header if on a dedicated sub-page --}}
     @if(($currentSection ?? 'dashboard') !== 'dashboard')
-        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
             <div class="flex items-center space-x-2 text-xs text-slate-500 font-mono">
                 <a href="{{ route('dashboard') }}" class="hover:text-blue-600 transition-colors font-semibold">DASHBOARD</a>
                 <span>/</span>
@@ -32,7 +32,7 @@
 
     <!-- KPI Summary Row -->
     @if(($currentSection ?? 'dashboard') === 'dashboard')
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div>
                 <div class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">Enrolled Trainees</div>
@@ -134,10 +134,84 @@
     </template>
     @endif
 
-    <!-- Section 1: Live Classroom Overview & Student Grid -->
-    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'classroom')
+    @if(($currentSection ?? 'dashboard') === 'dashboard')
+    <!-- Instructor Operations Hub Cards -->
+    <section class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
+            <div>
+                <h2 class="text-sm font-bold text-slate-900 tracking-wide">Instructor Operations & Classroom Portals</h2>
+                <p class="text-xs text-slate-500">Access dedicated command center modules for real-time monitoring and classroom simulation</p>
+            </div>
+            <a href="{{ route('terminal.index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm self-start sm:self-auto">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span>Launch Practice Terminal</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <!-- 1. Classroom & Spectator -->
+            <a href="{{ route('dashboard.section', 'classroom') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-amber-400 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-amber-800">Classroom & Spectate</h3>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">Real-time keystroke monitoring, live cadet inspection, and terminal session streaming.</p>
+                </div>
+                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-amber-700 font-bold">
+                    <span>Open Classroom &rarr;</span>
+                </div>
+            </a>
+
+            <!-- 2. Student Enrollment -->
+            <a href="{{ route('dashboard.section', 'students') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-emerald-400 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-emerald-800">Enroll Students</h3>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">Batch provision new student trainee accounts, export credentials, and manage rosters.</p>
+                </div>
+                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-emerald-700 font-bold">
+                    <span>Manage Roster &rarr;</span>
+                </div>
+            </a>
+
+            <!-- 3. Scenario & Drill Builder -->
+            <a href="{{ route('dashboard.section', 'builder') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-sky-400 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-sky-50 border border-sky-200 text-sky-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-sky-800">Scenario Builder</h3>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">Create and publish custom booking exercises, validation rubrics, and time limits.</p>
+                </div>
+                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-sky-700 font-bold">
+                    <span>Build Drills &rarr;</span>
+                </div>
+            </a>
+
+            <!-- 4. Queue & Sandbox Manager -->
+            <a href="{{ route('dashboard.section', 'queues') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-indigo-400 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-indigo-800">Queue & Sandbox</h3>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">Broadcast PNR flight changes into student queues and manage sandbox resets.</p>
+                </div>
+                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-indigo-700 font-bold">
+                    <span>Manage Queues &rarr;</span>
+                </div>
+            </a>
+        </div>
+    </section>
+    @endif
+
+    <!-- Section 1: Live Classroom Overview & Student Grid (Dedicated to /dashboard/classroom) -->
+    @if(($currentSection ?? '') === 'classroom')
     <section id="classroom" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-        <div id="students-enrollment" class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div id="students-enrollment" class="px-4 sm:px-6 py-3.5 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <h2 class="text-sm font-bold text-slate-900 tracking-wide">Live Classroom Grid & Spectator</h2>
                 <p class="text-xs text-slate-500">Real-time status monitoring, keystroke streaming, and student account enrollment</p>
@@ -147,7 +221,7 @@
                 <input type="text"
                        x-model="studentFilter"
                        placeholder="Filter by name, agent..."
-                       class="bg-white border border-slate-300 text-slate-800 placeholder:text-slate-400 rounded-lg px-3 py-1.5 text-xs outline-none w-40 sm:w-48 focus:border-blue-500 font-mono">
+                       class="bg-white border border-slate-300 text-slate-800 placeholder:text-slate-400 rounded-lg px-3 py-1.5 text-xs outline-none w-full sm:w-48 focus:border-blue-500 font-mono">
                 <button @click="openCreateStudentModal()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                     <span>+ Enroll Student</span>
@@ -160,7 +234,7 @@
         </div>
 
         <!-- Student Cards Grid -->
-        <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             <template x-for="st in filteredStudents" :key="st.id">
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between hover:border-slate-300 hover:shadow-xs transition-all">
                     <div>
@@ -229,16 +303,16 @@
     <!-- Dedicated Student Roster Section (When viewing /dashboard/students) -->
     @if(($currentSection ?? '') === 'students')
     <section id="students" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm space-y-4">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="px-4 sm:px-6 py-3.5 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <h2 class="text-sm font-bold text-slate-900 tracking-wide">Enrolled Student Roster</h2>
                 <p class="text-xs text-slate-500">Manage trainee accounts with full access control, direct login, and batch provisioning</p>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 flex-wrap gap-2">
                 <input type="text"
                        x-model="studentFilter"
                        placeholder="Search student or agent..."
-                       class="bg-white border border-slate-300 text-slate-800 placeholder:text-slate-400 rounded-lg px-3 py-1.5 text-xs outline-none w-48 focus:border-blue-500 font-mono">
+                       class="bg-white border border-slate-300 text-slate-800 placeholder:text-slate-400 rounded-lg px-3 py-1.5 text-xs outline-none w-full sm:w-48 focus:border-blue-500 font-mono">
                 <button @click="openCreateStudentModal()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                     <span>+ Enroll Student</span>
@@ -297,10 +371,10 @@
     </section>
     @endif
 
-    <!-- Section 2: Scenario & Drill Builder (Form Interface) -->
-    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'builder')
+    <!-- Section 2: Scenario & Drill Builder (Form Interface) (Dedicated to /dashboard/builder) -->
+    @if(($currentSection ?? '') === 'builder')
     <section id="builder" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div class="px-4 sm:px-6 py-3.5 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <h2 class="text-sm font-bold text-slate-900 tracking-wide">Scenario & Drill Builder</h2>
                 <p class="text-xs text-slate-500">Configure new mock booking assignments, passenger profiles, and validation rules</p>
@@ -311,9 +385,9 @@
         </div>
 
         <!-- Builder Form Body (Toggleable) -->
-        <div x-show="showBuilderForm" class="p-6 border-b border-slate-200 bg-slate-50/50">
+        <div x-show="showBuilderForm" class="p-4 sm:p-6 border-b border-slate-200 bg-slate-50/50">
             <form @submit.prevent="saveNewScenario()" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <div>
                         <label class="block text-xs font-mono text-slate-600 mb-1 font-semibold">SCENARIO ID</label>
                         <input type="text" x-model="newScenario.id" placeholder="e.g. SCN-MC-05" required class="w-full bg-white border border-slate-300 text-slate-900 text-xs px-3 py-2 rounded-lg font-mono outline-none focus:border-blue-500">
@@ -358,7 +432,7 @@
                 <!-- Passenger Profile -->
                 <div class="p-3.5 bg-white rounded-lg border border-slate-200 space-y-3 shadow-xs">
                     <span class="text-xs font-mono font-bold text-slate-700 block">PASSENGER PROFILE & MANDATORY CRITERIA</span>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-[11px] text-slate-500 mb-1 font-medium">Passenger Name & Title</label>
                             <input type="text" x-model="newScenario.passengerName" placeholder="e.g. MILLER/DAVID MR" class="w-full bg-white border border-slate-300 text-slate-900 text-xs px-3 py-1.5 rounded font-mono outline-none">
@@ -383,7 +457,7 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end space-x-2 pt-2">
+                <div class="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
                     <button type="button" @click="showBuilderForm = false" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold">Cancel</button>
                     <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs shadow-sm transition-colors">Save & Publish Assignment</button>
                 </div>
@@ -438,7 +512,7 @@
     <!-- Section 3: Submissions & Gradebook -->
     @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'gradebook')
     <section id="gradebook" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div class="px-4 sm:px-6 py-3.5 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
                 <h2 class="text-sm font-bold text-slate-900 tracking-wide">Submissions & Gradebook</h2>
                 <p class="text-xs text-slate-500">Automated grading audit results, chronological playback, and score overrides</p>
@@ -485,16 +559,16 @@
     </section>
     @endif
 
-    <!-- Section 4: Simulated Queue & Sandbox Management -->
-    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'queues')
+    <!-- Section 4: Simulated Queue & Sandbox Management (Dedicated to /dashboard/queues) -->
+    @if(($currentSection ?? '') === 'queues')
     <section id="queues" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="px-4 sm:px-6 py-3.5 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <h2 class="text-sm font-bold text-slate-900 tracking-wide">Simulated Queue & Sandbox Management</h2>
                 <p class="text-xs text-slate-500">Broadcast test PNRs directly to student agency queues or reset sandbox environments</p>
             </div>
 
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 flex-wrap gap-2">
                 <button @click="showBroadcastModal = true" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                     <span>Broadcast PNR to Queue</span>
@@ -505,7 +579,7 @@
             </div>
         </div>
 
-        <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
             @foreach($queueSummary as $q)
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-xs">
                     <div>
@@ -526,8 +600,8 @@
     </section>
     @endif
 
-    <!-- Section 5: Classroom Analytics & Audit Trail (Migrated from /instructor) -->
-    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'analytics')
+    <!-- Section 5: Classroom Analytics & Audit Trail (Dedicated to /dashboard/analytics) -->
+    @if(($currentSection ?? '') === 'analytics')
     <section id="analytics" class="space-y-6">
         <div class="flex items-center justify-between">
             <div>
@@ -540,7 +614,7 @@
         </div>
 
         <!-- KPI Cards from /instructor -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -674,9 +748,9 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
+            <div class="p-3 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
                 <span class="text-slate-500">Viewing active keystroke and response playback buffer.</span>
-                <button @click="spectateData = null" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded">Close Stream</button>
+                <button @click="spectateData = null" class="w-full sm:w-auto px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded text-center">Close Stream</button>
             </div>
         </div>
     </div>
@@ -800,8 +874,8 @@
     </div>
 
     <!-- Modal: Enroll Single Student -->
-    <div x-show="showCreateStudentModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs" style="display: none;">
-        <div @click.away="showCreateStudentModal = false" class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+    <div x-show="showCreateStudentModal" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-xs" style="display: none;">
+        <div @click.away="showCreateStudentModal = false" class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto shadow-2xl relative">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
@@ -853,9 +927,9 @@
                     </div>
                 </div>
 
-                <div class="pt-3 border-t border-slate-200 flex justify-end space-x-2">
+                <div class="pt-3 border-t border-slate-200 flex flex-col-reverse sm:flex-row justify-end gap-2">
                     <button type="button" @click="showCreateStudentModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition-colors">Cancel</button>
-                    <button type="submit" :disabled="isCreatingStudent" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-lg text-xs shadow-sm transition-colors flex items-center gap-1.5">
+                    <button type="submit" :disabled="isCreatingStudent" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-lg text-xs shadow-sm transition-colors flex items-center justify-center gap-1.5">
                         <span x-show="!isCreatingStudent">Create Student Account</span>
                         <span x-show="isCreatingStudent">Creating...</span>
                     </button>
@@ -865,8 +939,8 @@
     </div>
 
     <!-- Modal: Batch Provision Unlimited Students -->
-    <div x-show="showBatchModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs" style="display: none;">
-        <div @click.away="showBatchModal = false" class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+    <div x-show="showBatchModal" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-xs" style="display: none;">
+        <div @click.away="showBatchModal = false" class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto shadow-2xl relative">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
@@ -911,9 +985,9 @@
                     <div>• Role is securely set to <span class="font-mono text-emerald-700 font-bold">student</span> without instructor privileges.</div>
                 </div>
 
-                <div class="pt-3 border-t border-slate-200 flex justify-end space-x-2">
+                <div class="pt-3 border-t border-slate-200 flex flex-col-reverse sm:flex-row justify-end gap-2">
                     <button type="button" @click="showBatchModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition-colors">Cancel</button>
-                    <button type="submit" :disabled="isBatchCreating" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-lg text-xs shadow-sm transition-colors flex items-center gap-1.5">
+                    <button type="submit" :disabled="isBatchCreating" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-lg text-xs shadow-sm transition-colors flex items-center justify-center gap-1.5">
                         <span x-show="!isBatchCreating" x-text="'Generate ' + (batchForm.count || 0) + ' Accounts'"></span>
                         <span x-show="isBatchCreating">Generating Accounts...</span>
                     </button>
@@ -923,8 +997,8 @@
     </div>
 
     <!-- Modal: Credentials Display & Copy -->
-    <div x-show="showCredentialsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs" style="display: none;">
-        <div @click.away="showCredentialsModal = false" class="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative flex flex-col max-h-[85vh]">
+    <div x-show="showCredentialsModal" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-xs" style="display: none;">
+        <div @click.away="showCredentialsModal = false" class="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl p-4 sm:p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 shrink-0">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
@@ -963,12 +1037,12 @@
                 </table>
             </div>
 
-            <div class="pt-3 border-t border-slate-200 flex items-center justify-between shrink-0">
-                <button @click="copyCredentials()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors">
+            <div class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0">
+                <button @click="copyCredentials()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                     <span>Copy All to Clipboard</span>
                 </button>
-                <button type="button" @click="showCredentialsModal = false" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs shadow-sm transition-colors">
+                <button type="button" @click="showCredentialsModal = false" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs shadow-sm transition-colors text-center">
                     Done
                 </button>
             </div>
@@ -976,8 +1050,8 @@
     </div>
 
     <!-- PNR Inspect Modal (Classroom Analytics) -->
-    <div x-show="selectedAuditPnr" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
-        <div @click.away="selectedAuditPnr = null" class="bg-white border border-slate-200 rounded-xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+    <div x-show="selectedAuditPnr" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4" style="display: none;">
+        <div @click.away="selectedAuditPnr = null" class="bg-white border border-slate-200 rounded-xl max-w-2xl w-full max-h-[90vh] sm:max-h-[80vh] flex flex-col overflow-hidden shadow-2xl">
             <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
                 <div>
                     <h3 class="text-sm font-bold text-slate-900" x-text="'PNR Audit: ' + selectedAuditPnr?.record_locator"></h3>
@@ -1092,7 +1166,7 @@ function instructorDashboard() {
         },
 
         async rejectCadet(cadetId) {
-            if (!confirm('Are you sure you want to reject and remove this cadet registration?')) return;
+            if (!await customConfirm('Are you sure you want to reject and remove this cadet registration?', 'Reject Registration', { type: 'danger', confirmText: 'Reject Cadet' })) return;
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
             try {
                 const res = await fetch(`/api/instructor/students/${cadetId}/reject`, {
@@ -1111,8 +1185,8 @@ function instructorDashboard() {
             }
         },
 
-        loginAsStudent(studentId) {
-            if (!confirm('Log directly into this cadet portal without credentials?')) return;
+        async loginAsStudent(studentId) {
+            if (!await customConfirm('Log directly into this cadet portal without credentials?', 'Cadet Impersonation', { type: 'info', confirmText: 'Proceed to Portal' })) return;
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/instructor/students/${studentId}/impersonate`;
@@ -1129,7 +1203,7 @@ function instructorDashboard() {
         },
 
         async deleteStudent(studentId, username) {
-            if (!confirm(`Are you sure you want to permanently delete cadet "${username}" and all their simulation data? This action cannot be undone.`)) {
+            if (!await customConfirm(`Are you sure you want to permanently delete cadet "${username}" and all their simulation data? This action cannot be undone.`, 'Permanently Delete Cadet', { type: 'danger', confirmText: 'Delete Cadet' })) {
                 return;
             }
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -1145,10 +1219,10 @@ function instructorDashboard() {
                     this.students = this.students.filter(s => s.id !== studentId);
                 } else {
                     const data = await res.json();
-                    alert(data.error || 'Failed to delete student.');
+                    await customAlert(data.error || 'Failed to delete student.', 'Deletion Failed', 'error');
                 }
             } catch (err) {
-                alert('Network error while deleting student: ' + err.message);
+                await customAlert('Network error while deleting student: ' + err.message, 'Network Error', 'error');
             }
         },
 
@@ -1245,7 +1319,7 @@ function instructorDashboard() {
                 if (!res.ok) throw new Error('Failed to load spectate data');
                 this.spectateData = await res.json();
             } catch (e) {
-                alert('Could not spectate student: ' + e.message);
+                await customAlert('Could not spectate student: ' + e.message, 'Spectate Error', 'error');
             }
         },
 
@@ -1277,10 +1351,10 @@ function instructorDashboard() {
                     this.selectedSubModal.instructor_feedback = data.submission.instructor_feedback;
                     this.selectedSubModal.status = 'reviewed';
                     this.selectedSubModal = null;
-                    alert('Grade override and instructor feedback saved!');
+                    await customAlert('Grade override and instructor feedback saved!', 'Grade Saved', 'success');
                 }
             } catch (e) {
-                alert('Failed to save score override.');
+                await customAlert('Failed to save score override.', 'Save Error', 'error');
             }
         },
 
@@ -1319,16 +1393,16 @@ function instructorDashboard() {
 
                 const data = await res.json();
                 if (data.success) {
-                    alert('New booking scenario published to students successfully!');
+                    await customAlert('New booking scenario published to students successfully!', 'Scenario Published', 'success');
                     window.location.reload();
                 }
             } catch (e) {
-                alert('Failed to publish scenario.');
+                await customAlert('Failed to publish scenario.', 'Publish Error', 'error');
             }
         },
 
         async deleteScenario(id, title) {
-            const confirmed = confirm(`Are you sure you want to delete scenario "${id}" (${title || ''})?\nAll student submissions associated with this drill will also be removed.`);
+            const confirmed = await customConfirm(`Are you sure you want to delete scenario "${id}" (${title || ''})?\nAll student submissions associated with this drill will also be removed.`, 'Delete Scenario', { type: 'danger', confirmText: 'Delete Scenario' });
             if (!confirmed) {
                 return;
             }
@@ -1352,9 +1426,9 @@ function instructorDashboard() {
                 // Remove corresponding submissions from gradebook table
                 this.submissions = this.submissions.filter(sub => sub.scenario_id !== id);
 
-                alert(data.message || `Scenario '${id}' deleted successfully.`);
+                await customAlert(data.message || `Scenario '${id}' deleted successfully.`, 'Scenario Deleted', 'success');
             } catch (err) {
-                alert('Error deleting scenario: ' + err.message);
+                await customAlert('Error deleting scenario: ' + err.message, 'Deletion Error', 'error');
             }
         },
 
@@ -1371,12 +1445,12 @@ function instructorDashboard() {
 
                 const data = await res.json();
                 if (data.success) {
-                    alert(`PNR ${this.broadcastForm.pnr_locator} broadcasted to Queue ${this.broadcastForm.queue_number}!`);
+                    await customAlert(`PNR ${this.broadcastForm.pnr_locator} broadcasted to Queue ${this.broadcastForm.queue_number}!`, 'Broadcast Successful', 'success');
                     this.showBroadcastModal = false;
                     window.location.reload();
                 }
             } catch (e) {
-                alert('Failed to broadcast PNR to queue.');
+                await customAlert('Failed to broadcast PNR to queue.', 'Broadcast Error', 'error');
             }
         },
 
@@ -1486,15 +1560,16 @@ function instructorDashboard() {
             const text = this.createdCredentialsList.map(c =>
                 `Username: ${c.username} | Password: ${c.password} | Email: ${c.email} | Office: ${c.office_id} | Agent: ${c.agent_id}`
             ).join('\n');
-            navigator.clipboard.writeText(text).then(() => {
-                alert('All student credentials copied to clipboard!');
-            }).catch(() => {
-                prompt('Copy student credentials below:', text);
+            navigator.clipboard.writeText(text).then(async () => {
+                await customAlert('All student credentials copied to clipboard!', 'Credentials Copied', 'success');
+            }).catch(async () => {
+                await customPrompt('Copy student credentials below:', text, 'Student Credentials');
             });
         },
 
         async resetSandbox(studentUsername) {
-            if (!confirm(studentUsername ? `Reset sandbox for ${studentUsername}?` : 'Are you sure you want to reset the entire classroom sandbox? All pending queue items and logs will be purged.')) {
+            const msg = studentUsername ? `Reset sandbox for ${studentUsername}?` : 'Are you sure you want to reset the entire classroom sandbox? All pending queue items and logs will be purged.';
+            if (!await customConfirm(msg, 'Reset Sandbox', { type: 'danger', confirmText: 'Reset Sandbox' })) {
                 return;
             }
 
@@ -1510,11 +1585,11 @@ function instructorDashboard() {
 
                 const data = await res.json();
                 if (data.success) {
-                    alert(data.message);
+                    await customAlert(data.message, 'Sandbox Reset', 'success');
                     window.location.reload();
                 }
             } catch (e) {
-                alert('Sandbox reset failed.');
+                await customAlert('Sandbox reset failed.', 'Reset Error', 'error');
             }
         }
     };

@@ -30,11 +30,19 @@ class DualRoleDashboardTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('TRAINEE AGENT DESK');
         $response->assertSee('Syntax Accuracy');
-        $response->assertSee('Current Active PNR Status');
-        $response->assertSeeText('Assigned Booking Scenarios & Drills');
-        $response->assertSee('Interactive Cryptic Entry Validator');
+
+        // Removed from main /dashboard and kept in dedicated subpages
+        $response->assertDontSeeText('Assigned Booking Scenarios & Drills');
+        $response->assertDontSeeText('Interactive Cryptic Entry Validator');
+        $response->assertDontSeeText('AMADEUS Cryptic Terminal');
         $response->assertDontSee('Amadeus Cryptic Cheat Sheet');
         $response->assertDontSee('Essential entries by operational domain');
+
+        // Verify subpages: AMADEUS Cryptic Terminal completely removed from workspace per requirements
+        $this->actingAs($student)->get('/dashboard/workspace')->assertDontSeeText('AMADEUS Cryptic Terminal');
+        $this->actingAs($student)->get('/dashboard/workspace')->assertSeeText('Current Active PNR Status');
+        $this->actingAs($student)->get('/dashboard/drills')->assertSeeText('Assigned Booking Scenarios & Drills');
+        $this->actingAs($student)->get('/dashboard/validator')->assertSeeText('Interactive Cryptic Entry Validator');
     }
 
     public function test_02_instructor_dashboard_renders_successfully(): void
@@ -44,12 +52,19 @@ class DualRoleDashboardTest extends TestCase
         $response = $this->actingAs($instructor)->get('/dashboard?role=instructor');
         $response->assertStatus(200);
         $response->assertSee('INSTRUCTOR OPERATIONS HUB');
-        $response->assertSeeText('Live Classroom Grid & Spectator');
-        $response->assertSeeText('Scenario & Drill Builder');
         $response->assertSeeText('Submissions & Gradebook');
-        $response->assertSeeText('Simulated Queue & Sandbox Management');
+
+        // Removed from main /dashboard and kept in dedicated subpages
+        $response->assertDontSeeText('Live Classroom Grid & Spectator');
+        $response->assertDontSeeText('Simulated Queue & Sandbox Management');
+        $response->assertDontSeeText('Classroom Analytics & Audit Trail');
         $response->assertDontSee('Amadeus Cryptic Cheat Sheet');
         $response->assertDontSee('Essential entries by operational domain');
+
+        // Verify kept in respective subpages
+        $this->actingAs($instructor)->get('/dashboard/classroom')->assertSeeText('Live Classroom Grid & Spectator');
+        $this->actingAs($instructor)->get('/dashboard/builder')->assertSeeText('Scenario & Drill Builder');
+        $this->actingAs($instructor)->get('/dashboard/queues')->assertSeeText('Simulated Queue & Sandbox Management');
     }
 
     public function test_03_unauthenticated_guests_redirect_to_main_page(): void

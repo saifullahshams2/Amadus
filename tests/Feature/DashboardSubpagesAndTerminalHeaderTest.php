@@ -162,10 +162,28 @@ class DashboardSubpagesAndTerminalHeaderTest extends TestCase
         $analyticsRes->assertSeeText('Committed PNR Records');
         $analyticsRes->assertSeeText('Student PNR Audit Trail');
 
-        // 2. Overview dashboard also includes analytics
+        // 2. Overview dashboard removed analytics per requirements (kept on /dashboard/analytics)
         $dashRes = $this->actingAs($instructor)->get('/dashboard');
         $dashRes->assertStatus(200);
-        $dashRes->assertSeeText('Classroom Analytics & Audit Trail');
-        $dashRes->assertSeeText('Student PNR Audit Trail');
+        $dashRes->assertDontSeeText('Classroom Analytics & Audit Trail');
+    }
+
+    public function test_07_terminal_page_portal_navigation_removed_and_dashboard_button_on_top(): void
+    {
+        $student = User::where('role', 'student')->first();
+        $instructor = User::where('role', 'instructor')->first();
+
+        foreach ([$student, $instructor] as $user) {
+            $response = $this->actingAs($user)->get('/terminal');
+            $response->assertStatus(200);
+
+            // PORTAL NAVIGATION section removed
+            $response->assertDontSeeText('PORTAL NAVIGATION');
+
+            // Dashboard button is present
+            $response->assertSee(route('dashboard'), false);
+            $response->assertSeeText('Dashboard');
+            $response->assertSeeText('TERMINAL TYPE');
+        }
     }
 }

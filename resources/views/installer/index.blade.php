@@ -31,9 +31,9 @@
 
     <div x-data="installerWizard()" x-cloak class="w-full max-w-3xl bg-white border border-slate-200 rounded-2xl shadow-xl relative z-10 overflow-hidden my-8">
         <!-- Header Banner -->
-        <div class="bg-slate-50 border-b border-slate-200 px-6 py-5 flex items-center justify-between">
+        <div class="bg-slate-50 border-b border-slate-200 px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center space-x-3">
-                <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-10 h-10 object-contain">
+                <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-9 h-9 sm:w-10 sm:h-10 object-contain">
                 <div>
                     <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
                         <span>AMADEUS GDS SIM</span>
@@ -42,14 +42,14 @@
                     <p class="text-xs text-slate-500">First-time system setup, database selection & instructor provisioning</p>
                 </div>
             </div>
-            <div class="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-xs">
+            <div class="flex items-center gap-2 text-xs font-mono text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-xs self-start sm:self-auto">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>PHP {{ PHP_VERSION }}</span>
             </div>
         </div>
 
         <!-- Wizard Step Tracker -->
-        <div class="bg-slate-50/70 border-b border-slate-200 px-6 py-3.5">
+        <div class="bg-slate-50/70 border-b border-slate-200 px-3 sm:px-6 py-3.5 overflow-x-auto">
             <div class="flex items-center justify-between">
                 <!-- Step 1 Indicator -->
                 <div class="flex items-center gap-2">
