@@ -46,7 +46,7 @@ class PasswordResetTest extends TestCase
         ]);
 
         $response->assertSessionHas('status');
-        $response->assertSessionHas('reset_link');
+        $response->assertSessionMissing('reset_link');
 
         $this->assertDatabaseHas('password_reset_tokens', [
             'email' => 'cadet.pilot@amadeus.training',
@@ -166,7 +166,7 @@ class PasswordResetTest extends TestCase
             'success' => true,
             'email' => $user->email,
         ]);
-        $this->assertNotEmpty($forgotResponse->json('reset_url'));
+        $this->assertNull($forgotResponse->json('reset_url'));
 
         // Extract token
         $token = Password::broker()->createToken($user);

@@ -4,6 +4,7 @@ namespace App\Services\Amadeus;
 
 use App\Models\Pnr;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class CommandExecutionResult
 {
@@ -43,7 +44,7 @@ class AmadeusParser
         if ($input === 'HE' || str_starts_with($input, 'HELP') || $input === '?') {
             return new CommandExecutionResult(
                 [
-                    '--- AMADEUS GDS QUICK COMMAND REFERENCE ---',
+                    '--- AMADUS QUICK COMMAND REFERENCE ---',
                     'AN<DATE><ORIG><DEST>   : NEUTRAL AVAILABILITY (E.G. AN15NOVLHRJFK)',
                     'SS<SEATS><CLASS><LINE> : SELL SEAT FROM DISPLAY (E.G. SS1Y1)',
                     'NM1<SURNAME>/<NAME> MR : PASSENGER NAME (E.G. NM1DOE/JOHN MR)',
@@ -83,7 +84,7 @@ class AmadeusParser
             $area = $state['area'] ?? 'A';
 
             return new CommandExecutionResult(
-                ["SIGNED OUT OF AMADEUS GDS - WORK AREA {$area}"],
+                ["SIGNED OUT OF AMADUS - WORK AREA {$area}"],
                 $state,
                 false,
                 'SIGN_OUT'
@@ -400,35 +401,41 @@ class AmadeusParser
                 return new CommandExecutionResult($val->errors, $state, true, 'ET_ERROR');
             }
 
+            if ($userId === 'guest') {
+                return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO STORE AND COMMIT PNR (ET/ER)'], $state, true, 'ET_UNAUTHENTICATED');
+            }
+
             if (empty($state['activePnr']['recordLocator'])) {
                 $state['activePnr']['recordLocator'] = $this->pnr->generateRecordLocator();
             }
 
             $rloc = $state['activePnr']['recordLocator'];
-
-            // Authorization check before modifying existing record locator
-            $existingPnr = Pnr::find($rloc);
-            if ($existingPnr && ! $isInstructor && $existingPnr->user_id !== $userId) {
-                return new CommandExecutionResult(["UNAUTHORIZED TO OVERWRITE RECORD LOCATOR: {$rloc}"], $state, true, 'ET_UNAUTHORIZED');
-            }
-
             $office = $state['officeId'] ?? 'LON1A0980';
             $agent = $state['agentId'] ?? '1234AB';
             $status = ! empty($state['activePnr']['tickets']) ? 'TICKETED' : 'CONFIRMED';
 
-            // Commit to database
+            // Commit to database within transaction and row locking
             try {
-                Pnr::updateOrCreate(
-                    ['record_locator' => $rloc],
-                    [
-                        'user_id' => $existingPnr ? $existingPnr->user_id : $userId,
-                        'office_id' => $office,
-                        'status' => $status,
-                        'data_json' => $state['activePnr'],
-                    ]
-                );
+                DB::transaction(function () use ($rloc, $userId, $isInstructor, $office, $status, $state) {
+                    $existingPnr = Pnr::where('record_locator', $rloc)->lockForUpdate()->first();
+                    if ($existingPnr && ! $isInstructor && $existingPnr->user_id !== $userId) {
+                        throw new \RuntimeException("UNAUTHORIZED TO OVERWRITE RECORD LOCATOR: {$rloc}");
+                    }
+
+                    Pnr::updateOrCreate(
+                        ['record_locator' => $rloc],
+                        [
+                            'user_id' => $existingPnr ? $existingPnr->user_id : $userId,
+                            'office_id' => $office,
+                            'status' => $status,
+                            'data_json' => $state['activePnr'],
+                        ]
+                    );
+                });
+            } catch (\RuntimeException $re) {
+                return new CommandExecutionResult([$re->getMessage()], $state, true, 'ET_UNAUTHORIZED');
             } catch (\Throwable $e) {
-                // Ignore db write failure for guest
+                // Ignore DB write failure
             }
 
             if ($input === 'ER') {
@@ -529,6 +536,10 @@ class AmadeusParser
 
         // 21. ISSUE TICKET: TTP
         if ($input === 'TTP') {
+            if ($userId === 'guest') {
+                return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO ISSUE ELECTRONIC TICKETS (TTP)'], $state, true, 'TTP_UNAUTHENTICATED');
+            }
+
             if (! empty($state['activePnr']['recordLocator'])) {
                 $existingPnr = Pnr::find($state['activePnr']['recordLocator']);
                 if ($existingPnr && ! $isInstructor && $existingPnr->user_id !== $userId) {
@@ -546,10 +557,12 @@ class AmadeusParser
                 $state['activePnr']['ticketing'] = ['type' => 'TKOK', 'raw' => 'TKOK'];
 
                 if (! empty($state['activePnr']['recordLocator'])) {
-                    Pnr::where('record_locator', $state['activePnr']['recordLocator'])->update([
-                        'status' => 'TICKETED',
-                        'data_json' => $state['activePnr'],
-                    ]);
+                    DB::transaction(function () use ($state) {
+                        Pnr::where('record_locator', $state['activePnr']['recordLocator'])->lockForUpdate()->update([
+                            'status' => 'TICKETED',
+                            'data_json' => $state['activePnr'],
+                        ]);
+                    });
                 }
             }
 

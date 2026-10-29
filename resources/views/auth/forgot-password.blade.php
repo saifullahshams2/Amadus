@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Reset Password - AMADEUS GDS SIM')
+@section('title', 'Reset Password - Amadus')
 
 @section('content')
 <div class="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-y-auto">
@@ -18,7 +18,7 @@
     <div class="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl relative overflow-hidden">
         <!-- Brand / Header -->
         <div class="text-center space-y-2">
-            <img src="{{ asset('airplane-ticket.png') }}" alt="AMADEUS GDS SIM" class="w-12 h-12 object-contain mx-auto">
+            <img src="{{ asset('airplane-ticket.png') }}" alt="Amadus" class="w-12 h-12 object-contain mx-auto">
             <h1 class="text-xl font-bold text-slate-900 tracking-wide">Recover Password</h1>
             <p class="text-xs text-slate-500">Restore access to your training terminal account</p>
         </div>
@@ -30,22 +30,7 @@
             </div>
         @endif
 
-        @if(session('reset_link'))
-            <div class="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs space-y-1.5">
-                <div class="font-bold flex items-center gap-1 text-sky-900">
-                    <svg class="w-4 h-4 text-sky-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    <span>Password Reset Link Generated</span>
-                </div>
-                <p class="text-[11px] text-sky-700 leading-relaxed">
-                    Click the link below to set your new password:
-                </p>
-                <div class="pt-1">
-                    <a href="{{ session('reset_link') }}" class="text-sky-700 font-bold underline hover:text-sky-900 break-all">
-                        Reset Your Password &rarr;
-                    </a>
-                </div>
-            </div>
-        @endif
+
 
         @if($errors->any())
             <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs space-y-1">

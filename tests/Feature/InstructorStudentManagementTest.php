@@ -47,13 +47,13 @@ class InstructorStudentManagementTest extends TestCase
         // 3. Approved student gets terminal
         $responseStudent = $this->actingAs($student)->get('/terminal');
         $responseStudent->assertStatus(200);
-        $responseStudent->assertSee('AMADEUS GDS SIM');
+        $responseStudent->assertSee('Amadus');
         $responseStudent->assertSee('WORK AREA:');
 
         // 4. Instructor gets terminal
         $responseInstructor = $this->actingAs($instructor)->get('/terminal');
         $responseInstructor->assertStatus(200);
-        $responseInstructor->assertSee('AMADEUS GDS SIM');
+        $responseInstructor->assertSee('Amadus');
         $responseInstructor->assertSee('WORK AREA:');
     }
 

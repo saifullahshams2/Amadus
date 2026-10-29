@@ -132,12 +132,7 @@ class InstallerService
                 ];
             }
 
-            $rawPath = trim($config['database_path'] ?? 'database/database.sqlite');
-            if (empty($rawPath)) {
-                $rawPath = 'database/database.sqlite';
-            }
-
-            $path = $this->isAbsolutePath($rawPath) ? $rawPath : base_path($rawPath);
+            $path = $this->sanitizeSqlitePath($config['database_path'] ?? null);
             $dir = dirname($path);
 
             if (! File::isDirectory($dir) && ! File::makeDirectory($dir, 0755, true, true)) {
@@ -159,7 +154,7 @@ class InstallerService
 
                 return [
                     'success' => true,
-                    'message' => "SQLite connection verified successfully. File: [{$rawPath}].",
+                    'message' => 'SQLite connection verified successfully. File: ['.basename($path).'].',
                 ];
             } catch (Throwable $e) {
                 return [
@@ -183,8 +178,14 @@ class InstallerService
         $username = trim($config['username'] ?? 'root');
         $password = (string) ($config['password'] ?? '');
 
-        if (empty($database)) {
-            return ['success' => false, 'error' => 'Database name cannot be empty.'];
+        if (empty($database) || ! preg_match('/^[a-zA-Z0-9_]+$/', $database)) {
+            return ['success' => false, 'error' => 'Database name must be alphanumeric and may only contain underscores.'];
+        }
+
+        // SSRF protection: block link-local cloud metadata IPs
+        $resolvedIp = gethostbyname($host);
+        if ($resolvedIp === '169.254.169.254' || str_starts_with($resolvedIp, '169.254.')) {
+            return ['success' => false, 'error' => 'Connection to link-local metadata addresses is forbidden.'];
         }
 
         try {
@@ -237,12 +238,7 @@ class InstallerService
         $driver = strtolower(trim($config['driver'] ?? 'sqlite'));
 
         if ($driver === 'sqlite') {
-            $rawPath = trim($config['database_path'] ?? 'database/database.sqlite');
-            if (empty($rawPath)) {
-                $rawPath = 'database/database.sqlite';
-            }
-
-            $absolutePath = $this->isAbsolutePath($rawPath) ? $rawPath : base_path($rawPath);
+            $absolutePath = $this->sanitizeSqlitePath($config['database_path'] ?? null);
             File::ensureDirectoryExists(dirname($absolutePath));
             if (! File::exists($absolutePath)) {
                 File::put($absolutePath, '');
@@ -303,14 +299,11 @@ class InstallerService
         $driver = strtolower(trim($config['driver'] ?? 'sqlite'));
 
         if ($driver === 'sqlite') {
-            $rawPath = trim($config['database_path'] ?? 'database/database.sqlite');
-            if (empty($rawPath)) {
-                $rawPath = 'database/database.sqlite';
-            }
+            $sqlitePath = $this->sanitizeSqlitePath($config['database_path'] ?? null);
 
             $this->updateEnv([
                 'DB_CONNECTION' => 'sqlite',
-                'DB_DATABASE' => $rawPath,
+                'DB_DATABASE' => 'database/'.basename($sqlitePath),
             ]);
 
             return;
@@ -487,6 +480,24 @@ class InstallerService
         return str_starts_with($path, '/')
             || str_starts_with($path, '\\')
             || (strlen($path) > 2 && ctype_alpha($path[0]) && $path[1] === ':');
+    }
+
+    /**
+     * Sanitize SQLite path to strictly prevent directory traversal and confine inside database/.
+     */
+    public function sanitizeSqlitePath(?string $rawPath): string
+    {
+        $input = trim($rawPath ?? 'database/database.sqlite');
+        if (empty($input)) {
+            $input = 'database/database.sqlite';
+        }
+
+        $cleanFilename = basename($input);
+        if (! str_ends_with(strtolower($cleanFilename), '.sqlite')) {
+            $cleanFilename .= '.sqlite';
+        }
+
+        return database_path($cleanFilename);
     }
 
     /**

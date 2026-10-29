@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Pending Instructor Approval - AMADEUS GDS SIM')
+@section('title', 'Pending Instructor Approval - Amadus')
 
 @section('content')
 <div class="flex-1 flex items-center justify-center p-4">
     <div class="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl relative overflow-hidden">
         <!-- Header / Status Icon -->
         <div class="text-center space-y-3">
-            <img src="{{ asset('airplane-ticket.png') }}" alt="AMADEUS GDS SIM" class="w-12 h-12 object-contain mx-auto">
+            <img src="{{ asset('airplane-ticket.png') }}" alt="Amadus" class="w-12 h-12 object-contain mx-auto">
             
             <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 font-mono text-[11px] font-bold uppercase tracking-wider">
                 <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
@@ -16,7 +16,7 @@
 
             <h1 class="text-xl font-bold text-slate-900 tracking-wide">Cadet Enrollment Submitted</h1>
             <p class="text-xs text-slate-500 leading-relaxed">
-                Your registration has been recorded in the AMADEUS GDS SIM training database. Platform access is restricted to verified students.
+                Your registration has been recorded in the Amadus training database. Platform access is restricted to verified students.
             </p>
         </div>
 

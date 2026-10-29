@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'AMADEUS GDS SIM')
+@section('title', 'Amadus')
 @section('body_class', 'h-screen overflow-hidden')
 
 @section('content')
@@ -17,7 +17,7 @@
                 <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-8 h-8 object-contain">
                 <div>
                     <div class="text-xs font-black tracking-wider uppercase flex items-center gap-1.5">
-                        <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">AMADEUS SIM</span>
+                        <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     </div>
                 </div>
@@ -263,7 +263,7 @@
                     <a href="{{ route('dashboard') }}" @click="mobileSidebarOpen = false" class="flex items-center space-x-2">
                         <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-7 h-7 object-contain">
                         <div class="text-xs font-black tracking-wider uppercase flex items-center gap-1">
-                            <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">AMADEUS SIM</span>
+                            <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         </div>
                     </a>
@@ -508,7 +508,7 @@
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-2">
                     <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-7 h-7 object-contain">
                     <span class="font-extrabold bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent text-xs sm:text-sm">
-                        AMADEUS SIM
+                        Amadus
                     </span>
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 </a>
@@ -738,7 +738,7 @@ function amadeusApp() {
         history: [],
         historyIndex: -1,
         outputLines: [
-            { text: `AMADEUS GDS SIM - WORK AREA ${area} READY`, isHeader: true },
+            { text: `AMADUS - WORK AREA ${area} READY`, isHeader: true },
             { text: `OFFICE: LON1A0980  AGENT: 1234AB  SYSTEM ACTIVE`, isHeader: true },
             { text: `ENTER "HE" OR "HELP" FOR COMMAND REFERENCE`, isHeader: true },
             { text: `------------------------------------------------------------` },

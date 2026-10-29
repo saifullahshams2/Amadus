@@ -31,9 +31,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/{section}', [DashboardController::class, 'section'])->name('dashboard.section');
     Route::post('/dashboard/switch-role', [DashboardController::class, 'switchRole'])->name('dashboard.switch-role');
     Route::get('/terminal', [TerminalController::class, 'index'])->name('terminal.index');
-    Route::match(['get', 'post'], '/instructor/exit-impersonation', [InstructorController::class, 'exitImpersonation'])->name('impersonation.exit');
+    Route::post('/terminal/execute', [TerminalController::class, 'execute'])->name('terminal.execute')->middleware('throttle:60,1,terminal');
+    Route::post('/instructor/exit-impersonation', [InstructorController::class, 'exitImpersonation'])->name('impersonation.exit');
 });
-Route::post('/terminal/execute', [TerminalController::class, 'execute'])->name('terminal.execute')->middleware('throttle:60,1,terminal');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1,login');
@@ -65,22 +65,23 @@ Route::prefix('api')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1,login');
     Route::post('/auth/forgot-password', [PasswordResetController::class, 'sendResetLink'])->middleware('throttle:6,1');
     Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('throttle:6,1');
-    Route::get('/auth/me', [AuthController::class, 'me']);
-    Route::post('/auth/me', [AuthController::class, 'logout']);
+    Route::get('/auth/me', [AuthController::class, 'me'])->middleware('throttle:60,1');
+    Route::post('/auth/me', [AuthController::class, 'logout'])->middleware('throttle:60,1');
 
     Route::post('/terminal/execute', [TerminalController::class, 'execute'])->middleware('throttle:60,1,terminal');
 
     Route::get('/training/modules', [TrainingController::class, 'modules']);
 
+    Route::post('/dashboard/validate-syntax', [DashboardController::class, 'validateSyntaxApi'])->middleware('throttle:60,1');
+
     Route::middleware('auth')->group(function () {
         Route::get('/training/progress', [TrainingController::class, 'progress']);
         Route::post('/training/progress', [TrainingController::class, 'saveProgress']);
-    });
 
-    // Dual-Role Dashboard APIs
-    Route::get('/dashboard/active-pnr', [DashboardController::class, 'getActivePnrApi']);
-    Route::post('/dashboard/validate-syntax', [DashboardController::class, 'validateSyntaxApi']);
-    Route::post('/dashboard/scenarios/{id}/submit', [DashboardController::class, 'submitScenarioApi']);
+        // Dual-Role Dashboard APIs (Secured behind auth)
+        Route::get('/dashboard/active-pnr', [DashboardController::class, 'getActivePnrApi']);
+        Route::post('/dashboard/scenarios/{id}/submit', [DashboardController::class, 'submitScenarioApi'])->middleware('throttle:15,1');
+    });
 
     // Instructor Hub APIs (Strictly restricted to instructors)
     Route::middleware('instructor')->prefix('instructor')->group(function () {
@@ -88,14 +89,14 @@ Route::prefix('api')->group(function () {
         Route::post('/students', [InstructorController::class, 'storeStudent']);
         Route::delete('/students/{id}', [InstructorController::class, 'destroyStudent']);
         Route::post('/students/{id}/impersonate', [InstructorController::class, 'impersonateStudent']);
-        Route::post('/students/batch', [InstructorController::class, 'batchStoreStudents']);
+        Route::post('/students/batch', [InstructorController::class, 'batchStoreStudents'])->middleware('throttle:5,1');
         Route::post('/students/{id}/approve', [InstructorController::class, 'approveStudent']);
         Route::post('/students/{id}/reject', [InstructorController::class, 'rejectStudent']);
         Route::get('/spectate/{username}', [DashboardController::class, 'spectateStudentApi']);
         Route::post('/scenarios', [DashboardController::class, 'createScenarioApi']);
         Route::delete('/scenarios/{id}', [DashboardController::class, 'deleteScenario']);
         Route::post('/submissions/{id}/grade', [DashboardController::class, 'gradeSubmissionApi']);
-        Route::post('/queues/broadcast', [DashboardController::class, 'broadcastQueueApi']);
-        Route::post('/sandbox/reset', [DashboardController::class, 'resetSandboxApi']);
+        Route::post('/queues/broadcast', [DashboardController::class, 'broadcastQueueApi'])->middleware('throttle:20,1');
+        Route::post('/sandbox/reset', [DashboardController::class, 'resetSandboxApi'])->middleware('throttle:5,1');
     });
 });

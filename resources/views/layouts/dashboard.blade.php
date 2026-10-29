@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'AMADEUS GDS SIM')</title>
+    <title>@yield('title', 'Amadus')</title>
     <link rel="icon" type="image/png" href="{{ asset('airplane-ticket.png') }}">
     <link rel="shortcut icon" href="{{ asset('airplane-ticket.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -51,7 +51,7 @@
                 <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-8 h-8 object-contain">
                 <div>
                     <div class="text-xs font-black tracking-wider uppercase flex items-center gap-1.5">
-                        <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">AMADEUS GDS SIM</span>
+                        <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     </div>
                 </div>
@@ -252,7 +252,7 @@
                     <a href="/dashboard" @click="mobileSidebarOpen = false" class="flex items-center space-x-2">
                         <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-7 h-7 object-contain">
                         <div class="text-xs font-black tracking-wider uppercase flex items-center gap-1">
-                            <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">AMADEUS SIM</span>
+                            <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         </div>
                     </a>
@@ -471,7 +471,7 @@
                     <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-7 h-7 sm:w-8 sm:h-8 object-contain">
                     <div class="flex items-center gap-1.5">
                         <span class="text-xs sm:text-sm font-black tracking-wider uppercase bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">
-                            AMADEUS GDS SIM
+                            Amadus
                         </span>
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     </div>

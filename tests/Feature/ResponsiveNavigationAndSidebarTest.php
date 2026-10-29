@@ -28,7 +28,7 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
         // 1. Mobile & tablet header has logo on left (xl:hidden)
         $response->assertSee('xl:hidden', false);
         $response->assertSee('airplane-ticket.png', false);
-        $response->assertSeeText('AMADEUS GDS SIM');
+        $response->assertSeeText('Amadus');
 
         // 2. Mobile & tablet header has 3-line menu icon button on right
         $response->assertSee('@click="mobileSidebarOpen = true"', false);
@@ -82,7 +82,7 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSeeText('AMADEUS GDS SIM');
+        $response->assertSeeText('Amadus');
         $response->assertSeeText('Master Global Distribution in');
     }
 

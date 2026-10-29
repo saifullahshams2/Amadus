@@ -30,31 +30,42 @@ class TerminalController extends Controller
 
     public function execute(Request $request)
     {
-        $command = $request->input('command');
-        $state = $request->input('state', []);
+        $user = Auth::user();
 
-        if (! is_string($command) || trim($command) === '') {
-            return response()->json(['error' => 'Command string is required'], 400);
+        // 1. If unapproved student tries to execute commands, reject
+        if ($user && $user->role === 'student' && ! $user->is_approved) {
+            return response()->json(['error' => 'Cadet account is awaiting instructor approval.'], 403);
         }
 
-        $userId = Auth::user()?->username ?? 'guest';
+        // 2. Validate input command and state shape
+        $validated = $request->validate([
+            'command' => ['required', 'string', 'max:255'],
+            'state' => ['nullable', 'array'],
+        ]);
+
+        $command = $validated['command'];
+        $state = $validated['state'] ?? [];
+
+        $userId = $user?->username ?? 'guest';
 
         $startTime = microtime(true);
         $execResult = $this->parser->execute($command, $state, $userId);
         $durationMs = (int) round((microtime(true) - $startTime) * 1000);
 
-        // Record terminal activity for classroom spectating & learning analytics
-        try {
-            TerminalActivityLog::create([
-                'user_id' => $userId,
-                'command' => $command,
-                'output_lines' => $execResult->outputLines,
-                'is_error' => $execResult->isError,
-                'command_type' => $execResult->commandType,
-                'execution_time_ms' => $durationMs,
-            ]);
-        } catch (\Throwable $e) {
-            // Silently ignore log write errors during high volume/testing
+        // Record terminal activity only for authenticated users (prevents guest log flooding)
+        if ($userId !== 'guest') {
+            try {
+                TerminalActivityLog::create([
+                    'user_id' => $userId,
+                    'command' => $command,
+                    'output_lines' => $execResult->outputLines,
+                    'is_error' => $execResult->isError,
+                    'command_type' => $execResult->commandType,
+                    'execution_time_ms' => $durationMs,
+                ]);
+            } catch (\Throwable $e) {
+                // Silently ignore log write errors during high volume/testing
+            }
         }
 
         return response()->json([

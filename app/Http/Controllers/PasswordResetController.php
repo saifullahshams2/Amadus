@@ -53,20 +53,17 @@ class PasswordResetController extends Controller
 
         $token = Password::broker()->createToken($user);
         $user->sendPasswordResetNotification($token);
-        $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
                 'message' => 'Password reset link dispatched successfully.',
                 'email' => $user->email,
-                'reset_url' => $resetUrl,
             ]);
         }
 
         return back()->with([
             'status' => 'A password reset link has been dispatched to your email address.',
-            'reset_link' => $resetUrl,
         ]);
     }
 

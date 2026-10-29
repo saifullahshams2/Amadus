@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Pnr;
 use App\Models\User;
+use App\Services\Installer\InstallerService;
 use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -48,7 +49,7 @@ class SecurityHardeningTest extends TestCase
         $middlewareInstance = app(PreventRequestForgery::class);
         $excluded = $middlewareInstance->getExcludedPaths();
         $this->assertNotContains('terminal/execute', $excluded);
-        $this->assertContains('api/*', $excluded);
+        $this->assertNotContains('api/*', $excluded);
 
         // 2. Test CSRF enforcement handler rejects request missing CSRF token
         $activeCsrfMiddleware = new class(app(), app(Encrypter::class)) extends PreventRequestForgery
@@ -126,6 +127,7 @@ class SecurityHardeningTest extends TestCase
             'email' => 'student2@example.com',
             'password' => bcrypt('password123'),
             'role' => 'student',
+            'is_approved' => true,
             'office_id' => 'LON1A0980',
             'agent_id' => '5678CD',
         ]);
@@ -269,5 +271,170 @@ class SecurityHardeningTest extends TestCase
         $resDna->assertStatus(200);
         $this->assertTrue($resDna->json('isError'));
         $this->assertStringContainsString('MINIMUM 2 CHARACTERS', implode(' ', $resDna->json('outputLines')));
+    }
+
+    public function test_response_includes_content_security_policy_header(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Security-Policy');
+        $this->assertStringContainsString("default-src 'self'", $response->headers->get('Content-Security-Policy'));
+    }
+
+    public function test_unauthenticated_user_cannot_access_active_pnr_api(): void
+    {
+        $response = $this->getJson('/api/dashboard/active-pnr');
+        $response->assertStatus(401);
+    }
+
+    public function test_student_cannot_read_another_users_active_pnr_via_query(): void
+    {
+        $student = User::where('username', 'student')->first();
+        $this->actingAs($student);
+
+        // Instructor has an active PNR
+        Pnr::create([
+            'record_locator' => 'INS999',
+            'user_id' => 'instructor',
+            'office_id' => 'LON1A0980',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'INS999',
+                'passengers' => [['lastName' => 'TOPSECRET', 'firstName' => 'VIP']],
+            ],
+        ]);
+
+        $response = $this->getJson('/api/dashboard/active-pnr?user=instructor');
+        $response->assertStatus(200);
+
+        // Student query must ignore the ?user=instructor parameter and look up the student's own PNR
+        $this->assertNotEquals('INS999', $response->json('recordLocator'));
+    }
+
+    public function test_unauthenticated_user_cannot_submit_scenario(): void
+    {
+        $response = $this->postJson('/api/dashboard/scenarios/SCN-RT-01/submit', [
+            'pnrData' => [],
+        ]);
+
+        $response->assertStatus(401);
+    }
+
+    public function test_unapproved_student_cannot_execute_terminal_commands(): void
+    {
+        $unapproved = User::create([
+            'username' => 'unapproved_cadet',
+            'name' => 'Pending Cadet',
+            'email' => 'unapproved@amadeus.training',
+            'password' => bcrypt('password123'),
+            'role' => 'student',
+            'is_approved' => false,
+            'office_id' => 'LON1A0980',
+            'agent_id' => '1234AB',
+        ]);
+
+        $response = $this->actingAs($unapproved)->postJson('/api/terminal/execute', [
+            'command' => 'HE',
+            'state' => [],
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_guest_session_cannot_persist_pnr_via_et(): void
+    {
+        $validState = [
+            'officeId' => 'LON1A0980',
+            'agentId' => '1234AB',
+            'activePnr' => [
+                'recordLocator' => 'GST001',
+                'passengers' => [
+                    ['lastName' => 'GUEST', 'firstName' => 'TEST'],
+                ],
+                'segments' => [
+                    [
+                        'segmentNumber' => 1,
+                        'airlineCode' => 'BA',
+                        'flightNumber' => '175',
+                        'bookingClass' => 'Y',
+                        'departureDate' => '15NOV',
+                        'departureAirport' => 'LHR',
+                        'arrivalAirport' => 'JFK',
+                        'departureTime' => '1000',
+                        'arrivalTime' => '1300',
+                        'seats' => 1,
+                        'status' => 'HK',
+                    ],
+                ],
+                'contacts' => [
+                    ['id' => 1, 'type' => 'PHONE', 'detail' => 'LON 123456'],
+                ],
+                'ticketing' => ['type' => 'TKOK', 'raw' => 'TKOK'],
+                'receivedFrom' => 'TEST',
+            ],
+        ];
+
+        // Execute ET without authentication (guest)
+        $res = $this->postJson('/api/terminal/execute', [
+            'command' => 'ET',
+            'state' => $validState,
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertTrue($res->json('isError'));
+        $output = implode(' ', $res->json('outputLines'));
+        $this->assertStringContainsString('GUEST SESSION: LOGIN REQUIRED', $output);
+        $this->assertDatabaseMissing('pnrs', ['record_locator' => 'GST001']);
+    }
+
+    public function test_exit_impersonation_rejects_get_requests(): void
+    {
+        $student = User::where('username', 'student')->first();
+        $response = $this->actingAs($student)->get('/instructor/exit-impersonation');
+
+        // GET method is no longer allowed
+        $response->assertStatus(405);
+    }
+
+    public function test_installer_blocks_sqlite_path_traversal(): void
+    {
+        $service = app(InstallerService::class);
+        $sanitized = $service->sanitizeSqlitePath('../../etc/passwd');
+
+        $this->assertEquals(database_path('passwd.sqlite'), $sanitized);
+        $this->assertStringNotContainsString('..', $sanitized);
+    }
+
+    public function test_installer_blocks_ssrf_to_cloud_metadata(): void
+    {
+        $service = app(InstallerService::class);
+        $result = $service->testDatabase([
+            'driver' => 'mysql',
+            'host' => '169.254.169.254',
+            'port' => 3306,
+            'database' => 'test_db',
+            'username' => 'root',
+            'password' => '',
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('forbidden', strtolower($result['error']));
+    }
+
+    public function test_installer_rejects_malicious_database_identifiers(): void
+    {
+        $service = app(InstallerService::class);
+        $result = $service->testDatabase([
+            'driver' => 'mysql',
+            'host' => '127.0.0.1',
+            'port' => 3306,
+            'database' => 'test_db; DROP TABLE users;--',
+            'username' => 'root',
+            'password' => '',
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('alphanumeric', $result['error']);
     }
 }

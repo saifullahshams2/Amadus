@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AMADEUS GDS SIM</title>
+    <title>Amadus</title>
     <link rel="icon" type="image/png" href="{{ asset('airplane-ticket.png') }}">
     <link rel="shortcut icon" href="{{ asset('airplane-ticket.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -40,9 +40,9 @@
         <!-- Brand -->
         <div class="flex items-center space-x-3">
             <a href="/" class="flex items-center space-x-2.5 group">
-                <img src="{{ asset('airplane-ticket.png') }}" alt="AMADEUS GDS SIM" class="w-8 h-8 object-contain group-hover:scale-105 transition-transform">
+                <img src="{{ asset('airplane-ticket.png') }}" alt="Amadus" class="w-8 h-8 object-contain group-hover:scale-105 transition-transform">
                 <span class="font-extrabold text-base sm:text-lg tracking-wider bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">
-                    AMADEUS GDS SIM
+                    Amadus
                 </span>
             </a>
         </div>
@@ -258,8 +258,8 @@
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <!-- Left: Copyright and status -->
             <div class="flex items-center space-x-2 text-center md:text-left">
-                <img src="{{ asset('airplane-ticket.png') }}" alt="AMADEUS GDS SIM" class="w-5 h-5 object-contain">
-                <span class="font-bold tracking-wide bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">AMADEUS GDS SIM</span>
+                <img src="{{ asset('airplane-ticket.png') }}" alt="Amadus" class="w-5 h-5 object-contain">
+                <span class="font-bold tracking-wide bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
             </div>
 
             <!-- Center: Legal & Purpose -->

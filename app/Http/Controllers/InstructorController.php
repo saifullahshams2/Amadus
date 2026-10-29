@@ -159,7 +159,7 @@ class InstructorController extends Controller
         }
 
         $validated = $request->validate([
-            'count' => ['required', 'integer', 'min:1', 'max:500'],
+            'count' => ['required', 'integer', 'min:1', 'max:50'],
             'prefix' => ['nullable', 'string', 'max:30', 'regex:/^[a-zA-Z0-9_\-]+$/'],
             'password' => ['nullable', 'string', 'min:6'],
             'office_id' => ['nullable', 'string', 'max:20'],
@@ -168,6 +168,7 @@ class InstructorController extends Controller
         $count = (int) $validated['count'];
         $prefix = strtolower(trim($validated['prefix'] ?? 'student'));
         $defaultPassword = $validated['password'] ?? 'Amadeus@'.date('Y');
+        $hashedPassword = Hash::make($defaultPassword); // Pre-hash once to prevent CPU starvation DoS
         $officeId = ! empty($validated['office_id'])
             ? strtoupper(trim($validated['office_id']))
             : ($user->office_id ?? 'LON1A0980');
@@ -195,7 +196,7 @@ class InstructorController extends Controller
                 'name' => ucwords(str_replace(['_', '-'], ' ', $candidateUsername)),
                 'username' => $candidateUsername,
                 'email' => $candidateEmail,
-                'password' => Hash::make($defaultPassword),
+                'password' => $hashedPassword,
                 'role' => 'student', // Strictly enforced as student
                 'is_approved' => true,
                 'office_id' => $officeId,

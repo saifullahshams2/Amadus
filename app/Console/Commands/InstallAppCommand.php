@@ -26,7 +26,7 @@ class InstallAppCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Install Amadeus GDS Training Platform and provision primary Flight Instructor account';
+    protected $description = 'Install Amadus Training Platform and provision primary Flight Instructor account';
 
     /**
      * Execute the console command.
@@ -34,7 +34,7 @@ class InstallAppCommand extends Command
     public function handle(InstallerService $installerService): int
     {
         $this->info('====================================================');
-        $this->info('  Amadeus GDS Platform & Cash-Register Installer    ');
+        $this->info('  Amadus Platform & Cash-Register Installer         ');
         $this->info('====================================================');
 
         if ($installerService->isInstalled() && ! $this->option('force')) {

@@ -174,7 +174,7 @@ class InstallerController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Amadeus GDS Platform installed successfully. Installer is now locked.',
+                'message' => 'Amadus Platform installed successfully. Installer is now locked.',
                 'database' => [
                     'driver' => $dbDriver,
                 ],

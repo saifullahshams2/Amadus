@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Sign In - AMADEUS GDS SIM')
+@section('title', 'Sign In - Amadus')
 
 @section('content')
 <div class="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-y-auto">
@@ -18,8 +18,8 @@
     <div class="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl relative overflow-hidden">
         <!-- Brand -->
         <div class="text-center space-y-2">
-            <img src="{{ asset('airplane-ticket.png') }}" alt="AMADEUS GDS SIM" class="w-12 h-12 object-contain mx-auto">
-            <h1 class="text-xl font-bold text-slate-900 tracking-wide">AMADEUS GDS SIM</h1>
+            <img src="{{ asset('airplane-ticket.png') }}" alt="Amadus" class="w-12 h-12 object-contain mx-auto">
+            <h1 class="text-xl font-bold text-slate-900 tracking-wide">Amadus</h1>
             <p class="text-xs text-slate-500">Sign in to your training terminal or instructor hub</p>
         </div>
 

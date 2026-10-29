@@ -24,7 +24,7 @@ class LandingAndApprovalTest extends TestCase
         $response = $this->get('/');
 
         $response->assertStatus(200);
-        $response->assertSeeText('AMADEUS GDS SIM');
+        $response->assertSeeText('Amadus');
         $response->assertSeeText('Access Dashboard');
         $response->assertSee('Login');
         $response->assertSee('/login');
@@ -63,7 +63,7 @@ class LandingAndApprovalTest extends TestCase
         $authResponse = $this->actingAs($student)->get('/terminal');
         $authResponse->assertStatus(200);
         $authResponse->assertSeeText('WORK AREA:');
-        $authResponse->assertSeeText('AMADEUS GDS SIM');
+        $authResponse->assertSeeText('Amadus');
         $authResponse->assertSeeText('Dashboard');
     }
 

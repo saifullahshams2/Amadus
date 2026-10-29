@@ -252,7 +252,16 @@ class DashboardController extends Controller
      */
     public function getActivePnrApi(Request $request): JsonResponse
     {
-        $userId = Auth::user()?->username ?? $request->query('user', 'student');
+        $currentUser = Auth::user();
+        if (! $currentUser) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+
+        // Only instructors can inspect another user's active PNR via ?user=
+        $userId = ($currentUser->role === 'instructor' && $request->filled('user'))
+            ? $request->query('user')
+            : $currentUser->username;
+
         $pnr = Pnr::where('user_id', $userId)->orderBy('updated_at', 'desc')->first();
 
         if (! $pnr) {
@@ -298,7 +307,15 @@ class DashboardController extends Controller
     public function submitScenarioApi(Request $request, string $id): JsonResponse
     {
         $user = Auth::user();
-        $username = $user?->username ?? 'student';
+        if (! $user) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+
+        if ($user->role === 'student' && ! $user->is_approved) {
+            return response()->json(['error' => 'Cadet account requires instructor approval.'], 403);
+        }
+
+        $username = $user->username;
 
         $pnrData = $request->input('pnrData');
         if (! $pnrData) {

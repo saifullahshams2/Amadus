@@ -49,7 +49,7 @@ class InstallerTest extends TestCase
         $response = $this->get('/install');
 
         $response->assertStatus(200);
-        $response->assertSeeText('AMADEUS GDS SIM');
+        $response->assertSeeText('Amadus');
         $response->assertSeeText('Installer');
         $response->assertSeeText('System Prerequisites & Permissions');
         $response->assertSeeText('Provision Primary Flight Instructor');

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Installer &bull; AMADEUS GDS SIM</title>
+    <title>Installer &bull; Amadus</title>
     <link rel="icon" type="image/png" href="{{ asset('airplane-ticket.png') }}">
     <link rel="shortcut icon" href="{{ asset('airplane-ticket.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,7 +36,7 @@
                 <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-9 h-9 sm:w-10 sm:h-10 object-contain">
                 <div>
                     <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                        <span>AMADEUS GDS SIM</span>
+                        <span>Amadus</span>
                         <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold">Installer</span>
                     </h1>
                     <p class="text-xs text-slate-500">First-time system setup, database selection & instructor provisioning</p>
@@ -420,7 +420,7 @@
                 </div>
 
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">AMADEUS GDS SIM Installed Successfully!</h2>
+                    <h2 class="text-lg font-bold text-slate-900">Amadus Installed Successfully!</h2>
                     <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">
                         Database migrated, reference airports & scenarios loaded, and your primary flight instructor account is active.
                     </p>

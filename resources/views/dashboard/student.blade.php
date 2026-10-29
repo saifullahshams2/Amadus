@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Trainee Dashboard - AMADEUS GDS SIM')
+@section('title', 'Trainee Dashboard - Amadus')
 
 @section('content')
 <div x-data="studentDashboard()" x-init="init()" class="space-y-6 max-w-7xl mx-auto pb-12">

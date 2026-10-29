@@ -1,8 +1,8 @@
 <div align="center">
 
-# ✈️ Amadeus GDS Training Simulator (1A)
+# ✈️ Amadus Training Simulator (1A)
 
-**A high-fidelity, browser-based Amadeus Global Distribution System (GDS) simulator built for aviation academies, ticketing agents, travel agencies, and students.**
+**A high-fidelity, browser-based Amadus Global Distribution System (GDS) simulator built for aviation academies, ticketing agents, travel agencies, and students.**
 
 Replicates the authentic **Amadeus Selling Platform Connect** cryptic terminal experience with full-screen CRT Green, CRT Amber, and Modern Dark themes, global airline and airport datasets, database flexibility (SQLite, MySQL, & MariaDB), role-based multi-user accounts (Cadets & Instructors), and an intelligent interactive training curriculum — powered 100% by **PHP (Laravel 13), Tailwind CSS v4, & Alpine.js**.
 
@@ -300,7 +300,7 @@ nano .env
 
 Apply the following production settings:
 ```env
-APP_NAME="AMADEUS GDS SIM"
+APP_NAME="Amadus"
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://gds.yourdomain.com
@@ -741,4 +741,4 @@ sudo chmod -R 775 storage bootstrap/cache
 
 ## 📄 License
 
-The Amadeus GDS Training Simulator is open-sourced software licensed under the [MIT License](LICENSE).
+The Amadus Training Simulator is open-sourced software licensed under the [MIT License](LICENSE).

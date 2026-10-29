@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Instructor Operations Hub - AMADEUS GDS SIM')
+@section('title', 'Instructor Operations Hub - Amadus')
 
 @section('content')
 <div x-data="instructorHub()" class="flex-1 flex flex-col h-full overflow-hidden bg-[#f8fafc] text-slate-800">
