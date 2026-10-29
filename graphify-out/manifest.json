@@ -6,10 +6,10 @@
     "semantic_hash": "59ec21ff5f1f5b3acb8f2f82c8b6dc77"
   },
   "README.md": {
-    "mtime": 1792922250.3456225,
-    "seen": 1793127398.0700245,
-    "ast_hash": "4a264e2c418c5004c7563fdaae2ee5cd",
-    "semantic_hash": "4a264e2c418c5004c7563fdaae2ee5cd"
+    "mtime": 1793254952.8144574,
+    "seen": 1793266595.416609,
+    "ast_hash": "9a426b8c46879424ff60750d50cb752f",
+    "semantic_hash": "9a426b8c46879424ff60750d50cb752f"
   },
   "app/Http/Controllers/AuthController.php": {
     "mtime": 1793087854.6940792,
@@ -213,8 +213,7 @@
     "mtime": 1792910773.2034707,
     "seen": 1793127398.0699456,
     "ast_hash": "6c89e5985de607b5e984a1fc9f41252d",
-    "semantic_hash": "6c89e5985de607b5e984a1fc9f41252d",
-    "ast_empty": true
+    "semantic_hash": "6c89e5985de607b5e984a1fc9f41252d"
   },
   "database/data/airports_full.json": {
     "mtime": 1792910773.2035828,
@@ -283,22 +282,22 @@
     "semantic_hash": "6c097d79081498bcd2d82b1e3dc2da3a"
   },
   "resources/views/instructor/index.blade.php": {
-    "mtime": 1793120769.8836036,
-    "seen": 1793127398.0699632,
-    "ast_hash": "7eeb6266686625a5a614df5c3afa0566",
-    "semantic_hash": "7eeb6266686625a5a614df5c3afa0566"
+    "mtime": 1793264238.4351232,
+    "seen": 1793266595.4164453,
+    "ast_hash": "0e8c20779fc67c4fb30b572b6402acfd",
+    "semantic_hash": "0e8c20779fc67c4fb30b572b6402acfd"
   },
   "resources/views/layouts/app.blade.php": {
-    "mtime": 1793087626.3318112,
-    "seen": 1793127398.069965,
-    "ast_hash": "673316d4534b3f0238c0a1b8351bae2c",
-    "semantic_hash": "673316d4534b3f0238c0a1b8351bae2c"
+    "mtime": 1793264070.9540124,
+    "seen": 1793266595.4164505,
+    "ast_hash": "9da3d1fef0cf4aabab57a52dd467470c",
+    "semantic_hash": "9da3d1fef0cf4aabab57a52dd467470c"
   },
   "resources/views/terminal/index.blade.php": {
-    "mtime": 1793173590.9094727,
-    "seen": 1793180298.3938835,
-    "ast_hash": "2a359a88e66eec9085ecd64b3a0c74d0",
-    "semantic_hash": "2a359a88e66eec9085ecd64b3a0c74d0"
+    "mtime": 1793266046.313484,
+    "seen": 1793266595.4164572,
+    "ast_hash": "7dd7bf0492b1d77e37f91b250d4058ad",
+    "semantic_hash": "7dd7bf0492b1d77e37f91b250d4058ad"
   },
   "routes/console.php": {
     "mtime": 1792910773.2051463,
@@ -358,8 +357,7 @@
     "mtime": 1792945476.720058,
     "seen": 1793127398.069893,
     "ast_hash": "45df82d396f66aa5166e8ed7959520b2",
-    "semantic_hash": "45df82d396f66aa5166e8ed7959520b2",
-    "ast_empty": true
+    "semantic_hash": "45df82d396f66aa5166e8ed7959520b2"
   },
   ".agents/skills/security-audit/validate-coverage-ledger.cjs": {
     "mtime": 1792945476.720058,
@@ -473,8 +471,7 @@
     "mtime": 1792943361.0208068,
     "seen": 1793127398.0699348,
     "ast_hash": "aa5490957a27d62dfbd15c12fa5ecfc8",
-    "semantic_hash": "aa5490957a27d62dfbd15c12fa5ecfc8",
-    "ast_empty": true
+    "semantic_hash": "aa5490957a27d62dfbd15c12fa5ecfc8"
   },
   "database/migrations/2026_10_25_000002_create_dashboard_tables.php": {
     "mtime": 1792949952.9570053,
@@ -489,41 +486,40 @@
     "semantic_hash": "465b3275e8e99f32a649bf4089215439"
   },
   "resources/views/dashboard/instructor.blade.php": {
-    "mtime": 1793173758.560837,
-    "seen": 1793180298.393867,
-    "ast_hash": "48c426e9347ed4c87a3a0fc873d6a8fc",
-    "semantic_hash": "48c426e9347ed4c87a3a0fc873d6a8fc"
+    "mtime": 1793265959.474475,
+    "seen": 1793266595.4164298,
+    "ast_hash": "4d19188b8c9602468e41054abd20c87b",
+    "semantic_hash": "4d19188b8c9602468e41054abd20c87b"
   },
   "resources/views/dashboard/student.blade.php": {
-    "mtime": 1793173667.4321837,
-    "seen": 1793180298.3938684,
-    "ast_hash": "109bcaa3ae20ddad511072cef2b7deeb",
-    "semantic_hash": "109bcaa3ae20ddad511072cef2b7deeb"
+    "mtime": 1793265927.197437,
+    "seen": 1793266595.4164326,
+    "ast_hash": "711dc39e85d3bd0c968bb3816eeafa20",
+    "semantic_hash": "711dc39e85d3bd0c968bb3816eeafa20"
   },
   "resources/views/installer/index.blade.php": {
-    "mtime": 1793080013.065109,
-    "seen": 1793127398.0699625,
-    "ast_hash": "30652ca179029270a2a26eb9ba9b17f7",
-    "semantic_hash": "30652ca179029270a2a26eb9ba9b17f7"
+    "mtime": 1793255742.1566439,
+    "seen": 1793266595.4164429,
+    "ast_hash": "615ef153e84121035cc8b9cada95d672",
+    "semantic_hash": "615ef153e84121035cc8b9cada95d672"
   },
   "resources/views/layouts/dashboard.blade.php": {
-    "mtime": 1793173430.94091,
-    "seen": 1793180298.3938818,
-    "ast_hash": "50080e1d4a87bc72d57d541bd8c0a47c",
-    "semantic_hash": "50080e1d4a87bc72d57d541bd8c0a47c"
+    "mtime": 1793264060.9630027,
+    "seen": 1793266595.4164524,
+    "ast_hash": "c31018d1a7e7abfb9ece665dcab46629",
+    "semantic_hash": "c31018d1a7e7abfb9ece665dcab46629"
   },
   "skills-lock.json": {
     "mtime": 1792945476.734542,
     "seen": 1793127398.0699687,
     "ast_hash": "88825e643d67c670cd05ec051e3e3115",
-    "semantic_hash": "88825e643d67c670cd05ec051e3e3115",
-    "ast_empty": true
+    "semantic_hash": "88825e643d67c670cd05ec051e3e3115"
   },
   "tests/Feature/DualRoleDashboardTest.php": {
-    "mtime": 1793080013.066109,
-    "seen": 1793127398.0699704,
-    "ast_hash": "64808ac379a89eb0205cf4fc91d77f41",
-    "semantic_hash": "64808ac379a89eb0205cf4fc91d77f41"
+    "mtime": 1793266097.7504063,
+    "seen": 1793266595.4164686,
+    "ast_hash": "1ebf5ecb095c6977448f0d845f80e1eb",
+    "semantic_hash": "1ebf5ecb095c6977448f0d845f80e1eb"
   },
   "tests/Feature/InstallerTest.php": {
     "mtime": 1793080013.066109,
@@ -940,9 +936,21 @@
     "semantic_hash": "f70f071e433190fa1a1bc3ca8a5e09e0"
   },
   "tests/Feature/DashboardSubpagesAndTerminalHeaderTest.php": {
-    "mtime": 1793173847.861925,
-    "seen": 1793180298.3938916,
-    "ast_hash": "122327619dd6e80c441094201e3e5ec6",
-    "semantic_hash": "122327619dd6e80c441094201e3e5ec6"
+    "mtime": 1793266091.5627525,
+    "seen": 1793266595.4164672,
+    "ast_hash": "99b86af50f4a1f83e258057833e928fa",
+    "semantic_hash": "99b86af50f4a1f83e258057833e928fa"
+  },
+  "resources/views/partials/dynamic-popup.blade.php": {
+    "mtime": 1793264049.9910889,
+    "seen": 1793266595.416455,
+    "ast_hash": "9ec19c072c46240f02643c369aed0f06",
+    "semantic_hash": "9ec19c072c46240f02643c369aed0f06"
+  },
+  "tests/Feature/ResponsiveNavigationAndSidebarTest.php": {
+    "mtime": 1793266103.732024,
+    "seen": 1793266595.4164808,
+    "ast_hash": "653d94d9d8e314ac11c1c623860c008e",
+    "semantic_hash": "653d94d9d8e314ac11c1c623860c008e"
   }
 }
