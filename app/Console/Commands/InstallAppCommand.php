@@ -65,11 +65,13 @@ class InstallAppCommand extends Command
         }
         $this->info('   [OK] System requirements verified.');
 
+        $isInteractive = $this->input->isInteractive() && ! app()->runningUnitTests();
+
         // 2. Gather Instructor details
-        $name = $this->option('name') ?: ($this->input->isInteractive() ? $this->ask('Enter Instructor Full Name', 'Flight Instructor') : 'Flight Instructor');
-        $username = $this->option('username') ?: ($this->input->isInteractive() ? $this->ask('Enter Instructor Username', 'instructor') : 'instructor');
-        $email = $this->option('email') ?: ($this->input->isInteractive() ? $this->ask('Enter Instructor Email', 'instructor@amadeus-gds.demo') : 'instructor@amadeus-gds.demo');
-        $password = $this->option('password') ?: ($this->input->isInteractive() ? $this->secret('Enter Instructor Password (min 6 chars)') : 'amadeus123');
+        $name = $this->option('name') ?: ($isInteractive ? $this->ask('Enter Instructor Full Name', 'Flight Instructor') : 'Flight Instructor');
+        $username = $this->option('username') ?: ($isInteractive ? $this->ask('Enter Instructor Username', 'instructor') : 'instructor');
+        $email = $this->option('email') ?: ($isInteractive ? $this->ask('Enter Instructor Email', 'instructor@amadeus-gds.demo') : 'instructor@amadeus-gds.demo');
+        $password = $this->option('password') ?: ($isInteractive ? $this->secret('Enter Instructor Password (min 6 chars)') : 'amadeus123');
         if (empty($password)) {
             $password = 'amadeus123';
         }
@@ -79,7 +81,7 @@ class InstallAppCommand extends Command
 
         // 3. Configure Application URL / Domain
         $appUrl = $this->option('app-url');
-        if (! $appUrl && $this->input->isInteractive()) {
+        if (! $appUrl && $isInteractive) {
             $appUrl = $this->ask('Application URL / Domain', config('app.url', 'http://localhost:8000'));
         }
         $appUrl = $appUrl ?: config('app.url', 'http://localhost:8000');

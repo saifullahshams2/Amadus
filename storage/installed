@@ -1,0 +1,6 @@
+{
+    "installed_at": "2026-10-29T19:06:43+00:00",
+    "app_version": "1.0.0",
+    "installer_locked": true,
+    "locked_via": "CLI app:remove-installer"
+}

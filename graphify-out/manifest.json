@@ -390,10 +390,10 @@
     "semantic_hash": "e9aa1f8c50e06cc1a7764cb08654183d"
   },
   "app/Console/Commands/InstallAppCommand.php": {
-    "mtime": 1793294687.7776942,
-    "seen": 1793299258.9803367,
-    "ast_hash": "b78500dab205f7c49a44c337a162a0b1",
-    "semantic_hash": "b78500dab205f7c49a44c337a162a0b1"
+    "mtime": 1793300588.5474563,
+    "seen": 1793300763.6516051,
+    "ast_hash": "be0f3535265921a2613cdaf169e99917",
+    "semantic_hash": "be0f3535265921a2613cdaf169e99917"
   },
   "app/Http/Controllers/DashboardController.php": {
     "mtime": 1793298095.5801828,
@@ -402,10 +402,10 @@
     "semantic_hash": "2db42b9334a0cf90815a41a2e9503775"
   },
   "app/Http/Controllers/InstallerController.php": {
-    "mtime": 1793294673.462623,
-    "seen": 1793299258.9803498,
-    "ast_hash": "2516de2355ad40bc6dc62afa0e58b292",
-    "semantic_hash": "2516de2355ad40bc6dc62afa0e58b292"
+    "mtime": 1793300366.2099128,
+    "seen": 1793300763.6516259,
+    "ast_hash": "ec4c340f0460dc6c3efd6bd1c55afe88",
+    "semantic_hash": "ec4c340f0460dc6c3efd6bd1c55afe88"
   },
   "app/Http/Middleware/EnsureAppIsInstalled.php": {
     "mtime": 1793080013.0471108,
@@ -456,10 +456,10 @@
     "semantic_hash": "944dd671d601b196e982dae9d1f85e1e"
   },
   "app/Services/Installer/InstallerService.php": {
-    "mtime": 1793298145.9136407,
-    "seen": 1793299258.9804053,
-    "ast_hash": "074e9e9dab33233eeab875aa33b2f95f",
-    "semantic_hash": "074e9e9dab33233eeab875aa33b2f95f"
+    "mtime": 1793300345.9144206,
+    "seen": 1793300763.6517184,
+    "ast_hash": "e15053b24c21314119518acece5a5450",
+    "semantic_hash": "e15053b24c21314119518acece5a5450"
   },
   "app/Services/Training/ScenarioService.php": {
     "mtime": 1793005908.8794887,
@@ -498,10 +498,10 @@
     "semantic_hash": "4d8931cb5db56cffc53c68b83ebd75eb"
   },
   "resources/views/installer/index.blade.php": {
-    "mtime": 1793294657.3985703,
-    "seen": 1793299258.9804933,
-    "ast_hash": "b94c344cc84a80c58d99c13e902781ef",
-    "semantic_hash": "b94c344cc84a80c58d99c13e902781ef"
+    "mtime": 1793300400.288745,
+    "seen": 1793300763.6518176,
+    "ast_hash": "c22683394a0a42b648fad6167bc9fa04",
+    "semantic_hash": "c22683394a0a42b648fad6167bc9fa04"
   },
   "resources/views/layouts/dashboard.blade.php": {
     "mtime": 1793294401.119043,
@@ -522,10 +522,10 @@
     "semantic_hash": "1ebf5ecb095c6977448f0d845f80e1eb"
   },
   "tests/Feature/InstallerTest.php": {
-    "mtime": 1793294810.0410736,
-    "seen": 1793299258.98052,
-    "ast_hash": "3721bffe9cb4f7112feabccb974f199e",
-    "semantic_hash": "3721bffe9cb4f7112feabccb974f199e"
+    "mtime": 1793300417.5541692,
+    "seen": 1793300763.6518598,
+    "ast_hash": "d7a4aa0c3fbf6561d1ddbc2a897cbd68",
+    "semantic_hash": "d7a4aa0c3fbf6561d1ddbc2a897cbd68"
   },
   "tests/Feature/SecurityHardeningTest.php": {
     "mtime": 1793298314.963303,
