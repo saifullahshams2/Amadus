@@ -19,6 +19,7 @@ class InstallAppCommand extends Command
                             {--password= : Instructor account password}
                             {--office=LON1A0980 : Amadeus Office ID}
                             {--agent=IN01GS : Agent Duty Code}
+                            {--app-url= : Application URL / Domain (e.g. https://amadus.example.com)}
                             {--force : Force re-installation even if already installed}';
 
     /**
@@ -76,13 +77,26 @@ class InstallAppCommand extends Command
         $office = $this->option('office') ?: 'LON1A0980';
         $agent = $this->option('agent') ?: 'IN01GS';
 
-        // 3. Migrate and Seed Database
-        $this->line('2. Running database migrations and seeders...');
+        // 3. Configure Application URL / Domain
+        $appUrl = $this->option('app-url');
+        if (! $appUrl && $this->input->isInteractive()) {
+            $appUrl = $this->ask('Application URL / Domain', config('app.url', 'http://localhost:8000'));
+        }
+        $appUrl = $appUrl ?: config('app.url', 'http://localhost:8000');
+        if (! preg_match('~^https?://~i', (string) $appUrl)) {
+            $appUrl = 'https://'.$appUrl;
+        }
+        $appUrl = rtrim($appUrl, '/');
+        $installerService->updateAppUrl($appUrl);
+        $this->info("   [OK] Application URL configured: {$appUrl}");
+
+        // 4. Migrate and Seed Database
+        $this->line('3. Running database migrations and seeders...');
         $installerService->runMigrationsAndSeeders();
         $this->info('   [OK] Database migrated and reference data seeded.');
 
-        // 4. Create Instructor Account
-        $this->line('3. Provisioning Flight Instructor account...');
+        // 5. Create Instructor Account
+        $this->line('4. Provisioning Flight Instructor account...');
         $instructor = $installerService->createInstructor([
             'name' => $name,
             'username' => $username,
@@ -93,7 +107,7 @@ class InstallAppCommand extends Command
         ]);
         $this->info("   [OK] Instructor account [{$instructor->username}] created successfully (Role: instructor).");
 
-        // 5. Lock Installation
+        // 6. Lock Installation
         $installerService->markInstalled($instructor);
         $this->info('   [OK] Installation lock file written to storage/installed.');
 
@@ -104,6 +118,7 @@ class InstallAppCommand extends Command
         $this->table(
             ['Field', 'Value'],
             [
+                ['Application URL', $appUrl],
                 ['Role', 'INSTRUCTOR'],
                 ['Name', $instructor->name],
                 ['Username', $instructor->username],

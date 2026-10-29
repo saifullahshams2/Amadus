@@ -320,6 +320,26 @@ class InstallerService
     }
 
     /**
+     * Persist configured application URL / domain into .env file and runtime config.
+     */
+    public function updateAppUrl(?string $appUrl): void
+    {
+        $url = trim($appUrl ?? '');
+        if (empty($url)) {
+            return;
+        }
+
+        $cleaned = rtrim($url, '/');
+        config(['app.url' => $cleaned]);
+
+        if (app()->environment('testing')) {
+            return;
+        }
+
+        $this->updateEnv(['APP_URL' => $cleaned]);
+    }
+
+    /**
      * Atomically update or insert key-value pairs in the root .env file.
      *
      * @param  array<string, string|null>  $keyValues
@@ -457,6 +477,7 @@ class InstallerService
         $payload = [
             'installed_at' => now()->toIso8601String(),
             'app_version' => '1.0.0',
+            'app_url' => config('app.url'),
             'database_driver' => $driver,
             'installer_locked' => true,
             'installed_by' => [

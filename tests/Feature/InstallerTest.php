@@ -52,7 +52,8 @@ class InstallerTest extends TestCase
         $response->assertSeeText('Amadus');
         $response->assertSeeText('Installer');
         $response->assertSeeText('System Prerequisites & Permissions');
-        $response->assertSeeText('Provision Primary Flight Instructor');
+        $response->assertSeeText('Application Domain & Instructor Setup');
+        $response->assertSeeText('Application Domain / URL');
         $response->assertSeeText('SQLite');
         $response->assertSeeText('MySQL');
     }
@@ -219,5 +220,50 @@ class InstallerTest extends TestCase
         $exitCode = Artisan::call('app:remove-installer');
         $this->assertEquals(0, $exitCode);
         $this->assertTrue($this->installerService->isInstalled());
+    }
+
+    public function test_10_installer_accepts_and_configures_custom_app_url(): void
+    {
+        $payload = [
+            'app_url' => 'https://amadus.aviation.edu',
+            'name' => 'URL Test Instructor',
+            'username' => 'url_instructor',
+            'email' => 'url.instructor@amadeus.test',
+            'password' => 'SecurePass123!',
+            'password_confirmation' => 'SecurePass123!',
+            'database_driver' => 'sqlite',
+        ];
+
+        $response = $this->postJson('/install', $payload);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'app_url' => 'https://amadus.aviation.edu',
+        ]);
+
+        $this->assertEquals('https://amadus.aviation.edu', config('app.url'));
+
+        // Check lock file payload includes app_url
+        $lockContent = json_decode(File::get(storage_path('installed')), true);
+        $this->assertEquals('https://amadus.aviation.edu', $lockContent['app_url']);
+    }
+
+    public function test_11_artisan_app_install_command_supports_app_url_option(): void
+    {
+        $exitCode = Artisan::call('app:install', [
+            '--app-url' => 'https://cli.amadus.aero',
+            '--name' => 'CLI URL Instructor',
+            '--username' => 'cli_url_instructor',
+            '--email' => 'cli.url@amadeus.test',
+            '--password' => 'CliPassword123!',
+            '--force' => true,
+        ]);
+
+        $this->assertEquals(0, $exitCode);
+        $this->assertEquals('https://cli.amadus.aero', config('app.url'));
+
+        $lockContent = json_decode(File::get(storage_path('installed')), true);
+        $this->assertEquals('https://cli.amadus.aero', $lockContent['app_url']);
     }
 }

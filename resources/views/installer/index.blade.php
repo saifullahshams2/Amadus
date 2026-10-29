@@ -334,8 +334,23 @@
             <!-- STEP 3: Instructor Account Creation Form -->
             <form x-show="step === 3" @submit.prevent="submitInstallation()" class="space-y-5">
                 <div>
-                    <h2 class="text-base font-semibold text-slate-900">Provision Primary Flight Instructor</h2>
-                    <p class="text-xs text-slate-500 mt-1">This will be the sole administrative account created during setup. No demo accounts or student accounts will be created.</p>
+                    <h2 class="text-base font-semibold text-slate-900">Application Domain & Instructor Setup</h2>
+                    <p class="text-xs text-slate-500 mt-1">Configure your primary domain and provision the sole administrative flight instructor account.</p>
+                </div>
+
+                <!-- Application URL / Domain Field -->
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-semibold text-slate-800">
+                            Application Domain / URL <span class="text-rose-500">*</span>
+                        </label>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200 font-semibold">APP_URL</span>
+                    </div>
+                    <input type="url" name="app_url" x-model="formData.app_url" required placeholder="https://amadus.yourdomain.com"
+                           class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500">
+                    <p class="text-[11px] text-slate-500">
+                        Auto-detected from current request. Critical for generating password reset links, notification emails, and background queue workers.
+                    </p>
                 </div>
 
                 <!-- Security Note -->
@@ -439,6 +454,10 @@
 
                 <!-- Summary Details Box -->
                 <div class="max-w-md mx-auto p-4 rounded-xl bg-slate-50 border border-slate-200 text-left space-y-2 text-xs">
+                    <div class="flex justify-between" x-show="installedData.app_url || formData.app_url">
+                        <span class="text-slate-500">Application URL:</span>
+                        <span class="font-mono text-blue-700 font-semibold truncate max-w-[240px]" x-text="installedData.app_url || formData.app_url"></span>
+                    </div>
                     <div class="flex justify-between">
                         <span class="text-slate-500">Database Driver:</span>
                         <span class="font-mono font-bold text-slate-900 uppercase" x-text="installedData.database_driver || dbConfig.driver"></span>
@@ -497,6 +516,7 @@
             },
 
             formData: {
+                app_url: '{{ $defaultAppUrl ?? request()->getSchemeAndHttpHost() }}',
                 name: 'Flight Instructor',
                 username: 'instructor',
                 email: 'instructor@amadeus.training',
@@ -573,6 +593,7 @@
                 this.isSubmitting = true;
 
                 const payload = {
+                    app_url: this.formData.app_url,
                     name: this.formData.name,
                     username: this.formData.username,
                     email: this.formData.email,

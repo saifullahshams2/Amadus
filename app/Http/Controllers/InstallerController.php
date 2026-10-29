@@ -18,17 +18,19 @@ class InstallerController extends Controller
     /**
      * Display the installation wizard.
      */
-    public function show(): View|RedirectResponse
+    public function show(Request $request): View|RedirectResponse
     {
         if ($this->installerService->isInstalled()) {
             return redirect()->route('landing')->with('info', 'Application is already installed and installer is locked.');
         }
 
         $requirements = $this->installerService->checkRequirements();
+        $defaultAppUrl = $request->getSchemeAndHttpHost() ?: config('app.url', 'http://localhost:8000');
 
         return view('installer.index', [
             'requirements' => $requirements,
             'defaultDriver' => config('database.default', 'sqlite'),
+            'defaultAppUrl' => $defaultAppUrl,
         ]);
     }
 
@@ -85,7 +87,15 @@ class InstallerController extends Controller
             return redirect()->route('landing')->with('warning', 'Application is already installed.');
         }
 
+        $rawAppUrl = $request->input('app_url');
+        if ($rawAppUrl && ! preg_match('~^https?://~i', (string) $rawAppUrl)) {
+            $request->merge(['app_url' => 'https://'.$rawAppUrl]);
+        }
+
         $validated = $request->validate([
+            // Application URL / Domain
+            'app_url' => 'nullable|url|max:255',
+
             // Database parameters (defaults to current driver if omitted for testing compatibility)
             'database_driver' => 'nullable|string|in:sqlite,mysql',
             'driver' => 'nullable|string|in:sqlite,mysql',
@@ -142,13 +152,19 @@ class InstallerController extends Controller
             return back()->withInput()->withErrors(['database' => $dbError]);
         }
 
-        // 2. Configure database environment & runtime connection
+        // 2. Configure application domain / URL and database runtime connection
+        $appUrl = ! empty($validated['app_url'])
+            ? rtrim($validated['app_url'], '/')
+            : ($request->getSchemeAndHttpHost() ?: config('app.url', 'http://localhost:8000'));
+
+        $this->installerService->updateAppUrl($appUrl);
         $this->installerService->configureDatabase($dbConfig);
 
         // Schedule .env update to run on application termination so the HTTP response finishes cleanly
         // before any server reload triggers (critical when running under `php artisan serve`).
-        app()->terminating(function () use ($dbConfig) {
+        app()->terminating(function () use ($dbConfig, $appUrl) {
             $this->installerService->updateDatabaseEnv($dbConfig);
+            $this->installerService->updateAppUrl($appUrl);
         });
 
         // 3. Run database migrations & seed reference catalog
@@ -175,6 +191,7 @@ class InstallerController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Amadus Platform installed successfully. Installer is now locked.',
+                'app_url' => $appUrl,
                 'database' => [
                     'driver' => $dbDriver,
                 ],
