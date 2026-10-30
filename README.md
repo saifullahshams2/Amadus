@@ -112,8 +112,8 @@ For developers contributing to or modifying the source code:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/saifullahshams2/gds-amadeus.git
-cd gds-amadeus
+git clone https://github.com/saifullahshams2/amadus.git
+cd amadus
 
 # 2. Install backend dependencies & configure environment
 composer install
