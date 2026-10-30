@@ -5,6 +5,7 @@ namespace App\Services\Amadeus;
 use App\Models\Pnr;
 use App\Models\QueueItem;
 use App\Models\TerminalActivityLog;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 class QueueService
@@ -124,12 +125,17 @@ class QueueService
             ->where('queue_number', $queueNumber)
             ->where('office_id', $officeId);
 
-        if ($userId) {
-            $query->where(function ($q) use ($userId): void {
-                $q->whereNull('target_user_id')
-                    ->orWhere('target_user_id', $userId);
-            });
+        if ($userId === null || $userId === '') {
+            return [
+                'lines' => ["Q{$queueNumber} QUEUE ACCESS REQUIRES AN AUTHENTICATED AGENT"],
+                'items' => collect(),
+            ];
         }
+
+        $query->where(function ($q) use ($userId): void {
+            $q->whereNull('target_user_id')
+                ->orWhere('target_user_id', $userId);
+        });
 
         $items = $query->orderBy('created_at', 'asc')->get();
 
@@ -199,7 +205,13 @@ class QueueService
     public function resetSandbox(?string $targetUserId = null, string $officeId = 'LON1A0980'): array
     {
         $queueQuery = QueueItem::where('office_id', $officeId);
-        $logQuery = TerminalActivityLog::query();
+        // Activity logs carry no office column, so scope them through the
+        // usernames that belong to this office. A classroom reset must never
+        // delete another office's training records or audit trail.
+        $logQuery = TerminalActivityLog::whereIn(
+            'user_id',
+            User::where('office_id', $officeId)->pluck('username')
+        );
         $pnrQuery = Pnr::where('office_id', $officeId);
 
         if ($targetUserId) {

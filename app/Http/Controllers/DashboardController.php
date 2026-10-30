@@ -171,8 +171,13 @@ class DashboardController extends Controller
         $officeId = $user?->office_id ?? 'LON1A0980';
 
         // 1. Enrolled Students with Live Session Status
-        $students = User::where('role', 'student')->where('is_approved', true)->get();
-        $pendingApprovals = User::where('role', 'student')->where('is_approved', false)->orderBy('created_at', 'desc')->get();
+        $students = User::where('role', 'student')->where('is_approved', true)
+            ->where('office_id', $officeId)
+            ->get();
+        $pendingApprovals = User::where('role', 'student')->where('is_approved', false)
+            ->where('office_id', $officeId)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $studentStatuses = $students->map(function (User $st) {
             $recentLogs = TerminalActivityLog::where('user_id', $st->username)
@@ -217,7 +222,8 @@ class DashboardController extends Controller
         $scenarios = Scenario::orderBy('created_at', 'desc')->get();
 
         // 3. Submissions & Gradebook
-        $submissions = Submission::with(['scenario', 'user'])
+        $submissions = Submission::whereHas('user', fn ($q) => $q->where('office_id', $officeId))
+            ->with(['scenario', 'user'])
             ->orderBy('created_at', 'desc')
             ->limit(50)
             ->get();
@@ -228,8 +234,9 @@ class DashboardController extends Controller
 
         // 5. Recent PNR audit trail
         $recentPnrs = Pnr::where('office_id', $officeId)->orderBy('updated_at', 'desc')->limit(20)->get();
-        $allPnrs = Pnr::orderBy('updated_at', 'desc')->limit(100)->get();
-        $progress = LessonProgress::all();
+        $allPnrs = Pnr::where('office_id', $officeId)->orderBy('updated_at', 'desc')->limit(100)->get();
+        $officeUsernames = $students->pluck('username')->merge($pendingApprovals->pluck('username'));
+        $progress = LessonProgress::whereIn('user_id', $officeUsernames)->get();
 
         return view('dashboard.instructor', [
             'user' => $user,
@@ -261,6 +268,13 @@ class DashboardController extends Controller
         $userId = ($currentUser->role === 'instructor' && $request->filled('user'))
             ? $request->query('user')
             : $currentUser->username;
+
+        if ($userId !== $currentUser->username) {
+            $target = User::where('username', $userId)
+                ->where('office_id', $currentUser->office_id)
+                ->first();
+            abort_unless($target !== null, 404);
+        }
 
         $pnr = Pnr::where('user_id', $userId)->orderBy('updated_at', 'desc')->first();
 
@@ -317,14 +331,31 @@ class DashboardController extends Controller
 
         $username = $user->username;
 
-        $pnrData = $request->input('pnrData');
-        if (! $pnrData) {
-            $latestPnr = Pnr::where('user_id', $username)->orderBy('updated_at', 'desc')->first();
-            $pnrData = $latestPnr?->data_json ?? [];
+        // Everything that gets graded is resolved from server-side state. The
+        // request may only name which of the caller's own stored PNRs to grade.
+        $locator = $request->input('recordLocator');
+        $pnrQuery = Pnr::where('user_id', $username);
+        if (is_string($locator) && $locator !== '') {
+            $pnrQuery->where('record_locator', strtoupper($locator));
         }
 
-        $terminalLogs = $request->input('terminalLogs', []);
-        $timeElapsed = (int) $request->input('timeElapsedSeconds', 0);
+        $latestPnr = $pnrQuery->orderBy('updated_at', 'desc')->first();
+        if (! $latestPnr) {
+            return response()->json([
+                'error' => 'No stored PNR found for this cadet. Complete and store the booking in the terminal before submitting.',
+            ], 422);
+        }
+
+        $pnrData = $latestPnr->data_json ?? [];
+
+        $activity = TerminalActivityLog::where('user_id', $username)->orderBy('created_at')->get();
+        $terminalLogs = $activity
+            ->map(fn (TerminalActivityLog $log) => [
+                'command' => $log->command,
+                'is_error' => (bool) $log->is_error,
+            ])
+            ->all();
+        $timeElapsed = (int) max(0, $activity->first()?->created_at?->diffInSeconds($latestPnr->updated_at ?? now()) ?? 0);
 
         $submission = $this->scenarios->submitScenario(
             $username,
@@ -346,7 +377,9 @@ class DashboardController extends Controller
      */
     public function spectateStudentApi(Request $request, string $username): JsonResponse
     {
-        $student = User::where('username', $username)->first();
+        $student = User::where('username', $username)
+            ->where('office_id', Auth::user()->office_id)
+            ->first();
         if (! $student) {
             return response()->json(['error' => 'Student not found'], 404);
         }
@@ -450,6 +483,12 @@ class DashboardController extends Controller
             'score' => 'required|integer|min:0|max:100',
             'feedback' => 'nullable|string',
         ]);
+
+        $submission = Submission::with('user')->findOrFail($id);
+        abort_unless(
+            $submission->user !== null && $submission->user->office_id === Auth::user()->office_id,
+            404
+        );
 
         $submission = $this->scenarios->overrideGrade(
             $id,

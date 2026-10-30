@@ -171,6 +171,14 @@ class DualRoleDashboardTest extends TestCase
             'tst' => ['currency' => 'GBP', 'baseFare' => 500, 'totalAmount' => 645.20],
         ];
 
+        Pnr::create([
+            'record_locator' => 'X9L3P2',
+            'user_id' => $student->username,
+            'office_id' => $student->office_id,
+            'status' => 'CONFIRMED',
+            'data_json' => $pnrData,
+        ]);
+
         $response = $this->actingAs($student)->postJson('/api/dashboard/scenarios/SCN-RT-01/submit', [
             'pnrData' => $pnrData,
             'terminalLogs' => [
@@ -193,6 +201,29 @@ class DualRoleDashboardTest extends TestCase
         $this->assertGreaterThanOrEqual(80, $grade['score']);
         $this->assertTrue($grade['passed']);
         $this->assertEquals(6, $grade['elementsPassedCount']);
+    }
+
+    public function test_06b_fabricated_pnr_data_is_not_graded(): void
+    {
+        $student = User::where('username', 'student')->first();
+        Pnr::where('user_id', $student->username)->delete();
+        Submission::where('user_id', $student->username)->delete();
+
+        $response = $this->actingAs($student)->postJson('/api/dashboard/scenarios/SCN-RT-01/submit', [
+            'pnrData' => [
+                'recordLocator' => 'FORG01',
+                'passengers' => [['lastName' => 'FAKE', 'firstName' => 'STUDENT', 'type' => 'ADT']],
+            ],
+            'terminalLogs' => [],
+            'timeElapsedSeconds' => 10,
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['error']);
+        $this->assertDatabaseMissing('submissions', [
+            'user_id' => $student->username,
+            'scenario_id' => 'SCN-RT-01',
+        ]);
     }
 
     public function test_07_instructor_can_spectate_student_keystrokes(): void

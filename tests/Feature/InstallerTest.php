@@ -266,4 +266,61 @@ class InstallerTest extends TestCase
         $lockContent = json_decode(File::get(storage_path('installed')), true);
         $this->assertEquals('https://cli.amadus.aero', $lockContent['app_url']);
     }
+
+    public function test_12_concurrent_installation_attempt_returns_conflict_409(): void
+    {
+        $handle = $this->installerService->acquireInstallLock();
+        $this->assertNotNull($handle);
+
+        $payload = [
+            'name' => 'Concurrent Instructor',
+            'username' => 'concurrent_inst',
+            'email' => 'concurrent@amadeus.test',
+            'password' => 'SecurePass123!',
+            'password_confirmation' => 'SecurePass123!',
+            'database_driver' => 'sqlite',
+        ];
+
+        $response = $this->postJson('/install', $payload);
+        $response->assertStatus(409);
+        $response->assertJson([
+            'error' => 'Another installation is already in progress.',
+        ]);
+
+        $this->installerService->releaseInstallLock($handle);
+    }
+
+    public function test_13_installer_cannot_reinstall_over_existing_database_instructor(): void
+    {
+        $existingInstructor = User::factory()->create([
+            'username' => 'existing_chief',
+            'email' => 'chief@academy.test',
+            'role' => 'instructor',
+            'password' => Hash::make('OriginalPass123!'),
+        ]);
+
+        // Marker missing (simulating container restart without volume)
+        $this->installerService->uninstall();
+        $this->assertFalse($this->installerService->isInstalled());
+
+        $payload = [
+            'name' => 'Attacker',
+            'username' => 'existing_chief',
+            'email' => 'attacker@evil.example',
+            'password' => 'AttackerPwn1!',
+            'password_confirmation' => 'AttackerPwn1!',
+            'database_driver' => 'sqlite',
+        ];
+
+        $response = $this->postJson('/install', $payload);
+        $response->assertStatus(400);
+        $response->assertJson([
+            'error' => 'Application is already installed.',
+        ]);
+
+        // Verify credentials in DB were not overwritten
+        $refreshed = $existingInstructor->fresh();
+        $this->assertEquals('chief@academy.test', $refreshed->email);
+        $this->assertTrue(Hash::check('OriginalPass123!', $refreshed->password));
+    }
 }

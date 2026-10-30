@@ -34,15 +34,18 @@ class InstructorController extends Controller
 
         $students = User::where('role', 'student')
             ->where('is_approved', true)
+            ->where('office_id', $user->office_id)
             ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'is_approved', 'created_at'])
             ->get();
         $pendingStudents = User::where('role', 'student')
             ->where('is_approved', false)
+            ->where('office_id', $user->office_id)
             ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'is_approved', 'created_at'])
             ->orderBy('created_at', 'desc')
             ->get();
-        $progress = LessonProgress::all();
-        $pnrs = Pnr::orderBy('updated_at', 'desc')->limit(100)->get();
+        $officeUsernames = $students->pluck('username')->merge($pendingStudents->pluck('username'));
+        $progress = LessonProgress::whereIn('user_id', $officeUsernames)->get();
+        $pnrs = Pnr::where('office_id', $user->office_id)->orderBy('updated_at', 'desc')->limit(100)->get();
 
         return view('instructor.index', compact('user', 'students', 'pendingStudents', 'progress', 'pnrs'));
     }
@@ -59,15 +62,18 @@ class InstructorController extends Controller
 
         $students = User::where('role', 'student')
             ->where('is_approved', true)
+            ->where('office_id', $user->office_id)
             ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'is_approved', 'created_at'])
             ->get();
         $pendingStudents = User::where('role', 'student')
             ->where('is_approved', false)
+            ->where('office_id', $user->office_id)
             ->select(['id', 'username', 'name', 'email', 'office_id', 'agent_id', 'is_approved', 'created_at'])
             ->orderBy('created_at', 'desc')
             ->get();
-        $progressRecords = LessonProgress::all();
-        $pnrs = Pnr::orderBy('updated_at', 'desc')->limit(100)->get();
+        $officeUsernames = $students->pluck('username')->merge($pendingStudents->pluck('username'));
+        $progressRecords = LessonProgress::whereIn('user_id', $officeUsernames)->get();
+        $pnrs = Pnr::where('office_id', $user->office_id)->orderBy('updated_at', 'desc')->limit(100)->get();
 
         return response()->json([
             'students' => $students,
@@ -167,8 +173,9 @@ class InstructorController extends Controller
 
         $count = (int) $validated['count'];
         $prefix = strtolower(trim($validated['prefix'] ?? 'student'));
-        $defaultPassword = $validated['password'] ?? 'Amadeus@'.date('Y');
-        $hashedPassword = Hash::make($defaultPassword); // Pre-hash once to prevent CPU starvation DoS
+        // No calendar-derived default: a predictable shared password lets anyone
+        // log in as any provisioned cadet. Each account gets its own random password.
+        $instructorPassword = $validated['password'] ?? null;
         $officeId = ! empty($validated['office_id'])
             ? strtoupper(trim($validated['office_id']))
             : ($user->office_id ?? 'LON1A0980');
@@ -192,6 +199,9 @@ class InstructorController extends Controller
 
             $agentId = 'ST'.rand(10, 99).strtoupper(Str::random(2));
 
+            $studentPassword = $instructorPassword ?? Str::password(16, symbols: false);
+            $hashedPassword = Hash::make($studentPassword);
+
             $student = User::create([
                 'name' => ucwords(str_replace(['_', '-'], ' ', $candidateUsername)),
                 'username' => $candidateUsername,
@@ -208,7 +218,7 @@ class InstructorController extends Controller
                 'username' => $student->username,
                 'name' => $student->name,
                 'email' => $student->email,
-                'plain_password' => $defaultPassword,
+                'plain_password' => $studentPassword,
                 'office_id' => $student->office_id,
                 'agent_id' => $student->agent_id,
                 'created_at' => $student->created_at->format('d M Y'),
@@ -226,7 +236,7 @@ class InstructorController extends Controller
             'success' => true,
             'message' => "Successfully provisioned {$count} student accounts.",
             'count' => count($createdStudents),
-            'default_password' => $defaultPassword,
+            'default_password' => $instructorPassword,
             'students' => $createdStudents,
         ], 201);
     }
@@ -244,7 +254,9 @@ class InstructorController extends Controller
             abort(403, 'Forbidden. Instructor access required.');
         }
 
-        $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
+        $student = User::where('id', $id)->where('role', 'student')
+            ->where('office_id', $user->office_id)
+            ->firstOrFail();
         $student->is_approved = true;
         $student->save();
 
@@ -272,7 +284,9 @@ class InstructorController extends Controller
             abort(403, 'Forbidden. Instructor access required.');
         }
 
-        $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
+        $student = User::where('id', $id)->where('role', 'student')
+            ->where('office_id', $user->office_id)
+            ->firstOrFail();
         $username = $student->username;
         $student->delete();
 
@@ -299,7 +313,9 @@ class InstructorController extends Controller
             abort(403, 'Forbidden. Instructor access required.');
         }
 
-        $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
+        $student = User::where('id', $id)->where('role', 'student')
+            ->where('office_id', $user->office_id)
+            ->firstOrFail();
         $username = $student->username;
 
         // Cascade delete all student simulation and activity records
@@ -334,7 +350,9 @@ class InstructorController extends Controller
             abort(403, 'Forbidden. Instructor access required.');
         }
 
-        $student = User::where('id', $id)->where('role', 'student')->firstOrFail();
+        $student = User::where('id', $id)->where('role', 'student')
+            ->where('office_id', $currentUser->office_id)
+            ->firstOrFail();
         $instructorId = $currentUser->id;
 
         Auth::login($student);

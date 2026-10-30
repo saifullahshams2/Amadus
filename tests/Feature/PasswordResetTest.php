@@ -71,13 +71,36 @@ class PasswordResetTest extends TestCase
         ]);
     }
 
-    public function test_request_reset_link_fails_for_unknown_user(): void
+    public function test_request_reset_link_does_not_reveal_whether_an_account_exists(): void
     {
         $response = $this->post('/forgot-password', [
             'email' => 'nonexistent@nowhere.test',
         ]);
 
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHas('status');
+        $response->assertSessionMissing('errors');
+        $this->assertDatabaseCount('password_reset_tokens', 0);
+    }
+
+    public function test_forgot_password_response_is_identical_for_known_and_unknown_identifiers(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'known.cadet@amadeus.training',
+            'username' => 'known_cadet',
+        ]);
+
+        $known = $this->postJson('/api/auth/forgot-password', ['email' => 'known_cadet']);
+        $knownByEmail = $this->postJson('/api/auth/forgot-password', ['email' => $user->email]);
+        $unknown = $this->postJson('/api/auth/forgot-password', ['email' => 'missing_cadet_zz']);
+
+        $known->assertStatus(200);
+        $knownByEmail->assertStatus(200);
+        $unknown->assertStatus(200);
+        $this->assertSame($known->json(), $unknown->json());
+        $this->assertSame($knownByEmail->json(), $unknown->json());
+
+        // The legitimate flow must still create the token for the real account.
+        $this->assertDatabaseHas('password_reset_tokens', ['email' => $user->email]);
     }
 
     public function test_reset_password_page_renders_with_token_and_email(): void
@@ -164,8 +187,8 @@ class PasswordResetTest extends TestCase
         $forgotResponse->assertStatus(200);
         $forgotResponse->assertJson([
             'success' => true,
-            'email' => $user->email,
         ]);
+        $this->assertArrayNotHasKey('email', $forgotResponse->json());
         $this->assertNull($forgotResponse->json('reset_url'));
 
         // Extract token

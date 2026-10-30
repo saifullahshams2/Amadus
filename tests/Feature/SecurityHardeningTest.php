@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Pnr;
+use App\Models\Submission;
+use App\Models\TerminalActivityLog;
 use App\Models\User;
 use App\Services\Installer\InstallerService;
 use Illuminate\Contracts\Encryption\Encrypter;
@@ -241,6 +243,15 @@ class SecurityHardeningTest extends TestCase
         $student = User::where('username', 'student')->first();
         $this->actingAs($student);
 
+        TerminalActivityLog::create([
+            'user_id' => $student->username,
+            'command' => 'JI*1234AB/GS',
+            'output_lines' => ['OK SIGN-IN', 'WORK AREA A ACTIVE'],
+            'is_error' => false,
+            'command_type' => 'SIGN_IN',
+            'execution_time_ms' => 4,
+        ]);
+
         // Lesson 1-1 has 2 objectives. Completing 1 objective should result in 50%, ignoring client score 999.
         $res = $this->postJson('/api/training/progress', [
             'lessonId' => 'les-1-1',
@@ -252,6 +263,42 @@ class SecurityHardeningTest extends TestCase
 
         $res->assertStatus(200);
         $this->assertEquals(50, $res->json('progress.score'));
+        $this->assertSame(['obj-1-1-1'], $res->json('progress.completed_objectives_json'));
+    }
+
+    public function test_training_progress_cannot_credit_objectives_without_terminal_evidence(): void
+    {
+        $student = User::where('username', 'student')->first();
+        $this->actingAs($student);
+
+        // Claiming every objective, or inventing objectives, must not mint progress.
+        $res = $this->postJson('/api/training/progress', [
+            'lessonId' => 'les-1-1',
+            'moduleId' => 'mod-1',
+            'completedObjectives' => ['obj-1-1-1', 'obj-1-1-2', 'fake-objective'],
+            'isComplete' => true,
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertEquals(0, $res->json('progress.score'));
+        $this->assertSame('in_progress', $res->json('progress.status'));
+        $this->assertSame([], $res->json('progress.completed_objectives_json'));
+    }
+
+    public function test_training_progress_rejects_unknown_lessons(): void
+    {
+        $student = User::where('username', 'student')->first();
+        $this->actingAs($student);
+
+        $res = $this->postJson('/api/training/progress', [
+            'lessonId' => 'NOT-A-LESSON',
+            'moduleId' => 'NOT-A-REAL-MODULE',
+            'completedObjectives' => ['obj-1-1-1'],
+            'isComplete' => true,
+        ]);
+
+        $res->assertStatus(422);
+        $this->assertDatabaseMissing('lesson_progress', ['lesson_id' => 'NOT-A-LESSON']);
     }
 
     public function test_location_and_airline_lookups_reject_empty_or_wildcard_only_queries(): void
@@ -436,5 +483,215 @@ class SecurityHardeningTest extends TestCase
 
         $this->assertFalse($result['success']);
         $this->assertStringContainsString('alphanumeric', $result['error']);
+    }
+
+    public function test_guest_session_cannot_view_queues_via_qs_or_qd(): void
+    {
+        $qsRes = $this->postJson('/api/terminal/execute', [
+            'command' => 'QS',
+            'state' => ['officeId' => 'LON1A0980'],
+        ]);
+        $qsRes->assertStatus(200);
+        $this->assertTrue($qsRes->json('isError'));
+        $this->assertStringContainsString('GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES', implode(' ', $qsRes->json('outputLines')));
+
+        $qdRes = $this->postJson('/api/terminal/execute', [
+            'command' => 'QD 1',
+            'state' => ['officeId' => 'LON1A0980'],
+        ]);
+        $qdRes->assertStatus(200);
+        $this->assertTrue($qdRes->json('isError'));
+        $this->assertStringContainsString('GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES', implode(' ', $qdRes->json('outputLines')));
+    }
+
+    public function test_instructor_cannot_access_or_mutate_cross_office_students(): void
+    {
+        $instA = User::create([
+            'username' => 'inst_a',
+            'name' => 'Instructor A',
+            'email' => 'insta@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'instructor',
+            'is_approved' => true,
+            'office_id' => 'ACADA001',
+            'agent_id' => 'INA1',
+        ]);
+
+        $cadetA = User::create([
+            'username' => 'cadet_a',
+            'name' => 'Cadet A',
+            'email' => 'cadeta@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'is_approved' => true,
+            'office_id' => 'ACADA001',
+            'agent_id' => 'CDA1',
+        ]);
+
+        $cadetB = User::create([
+            'username' => 'cadet_b',
+            'name' => 'Cadet B',
+            'email' => 'cadetb@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'is_approved' => false,
+            'office_id' => 'ACADB001',
+            'agent_id' => 'CDB1',
+        ]);
+
+        Pnr::create([
+            'record_locator' => 'CADB01',
+            'user_id' => $cadetB->username,
+            'office_id' => 'ACADB001',
+            'status' => 'CONFIRMED',
+            'data_json' => ['recordLocator' => 'CADB01'],
+        ]);
+
+        $submission = Submission::create([
+            'scenario_id' => 'SCN-RT-01',
+            'user_id' => $cadetB->username,
+            'score' => 50,
+            'status' => 'submitted',
+        ]);
+
+        $this->actingAs($instA);
+
+        // 1. Roster scoping
+        $roster = $this->getJson('/api/instructor/students');
+        $roster->assertStatus(200);
+        $studentUsernames = collect($roster->json('students'))->pluck('username');
+        $pendingUsernames = collect($roster->json('pendingStudents'))->pluck('username');
+        $this->assertTrue($studentUsernames->contains('cadet_a'));
+        $this->assertFalse($studentUsernames->contains('cadet_b'));
+        $this->assertFalse($pendingUsernames->contains('cadet_b'));
+
+        // 2. Active PNR scoping
+        $activePnr = $this->getJson('/api/dashboard/active-pnr?user=cadet_b');
+        $activePnr->assertStatus(404);
+
+        // 3. Spectate scoping
+        $spectate = $this->getJson('/api/instructor/spectate/cadet_b');
+        $spectate->assertStatus(404);
+
+        // 4. Approve scoping
+        $approve = $this->postJson("/api/instructor/students/{$cadetB->id}/approve");
+        $approve->assertStatus(404);
+
+        // 5. Reject scoping
+        $reject = $this->postJson("/api/instructor/students/{$cadetB->id}/reject");
+        $reject->assertStatus(404);
+
+        // 6. Delete scoping
+        $delete = $this->deleteJson("/api/instructor/students/{$cadetB->id}");
+        $delete->assertStatus(404);
+
+        // 7. Impersonate scoping
+        $impersonate = $this->postJson("/api/instructor/students/{$cadetB->id}/impersonate");
+        $impersonate->assertStatus(404);
+
+        // 8. Grade scoping
+        $grade = $this->postJson("/api/instructor/submissions/{$submission->id}/grade", [
+            'score' => 95,
+        ]);
+        $grade->assertStatus(404);
+    }
+
+    public function test_sandbox_reset_is_scoped_to_instructors_office(): void
+    {
+        $instC = User::create([
+            'username' => 'inst_c',
+            'name' => 'Instructor C',
+            'email' => 'instc@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'instructor',
+            'is_approved' => true,
+            'office_id' => 'ACADC001',
+            'agent_id' => 'INC1',
+        ]);
+
+        $cadetC = User::create([
+            'username' => 'cadet_c',
+            'name' => 'Cadet C',
+            'email' => 'cadetc@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'is_approved' => true,
+            'office_id' => 'ACADC001',
+            'agent_id' => 'CDC1',
+        ]);
+
+        $cadetD = User::create([
+            'username' => 'cadet_d',
+            'name' => 'Cadet D',
+            'email' => 'cadetd@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'is_approved' => true,
+            'office_id' => 'ACADD001',
+            'agent_id' => 'CDD1',
+        ]);
+
+        TerminalActivityLog::create([
+            'user_id' => 'cadet_c',
+            'command' => 'AN15NOVLHRJFK',
+            'output_lines' => ['OK'],
+            'is_error' => false,
+            'command_type' => 'AVAILABILITY',
+            'execution_time_ms' => 10,
+        ]);
+
+        TerminalActivityLog::create([
+            'user_id' => 'cadet_d',
+            'command' => 'DAN LHR',
+            'output_lines' => ['OK'],
+            'is_error' => false,
+            'command_type' => 'DECODE',
+            'execution_time_ms' => 10,
+        ]);
+
+        $this->actingAs($instC);
+
+        $response = $this->postJson('/api/instructor/sandbox/reset');
+        $response->assertStatus(200);
+
+        $this->assertDatabaseMissing('terminal_activity_logs', [
+            'user_id' => 'cadet_c',
+        ]);
+        $this->assertDatabaseHas('terminal_activity_logs', [
+            'user_id' => 'cadet_d',
+        ]);
+    }
+
+    public function test_terminal_execute_normalises_missing_active_pnr_keys_without_500(): void
+    {
+        $response = $this->postJson('/api/terminal/execute', [
+            'command' => 'NM1DOE/JOHN',
+            'state' => [
+                'activePnr' => [
+                    'recordLocator' => 'ABC123',
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertFalse($response->json('isError'));
+    }
+
+    public function test_registration_normalises_case_and_rejects_duplicate_with_422(): void
+    {
+        User::factory()->create([
+            'username' => 'existingcadet',
+            'email' => 'existing@example.test',
+        ]);
+
+        $response = $this->postJson('/api/auth/register', [
+            'username' => 'ExistingCadet',
+            'email' => 'different@example.test',
+            'password' => 'Passw0rd!23',
+            'password_confirmation' => 'Passw0rd!23',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['username']);
     }
 }

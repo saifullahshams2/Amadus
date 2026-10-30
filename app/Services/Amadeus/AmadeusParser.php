@@ -579,17 +579,25 @@ class AmadeusParser
 
         // 23. QUEUE COMMANDS: QS, QD, QN, QI
         if ($input === 'QS' || $input === 'QS/ALL') {
+            if ($userId === 'guest') {
+                return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES (QS)'], $state, true, 'QUEUE_UNAUTHENTICATED');
+            }
+
             $office = $state['officeId'] ?? 'LON1A0980';
-            $lines = $this->queue->formatQueueSummaryLines($office, $userId !== 'guest' ? $userId : null);
+            $lines = $this->queue->formatQueueSummaryLines($office, $userId);
 
             return new CommandExecutionResult($lines, $state, false, 'QUEUE_SUMMARY');
         }
 
         if (str_starts_with($input, 'QD')) {
+            if ($userId === 'guest') {
+                return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES (QD)'], $state, true, 'QUEUE_UNAUTHENTICATED');
+            }
+
             $office = $state['officeId'] ?? 'LON1A0980';
             $arg = trim(substr($input, 2));
             $qNum = is_numeric($arg) ? (int) $arg : 1;
-            $res = $this->queue->displayQueue($qNum, $office, $userId !== 'guest' ? $userId : null);
+            $res = $this->queue->displayQueue($qNum, $office, $userId);
 
             return new CommandExecutionResult($res['lines'], $state, false, 'QUEUE_DISPLAY');
         }

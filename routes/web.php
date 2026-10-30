@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/install', [InstallerController::class, 'show'])->name('installer.show');
 Route::post('/install', [InstallerController::class, 'install'])->name('installer.install');
 Route::get('/install/requirements', [InstallerController::class, 'requirements'])->name('installer.requirements');
-Route::post('/install/test-db', [InstallerController::class, 'testDatabase'])->name('installer.test-db');
+Route::post('/install/test-db', [InstallerController::class, 'testDatabase'])->middleware('throttle:10,1')->name('installer.test-db');
 
 // Main Landing Page (Public 100vh / 100vw Welcome Portal)
 Route::get('/', [LandingController::class, 'index'])->name('landing');

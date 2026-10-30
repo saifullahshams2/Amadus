@@ -34,36 +34,27 @@ class PasswordResetController extends Controller
 
         $input = trim($request->input('email'));
 
-        // Allow looking up by email or username
+        $genericMessage = 'If an account matches that email address or callsign, a password reset link has been sent.';
+
+        // Allow looking up by email or username. The lookup outcome is never disclosed to the caller.
         $user = filter_var($input, FILTER_VALIDATE_EMAIL)
             ? User::where('email', strtolower($input))->first()
             : User::where('username', strtolower($input))->first();
 
-        if (! $user) {
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'error' => 'We could not find an account with that email address or callsign.',
-                ], 404);
-            }
-
-            return back()->withInput()->withErrors([
-                'email' => 'We could not find an account with that email address or callsign.',
-            ]);
+        if ($user) {
+            $token = Password::broker()->createToken($user);
+            $user->sendPasswordResetNotification($token);
         }
-
-        $token = Password::broker()->createToken($user);
-        $user->sendPasswordResetNotification($token);
 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
-                'message' => 'Password reset link dispatched successfully.',
-                'email' => $user->email,
+                'message' => $genericMessage,
             ]);
         }
 
         return back()->with([
-            'status' => 'A password reset link has been dispatched to your email address.',
+            'status' => $genericMessage,
         ]);
     }
 
@@ -114,14 +105,16 @@ class PasswordResetController extends Controller
             return redirect()->route('login')->with('info', 'Your password has been successfully reset. You may now sign in with your new credentials.');
         }
 
+        $genericError = 'This password reset request is invalid or has expired.';
+
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
-                'error' => __($status),
+                'error' => $genericError,
             ], 422);
         }
 
         return back()->withInput($request->only('email'))->withErrors([
-            'email' => __($status),
+            'email' => $genericError,
         ]);
     }
 }

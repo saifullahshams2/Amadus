@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\Installer\InstallerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class InstallerController extends Controller
@@ -79,7 +81,48 @@ class InstallerController extends Controller
      */
     public function install(Request $request): JsonResponse|RedirectResponse
     {
+        $installLock = $this->installerService->acquireInstallLock();
+
+        if ($installLock === null) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Another installation is already in progress.'], 409);
+            }
+
+            return back()->withErrors(['error' => 'Another installation is already in progress.']);
+        }
+
+        try {
+            return $this->performInstall($request);
+        } finally {
+            $this->installerService->releaseInstallLock($installLock);
+        }
+    }
+
+    /**
+     * Perform installation while holding the exclusive installer lock.
+     */
+    protected function performInstall(Request $request): JsonResponse|RedirectResponse
+    {
         if ($this->installerService->isInstalled()) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Application is already installed.'], 400);
+            }
+
+            return redirect()->route('landing')->with('warning', 'Application is already installed.');
+        }
+
+        // The lock file is the only install marker and can be lost (ephemeral
+        // container storage, a restored backup, a re-deploy without a volume).
+        // A provisioned database is authoritative: never re-open the installer
+        // over existing accounts.
+        try {
+            $alreadyProvisioned = Schema::hasTable('users')
+                && User::where('role', 'instructor')->exists();
+        } catch (\Throwable) {
+            $alreadyProvisioned = false;
+        }
+
+        if ($alreadyProvisioned) {
             if ($request->wantsJson()) {
                 return response()->json(['error' => 'Application is already installed.'], 400);
             }

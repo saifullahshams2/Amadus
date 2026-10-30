@@ -6,6 +6,7 @@ use App\Models\TerminalActivityLog;
 use App\Services\Amadeus\AmadeusParser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class TerminalController extends Controller
 {
@@ -45,6 +46,28 @@ class TerminalController extends Controller
 
         $command = $validated['command'];
         $state = $validated['state'] ?? [];
+
+        // Normalise the client-supplied PNR buffer so a partial or wrongly-typed
+        // activePnr cannot become an unhandled exception (HTTP 500) in the parser.
+        // `null` and `[]` are the documented "no active PNR" sentinels and are left
+        // for AmadeusParser::execute() to initialise.
+        if (isset($state['activePnr']) && $state['activePnr'] !== []) {
+            if (! is_array($state['activePnr'])) {
+                throw ValidationException::withMessages([
+                    'state.activePnr' => 'The active PNR state must be an object.',
+                ]);
+            }
+
+            foreach (['passengers', 'segments', 'contacts', 'tickets', 'tsts', 'specialServiceRequests', 'remarks'] as $key) {
+                if (! array_key_exists($key, $state['activePnr']) || $state['activePnr'][$key] === null) {
+                    $state['activePnr'][$key] = [];
+                } elseif (! is_array($state['activePnr'][$key])) {
+                    throw ValidationException::withMessages([
+                        "state.activePnr.{$key}" => "The {$key} field must be an array.",
+                    ]);
+                }
+            }
+        }
 
         $userId = $user?->username ?? 'guest';
 

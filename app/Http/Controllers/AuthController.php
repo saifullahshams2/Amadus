@@ -88,6 +88,13 @@ class AuthController extends Controller
             ? 'required|string|min:6|confirmed'
             : 'required|string|min:6';
 
+        // Normalise before validating so the unique rules run against the value
+        // that will actually be stored (usernames and emails are lower-cased).
+        $request->merge([
+            'username' => is_string($request->input('username')) ? strtolower(trim($request->input('username'))) : $request->input('username'),
+            'email' => is_string($request->input('email')) ? strtolower(trim($request->input('email'))) : $request->input('email'),
+        ]);
+
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'username' => 'required|string|min:3|max:50|alpha_dash|unique:users,username',

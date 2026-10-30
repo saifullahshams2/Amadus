@@ -21,6 +21,40 @@ class InstallerService
     }
 
     /**
+     * Acquire an exclusive, non-blocking install lock so the install check and
+     * the work that follows it are atomic across concurrent requests.
+     *
+     * @return resource|null
+     */
+    public function acquireInstallLock()
+    {
+        $handle = fopen(storage_path('installing.lock'), 'c');
+
+        if ($handle === false) {
+            return null;
+        }
+
+        if (! flock($handle, LOCK_EX | LOCK_NB)) {
+            fclose($handle);
+
+            return null;
+        }
+
+        return $handle;
+    }
+
+    /**
+     * Release the exclusive install lock.
+     *
+     * @param  resource  $handle
+     */
+    public function releaseInstallLock($handle): void
+    {
+        flock($handle, LOCK_UN);
+        fclose($handle);
+    }
+
+    /**
      * Check server environment requirements and directory permissions.
      *
      * @return array{
@@ -182,10 +216,20 @@ class InstallerService
             return ['success' => false, 'error' => 'Database name must be alphanumeric and may only contain underscores.'];
         }
 
-        // SSRF protection: block link-local cloud metadata IPs
-        $resolvedIp = gethostbyname($host);
-        if ($resolvedIp === '169.254.169.254' || str_starts_with($resolvedIp, '169.254.')) {
-            return ['success' => false, 'error' => 'Connection to link-local metadata addresses is forbidden.'];
+        // SSRF protection: block link-local metadata endpoints in any literal form
+        // (IPv4, IPv4-mapped IPv6, or a hostname resolving to them).
+        $hostToCheck = trim($host, ' []');
+        $ip = filter_var($hostToCheck, FILTER_VALIDATE_IP) ? $hostToCheck : gethostbyname($hostToCheck);
+        $packed = @inet_pton((string) $ip);
+        if ($packed !== false) {
+            // Unwrap IPv4-mapped IPv6 (::ffff:169.254.x.x, incl. ::ffff:a9fe:a9fe).
+            if (strlen($packed) === 16 && str_starts_with($packed, str_repeat("\0", 10)."\xff\xff")) {
+                $packed = substr($packed, 12);
+            }
+            // 169.254.0.0/16 link-local range.
+            if (strlen($packed) === 4 && str_starts_with($packed, "\xa9\xfe")) {
+                return ['success' => false, 'error' => 'Connection to link-local metadata addresses is forbidden.'];
+            }
         }
 
         try {
@@ -209,9 +253,11 @@ class InstallerService
                 'message' => "MySQL connection verified. Database [{$database}] is ready on {$host}:{$port}.",
             ];
         } catch (Throwable $e) {
+            // Do not reflect driver/host:port detail: it turns this endpoint into a
+            // reachability oracle for arbitrary internal addresses and services.
             return [
                 'success' => false,
-                'error' => 'MySQL connection error: '.$e->getMessage(),
+                'error' => 'Database connection failed. Verify the host, port and credentials.',
             ];
         }
     }
@@ -430,29 +476,16 @@ class InstallerService
      */
     public function createInstructor(array $data): User
     {
-        // Check for any conflicting accounts by username or email
-        $byUsername = User::where('username', $data['username'])->first();
-        $byEmail = User::where('email', $data['email'])->first();
+        // Never modify an existing account during installation: a re-opened
+        // installer must not be able to take over a provisioned account.
+        $existing = User::where('username', $data['username'])
+            ->orWhere('email', $data['email'])
+            ->first();
 
-        // If two different existing records conflict with the desired credentials, remove duplicate
-        if ($byUsername && $byEmail && $byUsername->id !== $byEmail->id) {
-            $byEmail->delete();
-        }
-
-        $target = $byUsername ?? $byEmail;
-
-        if ($target) {
-            $target->name = $data['name'] ?? 'Flight Instructor';
-            $target->username = $data['username'];
-            $target->email = $data['email'];
-            $target->password = Hash::make($data['password']);
-            $target->role = 'instructor';
-            $target->is_approved = true;
-            $target->office_id = $data['office_id'] ?? 'LON1A0980';
-            $target->agent_id = $data['agent_id'] ?? 'IN01GS';
-            $target->save();
-
-            return $target;
+        if ($existing) {
+            throw new \RuntimeException(
+                'An account with this username or email already exists. Installation cannot modify existing accounts.'
+            );
         }
 
         return User::create([
