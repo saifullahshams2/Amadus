@@ -42,7 +42,7 @@ class EnsureAppIsInstalled
         // If not installed and trying to access regular application pages, redirect to installer
         if (! $isInstalled && ! $isInstallRoute) {
             // Exempt health check, static files or debug endpoints if needed
-            if ($request->is('up') || $request->is('_debugbar*')) {
+            if ($request->is('up') || $request->is('_debugbar*') || $request->is('*.png') || $request->is('*.ico') || $request->is('*.svg') || $request->is('*.css') || $request->is('*.js') || $request->is('*.jpg') || $request->is('*.webp')) {
                 return $next($request);
             }
 

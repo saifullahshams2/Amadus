@@ -22,7 +22,7 @@ class InstallerController extends Controller
      */
     public function show(Request $request): View|RedirectResponse
     {
-        if ($this->installerService->isInstalled()) {
+        if ($this->isAlreadyProvisioned()) {
             return redirect()->route('landing')->with('info', 'Application is already installed and installer is locked.');
         }
 
@@ -41,7 +41,7 @@ class InstallerController extends Controller
      */
     public function requirements(): JsonResponse
     {
-        if ($this->installerService->isInstalled()) {
+        if ($this->isAlreadyProvisioned()) {
             return response()->json(['error' => 'Application is already installed and installer is locked.'], 403);
         }
 
@@ -53,7 +53,7 @@ class InstallerController extends Controller
      */
     public function testDatabase(Request $request): JsonResponse
     {
-        if ($this->installerService->isInstalled()) {
+        if ($this->isAlreadyProvisioned()) {
             return response()->json(['error' => 'Application is already installed and installer is locked.'], 403);
         }
 
@@ -103,26 +103,7 @@ class InstallerController extends Controller
      */
     protected function performInstall(Request $request): JsonResponse|RedirectResponse
     {
-        if ($this->installerService->isInstalled()) {
-            if ($request->wantsJson()) {
-                return response()->json(['error' => 'Application is already installed.'], 400);
-            }
-
-            return redirect()->route('landing')->with('warning', 'Application is already installed.');
-        }
-
-        // The lock file is the only install marker and can be lost (ephemeral
-        // container storage, a restored backup, a re-deploy without a volume).
-        // A provisioned database is authoritative: never re-open the installer
-        // over existing accounts.
-        try {
-            $alreadyProvisioned = Schema::hasTable('users')
-                && User::where('role', 'instructor')->exists();
-        } catch (\Throwable) {
-            $alreadyProvisioned = false;
-        }
-
-        if ($alreadyProvisioned) {
+        if ($this->isAlreadyProvisioned()) {
             if ($request->wantsJson()) {
                 return response()->json(['error' => 'Application is already installed.'], 400);
             }
@@ -251,5 +232,22 @@ class InstallerController extends Controller
         }
 
         return redirect('/dashboard')->with('success', 'Installation completed successfully! Welcome, Instructor '.$instructor->name.'.');
+    }
+
+    /**
+     * Determine if the application has already been installed or provisioned.
+     */
+    protected function isAlreadyProvisioned(): bool
+    {
+        if ($this->installerService->isInstalled()) {
+            return true;
+        }
+
+        try {
+            return Schema::hasTable('users')
+                && User::where('role', 'instructor')->exists();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

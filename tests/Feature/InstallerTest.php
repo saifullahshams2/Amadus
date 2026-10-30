@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Middleware\EnsureAppIsInstalled;
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use App\Services\Installer\InstallerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -322,5 +323,36 @@ class InstallerTest extends TestCase
         $refreshed = $existingInstructor->fresh();
         $this->assertEquals('chief@academy.test', $refreshed->email);
         $this->assertTrue(Hash::check('OriginalPass123!', $refreshed->password));
+    }
+
+    public function test_14_installer_wizard_renders_when_app_key_is_initially_empty(): void
+    {
+        // Simulate a fresh download where app.key is empty
+        config(['app.key' => '']);
+
+        // Running register on AppServiceProvider or hitting the wizard should ensure key
+        $provider = new AppServiceProvider($this->app);
+        $provider->register();
+
+        $this->assertNotEmpty(config('app.key'));
+        $this->assertStringStartsWith('base64:', config('app.key'));
+
+        $response = $this->get('/install');
+        $response->assertStatus(200);
+        $response->assertSeeText('Installer');
+    }
+
+    public function test_15_installer_wizard_redirects_when_database_already_has_instructor(): void
+    {
+        User::factory()->create([
+            'role' => 'instructor',
+        ]);
+
+        $this->installerService->uninstall();
+        $this->assertFalse($this->installerService->isInstalled());
+
+        $response = $this->get('/install');
+        $response->assertRedirect(route('landing'));
+        $response->assertSessionHas('info', 'Application is already installed and installer is locked.');
     }
 }
