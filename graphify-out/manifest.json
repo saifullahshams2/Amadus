@@ -1,21 +1,21 @@
 {
   "package.json": {
-    "mtime": 1792910773.204104,
-    "seen": 1793127398.0699544,
-    "ast_hash": "59ec21ff5f1f5b3acb8f2f82c8b6dc77",
-    "semantic_hash": "59ec21ff5f1f5b3acb8f2f82c8b6dc77"
+    "mtime": 1793301628.0613985,
+    "seen": 1793393808.2006936,
+    "ast_hash": "cc2953779f57a22999b51cb28718022b",
+    "semantic_hash": "cc2953779f57a22999b51cb28718022b"
   },
   "README.md": {
-    "mtime": 1793294725.1679792,
-    "seen": 1793299258.9806454,
-    "ast_hash": "7fc277d3107cad39048190cc5c27d07b",
-    "semantic_hash": "7fc277d3107cad39048190cc5c27d07b"
+    "mtime": 1793393424.0033798,
+    "seen": 1793393808.2009027,
+    "ast_hash": "4185df83ae312f50c27e762f3fafeb53",
+    "semantic_hash": "4185df83ae312f50c27e762f3fafeb53"
   },
   "app/Http/Controllers/AuthController.php": {
-    "mtime": 1793087854.6940792,
-    "seen": 1793127398.0699072,
-    "ast_hash": "9dde49150db296bf72c24802b61d34c4",
-    "semantic_hash": "9dde49150db296bf72c24802b61d34c4"
+    "mtime": 1793385954.0657897,
+    "seen": 1793393808.200529,
+    "ast_hash": "1f178f4d05ff06b168e6dcc2e35a891f",
+    "semantic_hash": "1f178f4d05ff06b168e6dcc2e35a891f"
   },
   "app/Http/Controllers/Controller.php": {
     "mtime": 1792910773.2009676,
@@ -24,22 +24,22 @@
     "semantic_hash": "25a307335c0719bc9a91b3f7babd186d"
   },
   "app/Http/Controllers/InstructorController.php": {
-    "mtime": 1793298165.9472213,
-    "seen": 1793299258.9803517,
-    "ast_hash": "aeda4f148e8aec1a2bb074c6b0cf1515",
-    "semantic_hash": "aeda4f148e8aec1a2bb074c6b0cf1515"
+    "mtime": 1793384059.7272692,
+    "seen": 1793393808.200544,
+    "ast_hash": "e7f99435df94078d5b0802e7642b209a",
+    "semantic_hash": "e7f99435df94078d5b0802e7642b209a"
   },
   "app/Http/Controllers/TerminalController.php": {
-    "mtime": 1793298031.6033313,
-    "seen": 1793299258.980359,
-    "ast_hash": "b2efcc520fd8f51298f651da16f1033b",
-    "semantic_hash": "b2efcc520fd8f51298f651da16f1033b"
+    "mtime": 1793385939.565599,
+    "seen": 1793393808.2005534,
+    "ast_hash": "86fe1a08691b9b11fb901f428bea39a6",
+    "semantic_hash": "86fe1a08691b9b11fb901f428bea39a6"
   },
   "app/Http/Controllers/TrainingController.php": {
-    "mtime": 1792944286.1264286,
-    "seen": 1793127398.0699148,
-    "ast_hash": "7a91b20ad0cdd8846b10f712a061ca16",
-    "semantic_hash": "7a91b20ad0cdd8846b10f712a061ca16"
+    "mtime": 1793384004.285007,
+    "seen": 1793393808.200556,
+    "ast_hash": "62972ce7f23edc33e8acc179b98ba16c",
+    "semantic_hash": "62972ce7f23edc33e8acc179b98ba16c"
   },
   "app/Models/Aircraft.php": {
     "mtime": 1792944286.0334575,
@@ -78,16 +78,16 @@
     "semantic_hash": "f3654b21272db3555d956339828e746f"
   },
   "app/Providers/AppServiceProvider.php": {
-    "mtime": 1793080013.0471108,
-    "seen": 1793127398.0699263,
-    "ast_hash": "c7b424b34a14bb1a6bd552971b5156fd",
-    "semantic_hash": "c7b424b34a14bb1a6bd552971b5156fd"
+    "mtime": 1793388257.9696777,
+    "seen": 1793393808.2005947,
+    "ast_hash": "c6306c05fc0cf139ebbede31679a8c75",
+    "semantic_hash": "c6306c05fc0cf139ebbede31679a8c75"
   },
   "app/Services/Amadeus/AmadeusParser.php": {
-    "mtime": 1793298073.5905461,
-    "seen": 1793299258.980392,
-    "ast_hash": "c10157215c54ec69d4106d0581f80084",
-    "semantic_hash": "c10157215c54ec69d4106d0581f80084"
+    "mtime": 1793383244.8264382,
+    "seen": 1793393808.2005973,
+    "ast_hash": "36c36a6005ad177a9dd47a6bfaa7a9b0",
+    "semantic_hash": "36c36a6005ad177a9dd47a6bfaa7a9b0"
   },
   "app/Services/Amadeus/AvailabilityService.php": {
     "mtime": 1792944286.5397077,
@@ -132,10 +132,10 @@
     "semantic_hash": "e66bb13691f6184c762c196427d8e685"
   },
   "bootstrap/app.php": {
-    "mtime": 1793297909.067791,
-    "seen": 1793299258.9804153,
-    "ast_hash": "67b06b2f371f7b5129919d464b73119c",
-    "semantic_hash": "67b06b2f371f7b5129919d464b73119c"
+    "mtime": 1793388609.7647512,
+    "seen": 1793393808.2006285,
+    "ast_hash": "f38d69320bb9a444cdd378b2d7480965",
+    "semantic_hash": "f38d69320bb9a444cdd378b2d7480965"
   },
   "bootstrap/providers.php": {
     "mtime": 1792910773.2018673,
@@ -144,10 +144,10 @@
     "semantic_hash": "888c810b5a4720916f07aa05dd2c2dd3"
   },
   "composer.json": {
-    "mtime": 1792943283.58628,
-    "seen": 1793127398.069938,
-    "ast_hash": "c63ba8c5992d1ef40a26c21e14e6221c",
-    "semantic_hash": "c63ba8c5992d1ef40a26c21e14e6221c"
+    "mtime": 1793301682.188868,
+    "seen": 1793393808.2006338,
+    "ast_hash": "f87c2bee68da6d43aab7501d0433c1be",
+    "semantic_hash": "f87c2bee68da6d43aab7501d0433c1be"
   },
   "config/app.php": {
     "mtime": 1793294305.921885,
@@ -306,10 +306,10 @@
     "semantic_hash": "3c6ce2e6d16444282b24a9aa63885563"
   },
   "routes/web.php": {
-    "mtime": 1793298253.7557673,
-    "seen": 1793299258.980508,
-    "ast_hash": "e1273add5e7607c69324cb6c08cb6ec2",
-    "semantic_hash": "e1273add5e7607c69324cb6c08cb6ec2"
+    "mtime": 1793383963.2560713,
+    "seen": 1793393808.2007449,
+    "ast_hash": "009a9dfdefe452df9a952e1696bd2c31",
+    "semantic_hash": "009a9dfdefe452df9a952e1696bd2c31"
   },
   "tests/Feature/AmadeusGdsIntegrationTest.php": {
     "mtime": 1793294737.2440996,
@@ -396,22 +396,22 @@
     "semantic_hash": "be0f3535265921a2613cdaf169e99917"
   },
   "app/Http/Controllers/DashboardController.php": {
-    "mtime": 1793298095.5801828,
-    "seen": 1793299258.980348,
-    "ast_hash": "2db42b9334a0cf90815a41a2e9503775",
-    "semantic_hash": "2db42b9334a0cf90815a41a2e9503775"
+    "mtime": 1793383399.3505328,
+    "seen": 1793393808.2005377,
+    "ast_hash": "b7710e48e9c199679f0f81cb4bdb9c36",
+    "semantic_hash": "b7710e48e9c199679f0f81cb4bdb9c36"
   },
   "app/Http/Controllers/InstallerController.php": {
-    "mtime": 1793300366.2099128,
-    "seen": 1793300763.6516259,
-    "ast_hash": "ec4c340f0460dc6c3efd6bd1c55afe88",
-    "semantic_hash": "ec4c340f0460dc6c3efd6bd1c55afe88"
+    "mtime": 1793388648.9865487,
+    "seen": 1793393808.200541,
+    "ast_hash": "da187cae4b3af51a644bb9797399e9eb",
+    "semantic_hash": "da187cae4b3af51a644bb9797399e9eb"
   },
   "app/Http/Middleware/EnsureAppIsInstalled.php": {
-    "mtime": 1793080013.0471108,
-    "seen": 1793127398.0699155,
-    "ast_hash": "16282f5899a226d0abb85396e8bddf68",
-    "semantic_hash": "16282f5899a226d0abb85396e8bddf68"
+    "mtime": 1793388602.230598,
+    "seen": 1793393808.2005584,
+    "ast_hash": "8bec84d2970e60e003912a1ae2188b58",
+    "semantic_hash": "8bec84d2970e60e003912a1ae2188b58"
   },
   "app/Http/Middleware/EnsureUserIsInstructor.php": {
     "mtime": 1793080013.0471108,
@@ -450,16 +450,16 @@
     "semantic_hash": "771807e18da323a1ddce75bd8d93d215"
   },
   "app/Services/Amadeus/QueueService.php": {
-    "mtime": 1792950675.105493,
-    "seen": 1793127398.0699306,
-    "ast_hash": "944dd671d601b196e982dae9d1f85e1e",
-    "semantic_hash": "944dd671d601b196e982dae9d1f85e1e"
+    "mtime": 1793383275.8290412,
+    "seen": 1793393808.2006109,
+    "ast_hash": "061ee5beb782534ae3257ea6a10e99db",
+    "semantic_hash": "061ee5beb782534ae3257ea6a10e99db"
   },
   "app/Services/Installer/InstallerService.php": {
-    "mtime": 1793300345.9144206,
-    "seen": 1793300763.6517184,
-    "ast_hash": "e15053b24c21314119518acece5a5450",
-    "semantic_hash": "e15053b24c21314119518acece5a5450"
+    "mtime": 1793386004.7854807,
+    "seen": 1793393808.2006154,
+    "ast_hash": "b359469a35100de45940f86b55aeec5b",
+    "semantic_hash": "b359469a35100de45940f86b55aeec5b"
   },
   "app/Services/Training/ScenarioService.php": {
     "mtime": 1793005908.8794887,
@@ -516,22 +516,22 @@
     "semantic_hash": "88825e643d67c670cd05ec051e3e3115"
   },
   "tests/Feature/DualRoleDashboardTest.php": {
-    "mtime": 1793266097.7504063,
-    "seen": 1793266595.4164686,
-    "ast_hash": "1ebf5ecb095c6977448f0d845f80e1eb",
-    "semantic_hash": "1ebf5ecb095c6977448f0d845f80e1eb"
+    "mtime": 1793383418.4119272,
+    "seen": 1793393808.2007542,
+    "ast_hash": "1d98e1382f4da685112e5f32b1f89e33",
+    "semantic_hash": "1d98e1382f4da685112e5f32b1f89e33"
   },
   "tests/Feature/InstallerTest.php": {
-    "mtime": 1793300417.5541692,
-    "seen": 1793300763.6518598,
-    "ast_hash": "d7a4aa0c3fbf6561d1ddbc2a897cbd68",
-    "semantic_hash": "d7a4aa0c3fbf6561d1ddbc2a897cbd68"
+    "mtime": 1793388693.8764632,
+    "seen": 1793393808.2007582,
+    "ast_hash": "e6c5f6b7e163033495b81291978471b2",
+    "semantic_hash": "e6c5f6b7e163033495b81291978471b2"
   },
   "tests/Feature/SecurityHardeningTest.php": {
-    "mtime": 1793298314.963303,
-    "seen": 1793299258.9805357,
-    "ast_hash": "f38e6616e7225428ed0be9963e576010",
-    "semantic_hash": "f38e6616e7225428ed0be9963e576010"
+    "mtime": 1793386041.7710063,
+    "seen": 1793393808.2007692,
+    "ast_hash": "b82674b6af4c991261e56c94d7b58616",
+    "semantic_hash": "b82674b6af4c991261e56c94d7b58616"
   },
   "tests/Feature/StudentInstructorAccountSeparationTest.php": {
     "mtime": 1793080013.066109,
@@ -888,10 +888,10 @@
     "semantic_hash": "b6216d61c03e6ce0c9aea6ca7808f7ca"
   },
   "app/Http/Controllers/PasswordResetController.php": {
-    "mtime": 1793297942.2427487,
-    "seen": 1793299258.9803567,
-    "ast_hash": "62151353580011b7e54ba5ca97bad152",
-    "semantic_hash": "62151353580011b7e54ba5ca97bad152"
+    "mtime": 1793383878.4301324,
+    "seen": 1793393808.2005503,
+    "ast_hash": "8eaece3406f09bab89f030dd128cfc47",
+    "semantic_hash": "8eaece3406f09bab89f030dd128cfc47"
   },
   "resources/views/auth/forgot-password.blade.php": {
     "mtime": 1793297948.656934,
@@ -912,10 +912,10 @@
     "semantic_hash": "4a374dd00a6c79c72e587aaa9df209a5"
   },
   "tests/Feature/PasswordResetTest.php": {
-    "mtime": 1793297974.5726826,
-    "seen": 1793299258.980525,
-    "ast_hash": "f80b552a77a9bc0b6d041c50ef3cd1b2",
-    "semantic_hash": "f80b552a77a9bc0b6d041c50ef3cd1b2"
+    "mtime": 1793383901.5586617,
+    "seen": 1793393808.200765,
+    "ast_hash": "caa727bcfc63002367c62ad12cc13601",
+    "semantic_hash": "caa727bcfc63002367c62ad12cc13601"
   },
   "features.md": {
     "mtime": 1793112881.5317073,
