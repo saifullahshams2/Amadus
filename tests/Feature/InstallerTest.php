@@ -355,4 +355,35 @@ class InstallerTest extends TestCase
         $response->assertRedirect(route('landing'));
         $response->assertSessionHas('info', 'Application is already installed and installer is locked.');
     }
+
+    public function test_16_sqlite_database_path_resolves_to_absolute_path(): void
+    {
+        $sqlitePath = config('database.connections.sqlite.database');
+
+        $this->assertNotEmpty($sqlitePath);
+        $this->assertTrue(
+            $sqlitePath === ':memory:' ||
+            str_starts_with($sqlitePath, '/') ||
+            str_starts_with($sqlitePath, '\\') ||
+            (strlen($sqlitePath) > 2 && ctype_alpha($sqlitePath[0]) && $sqlitePath[1] === ':')
+        );
+        $this->assertFalse(File::isDirectory(public_path('database')));
+    }
+
+    public function test_17_middleware_heals_missing_installed_lock_when_database_has_instructor(): void
+    {
+        $instructor = User::factory()->create([
+            'role' => 'instructor',
+        ]);
+
+        $this->installerService->uninstall();
+        $this->assertFalse($this->installerService->isInstalled());
+
+        EnsureAppIsInstalled::$bypassInTesting = false;
+
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $this->assertTrue($this->installerService->isInstalled());
+        $this->assertFileExists(storage_path('installed'));
+    }
 }

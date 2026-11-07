@@ -30,10 +30,10 @@
     "semantic_hash": "e7f99435df94078d5b0802e7642b209a"
   },
   "app/Http/Controllers/TerminalController.php": {
-    "mtime": 1793385939.565599,
-    "seen": 1793393808.2005534,
-    "ast_hash": "86fe1a08691b9b11fb901f428bea39a6",
-    "semantic_hash": "86fe1a08691b9b11fb901f428bea39a6"
+    "mtime": 1794074088.7935605,
+    "seen": 1794075622.124663,
+    "ast_hash": "990870486a10f0bfaeb90af632a6e22c",
+    "semantic_hash": "990870486a10f0bfaeb90af632a6e22c"
   },
   "app/Http/Controllers/TrainingController.php": {
     "mtime": 1793384004.285007,
@@ -78,22 +78,22 @@
     "semantic_hash": "f3654b21272db3555d956339828e746f"
   },
   "app/Providers/AppServiceProvider.php": {
-    "mtime": 1793388257.9696777,
-    "seen": 1793393808.2005947,
-    "ast_hash": "c6306c05fc0cf139ebbede31679a8c75",
-    "semantic_hash": "c6306c05fc0cf139ebbede31679a8c75"
+    "mtime": 1794075142.417363,
+    "seen": 1794075622.1246865,
+    "ast_hash": "eee5123722f6ad2fc3bb72e9bd6aff4b",
+    "semantic_hash": "eee5123722f6ad2fc3bb72e9bd6aff4b"
   },
   "app/Services/Amadeus/AmadeusParser.php": {
-    "mtime": 1793383244.8264382,
-    "seen": 1793393808.2005973,
-    "ast_hash": "36c36a6005ad177a9dd47a6bfaa7a9b0",
-    "semantic_hash": "36c36a6005ad177a9dd47a6bfaa7a9b0"
+    "mtime": 1794074088.7945607,
+    "seen": 1794075622.1246886,
+    "ast_hash": "9432216185d2423e648757eb44583d0e",
+    "semantic_hash": "9432216185d2423e648757eb44583d0e"
   },
   "app/Services/Amadeus/AvailabilityService.php": {
-    "mtime": 1792944286.5397077,
-    "seen": 1793127398.0699275,
-    "ast_hash": "6b99dcee58422604b8db2b1f5a72cb1d",
-    "semantic_hash": "6b99dcee58422604b8db2b1f5a72cb1d"
+    "mtime": 1794074088.7945607,
+    "seen": 1794075622.1246896,
+    "ast_hash": "7751d3abec26a6f8715fc5bfa5c1470c",
+    "semantic_hash": "7751d3abec26a6f8715fc5bfa5c1470c"
   },
   "app/Services/Amadeus/DecodeService.php": {
     "mtime": 1792944286.6770666,
@@ -102,10 +102,10 @@
     "semantic_hash": "ccfe417f1e0948efc2ef92cb2e1fb656"
   },
   "app/Services/Amadeus/PnrService.php": {
-    "mtime": 1792944286.3156242,
-    "seen": 1793127398.069929,
-    "ast_hash": "acec1e54616fd61f671e5748de2d07f5",
-    "semantic_hash": "acec1e54616fd61f671e5748de2d07f5"
+    "mtime": 1794074088.7945607,
+    "seen": 1794075622.1246924,
+    "ast_hash": "9eafe070d02711bb60919162e21c745a",
+    "semantic_hash": "9eafe070d02711bb60919162e21c745a"
   },
   "app/Services/Amadeus/PricingService.php": {
     "mtime": 1792944286.6085014,
@@ -168,10 +168,10 @@
     "semantic_hash": "9775fa662b3c35e5f130b66f785155d2"
   },
   "config/database.php": {
-    "mtime": 1792910773.202267,
-    "seen": 1793127398.0699408,
-    "ast_hash": "594a01554ab7583541a8fb05a69f935f",
-    "semantic_hash": "594a01554ab7583541a8fb05a69f935f"
+    "mtime": 1794075134.874222,
+    "seen": 1794075622.1247134,
+    "ast_hash": "377b7506340fa3dde1e3a17e2aee4f9f",
+    "semantic_hash": "377b7506340fa3dde1e3a17e2aee4f9f"
   },
   "config/filesystems.php": {
     "mtime": 1792910773.2023222,
@@ -408,10 +408,10 @@
     "semantic_hash": "da187cae4b3af51a644bb9797399e9eb"
   },
   "app/Http/Middleware/EnsureAppIsInstalled.php": {
-    "mtime": 1793388602.230598,
-    "seen": 1793393808.2005584,
-    "ast_hash": "8bec84d2970e60e003912a1ae2188b58",
-    "semantic_hash": "8bec84d2970e60e003912a1ae2188b58"
+    "mtime": 1794075212.1476388,
+    "seen": 1794075622.1246672,
+    "ast_hash": "2484b1e854b30ab2a0637aeaca668e3c",
+    "semantic_hash": "2484b1e854b30ab2a0637aeaca668e3c"
   },
   "app/Http/Middleware/EnsureUserIsInstructor.php": {
     "mtime": 1793080013.0471108,
@@ -450,10 +450,10 @@
     "semantic_hash": "771807e18da323a1ddce75bd8d93d215"
   },
   "app/Services/Amadeus/QueueService.php": {
-    "mtime": 1793383275.8290412,
-    "seen": 1793393808.2006109,
-    "ast_hash": "061ee5beb782534ae3257ea6a10e99db",
-    "semantic_hash": "061ee5beb782534ae3257ea6a10e99db"
+    "mtime": 1794074088.7945607,
+    "seen": 1794075622.1246955,
+    "ast_hash": "24fae36e30184dcfc3b32f009a6c2552",
+    "semantic_hash": "24fae36e30184dcfc3b32f009a6c2552"
   },
   "app/Services/Installer/InstallerService.php": {
     "mtime": 1793386004.7854807,
@@ -522,10 +522,10 @@
     "semantic_hash": "1d98e1382f4da685112e5f32b1f89e33"
   },
   "tests/Feature/InstallerTest.php": {
-    "mtime": 1793388693.8764632,
-    "seen": 1793393808.2007582,
-    "ast_hash": "e6c5f6b7e163033495b81291978471b2",
-    "semantic_hash": "e6c5f6b7e163033495b81291978471b2"
+    "mtime": 1794075201.900454,
+    "seen": 1794075622.1247916,
+    "ast_hash": "81ada5a22d11e40aad4a24aa4a4f6cba",
+    "semantic_hash": "81ada5a22d11e40aad4a24aa4a4f6cba"
   },
   "tests/Feature/SecurityHardeningTest.php": {
     "mtime": 1793386041.7710063,
@@ -952,5 +952,23 @@
     "seen": 1793299258.980534,
     "ast_hash": "1a3a6a8d464c9134a2a7042bf6d1e667",
     "semantic_hash": "1a3a6a8d464c9134a2a7042bf6d1e667"
+  },
+  "tests/Feature/AmadeusCmdReferenceTest.php": {
+    "mtime": 1794074088.7945607,
+    "seen": 1794075622.1247842,
+    "ast_hash": "16f6c09d67197dfc63b88d979d5b53b4",
+    "semantic_hash": "16f6c09d67197dfc63b88d979d5b53b4"
+  },
+  "amadeus-cmd-1.md": {
+    "mtime": 1794074088.7925606,
+    "seen": 1794075622.124892,
+    "ast_hash": "a186c233fa0e51946ccaa8244990a091",
+    "semantic_hash": "a186c233fa0e51946ccaa8244990a091"
+  },
+  "amadeus-cmd-2.md": {
+    "mtime": 1794074088.7935605,
+    "seen": 1794075622.1248932,
+    "ast_hash": "11ab9ae85b22fc1e33d67a104307c0a9",
+    "semantic_hash": "11ab9ae85b22fc1e33d67a104307c0a9"
   }
 }

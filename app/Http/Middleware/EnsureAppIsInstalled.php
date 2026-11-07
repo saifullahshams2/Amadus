@@ -2,9 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Services\Installer\InstallerService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureAppIsInstalled
@@ -28,6 +30,21 @@ class EnsureAppIsInstalled
         }
 
         $isInstalled = $this->installerService->isInstalled();
+
+        if (! $isInstalled) {
+            try {
+                if (Schema::hasTable('users') && User::where('role', 'instructor')->exists()) {
+                    $instructor = User::where('role', 'instructor')->first();
+                    if ($instructor) {
+                        $this->installerService->markInstalled($instructor);
+                        $isInstalled = true;
+                    }
+                }
+            } catch (\Throwable) {
+                // Database not configured or unreachable yet
+            }
+        }
+
         $isInstallRoute = $request->is('install') || $request->is('install/*');
 
         // If installed and trying to visit installer, redirect away and lock access

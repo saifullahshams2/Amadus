@@ -85,13 +85,18 @@ class AppServiceProvider extends ServiceProvider
         // 4. If default database is SQLite and uninstalled, ensure SQLite database file exists
         if (! file_exists(storage_path('installed'))) {
             $sqlitePath = config('database.connections.sqlite.database');
-            if (config('database.default') === 'sqlite' && is_string($sqlitePath) && $sqlitePath !== ':memory:') {
-                $dir = dirname($sqlitePath);
+            if (config('database.default') === 'sqlite' && is_string($sqlitePath) && $sqlitePath !== ':memory:' && ! str_starts_with($sqlitePath, 'file:')) {
+                $isAbsolute = str_starts_with($sqlitePath, '/')
+                    || str_starts_with($sqlitePath, '\\')
+                    || (strlen($sqlitePath) > 2 && ctype_alpha($sqlitePath[0]) && $sqlitePath[1] === ':');
+                $absoluteSqlitePath = $isAbsolute ? $sqlitePath : base_path($sqlitePath);
+
+                $dir = dirname($absoluteSqlitePath);
                 if (! is_dir($dir)) {
                     @mkdir($dir, 0755, true);
                 }
-                if (! file_exists($sqlitePath)) {
-                    @touch($sqlitePath);
+                if (! file_exists($absoluteSqlitePath)) {
+                    @touch($absoluteSqlitePath);
                 }
             }
         }

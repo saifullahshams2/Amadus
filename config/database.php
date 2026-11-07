@@ -35,7 +35,23 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            'database' => (function () {
+                $database = env('DB_DATABASE');
+
+                if (empty($database)) {
+                    return database_path('database.sqlite');
+                }
+
+                if ($database === ':memory:' || str_starts_with($database, 'file:')) {
+                    return $database;
+                }
+
+                $isAbsolute = str_starts_with($database, '/')
+                    || str_starts_with($database, '\\')
+                    || (strlen($database) > 2 && ctype_alpha($database[0]) && $database[1] === ':');
+
+                return $isAbsolute ? $database : base_path($database);
+            })(),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
             'busy_timeout' => null,
