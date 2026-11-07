@@ -24,9 +24,14 @@ class PnrService
             'segments' => [],
             'contacts' => [],
             'remarks' => [],
+            'options' => [],
+            'seatRequests' => [],
             'specialServiceRequests' => [],
             'tsts' => [],
             'tickets' => [],
+            'history' => [
+                strtoupper(date('dM')).' '.gmdate('Hi')."Z CR-CREATION {$officeId}/{$agentId}",
+            ],
         ];
     }
 
@@ -99,16 +104,29 @@ class PnrService
         // 1. Passengers
         if (! empty($pnr['passengers'])) {
             foreach ($pnr['passengers'] as $idx => $pax) {
-                $paxStr = '  '.($idx + 1).'.'.strtoupper($pax['lastName']).'/'.strtoupper($pax['firstName']);
+                $paxNum = $idx + 1;
+                $paxId = $pax['id'] ?? "{$paxNum}.1";
+                $paxStr = '  '.$paxId.'.'.strtoupper($pax['lastName']).'/'.strtoupper($pax['firstName']);
+
                 if (! empty($pax['title'])) {
                     $paxStr .= ' '.strtoupper($pax['title']);
                 }
+
                 if (($pax['type'] ?? '') === 'CHD') {
-                    $paxStr .= '(CHD/'.($pax['dateOfBirth'] ?? '').')';
+                    $paxStr .= ! empty($pax['dateOfBirth']) ? "(CHD/{$pax['dateOfBirth']})" : '(CHD)';
                 }
-                if (($pax['type'] ?? '') === 'INF') {
+
+                if (! empty($pax['infant'])) {
+                    $inf = $pax['infant'];
+                    if (! empty($inf['lastName']) && strtoupper($inf['lastName']) !== strtoupper($pax['lastName'])) {
+                        $paxStr .= '(INF'.strtoupper($inf['lastName']).'/'.strtoupper($inf['firstName']).')';
+                    } else {
+                        $paxStr .= '(INF/'.strtoupper($inf['firstName']).')';
+                    }
+                } elseif (($pax['type'] ?? '') === 'INF') {
                     $paxStr .= '(INF/'.($pax['accompaniedBy'] ?? '').')';
                 }
+
                 $lines[] = $paxStr;
             }
         }
@@ -118,10 +136,33 @@ class PnrService
         // 2. Flight Segments
         if (! empty($pnr['segments'])) {
             foreach ($pnr['segments'] as $seg) {
-                $fltNo = str_pad($seg['flightNumber'], 3, ' ', STR_PAD_LEFT);
-                $seats = $seg['seats'];
-                $status = ($seg['status'] ?? 'HK').$seats;
-                $lines[] = "  {$seg['segmentNumber']}  {$seg['airlineCode']} {$fltNo} {$seg['bookingClass']} {$seg['departureDate']} {$seg['departureAirport']}{$seg['arrivalAirport']} {$status}  {$seg['departureTime']} {$seg['arrivalTime']}   *1A/E*";
+                if (($seg['type'] ?? '') === 'ARNK' || ($seg['airlineCode'] ?? '') === 'ARNK') {
+                    $lines[] = "  {$seg['segmentNumber']}  ARNK";
+                    $elementCounter++;
+
+                    continue;
+                }
+
+                if (($seg['status'] ?? '') === 'OPEN' || ($seg['flightNumber'] ?? '') === 'OPEN') {
+                    $depArr = "{$seg['departureAirport']}{$seg['arrivalAirport']}";
+                    $lines[] = "  {$seg['segmentNumber']}  {$seg['airlineCode']} OPEN {$seg['bookingClass']}       {$depArr} OPEN    OPEN OPEN   *1A/E*";
+                    $elementCounter++;
+
+                    continue;
+                }
+
+                $fltNo = str_pad((string) ($seg['flightNumber'] ?? '001'), 3, ' ', STR_PAD_LEFT);
+                $seats = $seg['seats'] ?? 1;
+                $statusCode = $seg['status'] ?? 'HK';
+                $statusStr = $statusCode.$seats;
+                $passiveTag = ! empty($seg['passiveCarrier']) ? "  /{$seg['passiveCarrier']}" : '   *1A/E*';
+                $depDate = $seg['departureDate'] ?? '15MAR';
+                $depApt = $seg['departureAirport'] ?? 'DOH';
+                $arrApt = $seg['arrivalAirport'] ?? 'LHR';
+                $depTime = $seg['departureTime'] ?? '0800';
+                $arrTime = $seg['arrivalTime'] ?? '1230';
+
+                $lines[] = "  {$seg['segmentNumber']}  {$seg['airlineCode']} {$fltNo} {$seg['bookingClass']} {$depDate} {$depApt}{$arrApt} {$statusStr}  {$depTime} {$arrTime}{$passiveTag}";
                 $elementCounter++;
             }
         }
@@ -142,49 +183,220 @@ class PnrService
             $elementCounter++;
         }
 
-        // 5. Special Service Requests
+        // 5. Special Service Requests (SSR / OSI)
         if (! empty($pnr['specialServiceRequests'])) {
             foreach ($pnr['specialServiceRequests'] as $sr) {
-                $lines[] = "  {$elementCounter} {$sr['type']} {$sr['code']} {$sr['text']}";
+                $prefix = $sr['type'] ?? 'SSR';
+                $code = $sr['code'] ?? '';
+                $text = $sr['text'] ?? '';
+                $lines[] = "  {$elementCounter} {$prefix} {$code} {$text}";
                 $elementCounter++;
             }
         }
 
-        // 6. Remarks
+        // 6. Seat Requests
+        if (! empty($pnr['seatRequests'])) {
+            foreach ($pnr['seatRequests'] as $seatReq) {
+                $reqText = is_array($seatReq) ? ($seatReq['text'] ?? 'ST') : $seatReq;
+                $lines[] = "  {$elementCounter} ST {$reqText}";
+                $elementCounter++;
+            }
+        }
+
+        // 7. Options
+        if (! empty($pnr['options'])) {
+            foreach ($pnr['options'] as $opt) {
+                $lines[] = "  {$elementCounter} OP {$opt['date']}/{$opt['text']}";
+                $elementCounter++;
+            }
+        }
+
+        // 8. Remarks (General RM and Confidential RC)
         if (! empty($pnr['remarks'])) {
             foreach ($pnr['remarks'] as $rem) {
-                $lines[] = "  {$elementCounter} RM {$rem}";
+                if (is_array($rem)) {
+                    $tag = ($rem['type'] ?? 'GENERAL') === 'CONFIDENTIAL' ? 'RC' : 'RM';
+                    $text = $rem['text'] ?? '';
+                } else {
+                    $tag = 'RM';
+                    $text = $rem;
+                }
+                $lines[] = "  {$elementCounter} {$tag} {$text}";
                 $elementCounter++;
             }
         }
 
-        // 7. Issued Tickets (FA lines)
+        // Split Cross-References
+        if (! empty($pnr['splitTo'])) {
+            $lines[] = "  {$elementCounter} RM SPLIT TO {$pnr['splitTo']}";
+            $elementCounter++;
+        }
+        if (! empty($pnr['splitFrom'])) {
+            $lines[] = "  {$elementCounter} RM SPLIT FROM {$pnr['splitFrom']}";
+            $elementCounter++;
+        }
+
+        // 9. Issued Tickets (FA lines & FH lines)
         if (! empty($pnr['tickets'])) {
             $carrier = $pnr['segments'][0]['airlineCode'] ?? '1A';
             foreach ($pnr['tickets'] as $tkt) {
-                $lines[] = "  {$elementCounter} FA PAX {$tkt['ticketNumber']}/ET{$carrier}/{$dateStr}";
+                $paxAssoc = ! empty($tkt['paxIndex']) ? "/P{$tkt['paxIndex']}" : '';
+                $tktMethod = $tkt['method'] ?? 'FA';
+                if (str_starts_with($tktMethod, 'FH')) {
+                    $paxType = $tkt['passengerType'] ?? 'PAX';
+                    $lines[] = "  {$elementCounter} {$tktMethod} {$paxType} {$tkt['ticketNumber']}{$paxAssoc}";
+                } else {
+                    $lines[] = "  {$elementCounter} FA PAX {$tkt['ticketNumber']}/ET{$carrier}/{$dateStr}{$paxAssoc}";
+                }
                 $elementCounter++;
             }
         }
 
-        // 8. Form of Payment
+        // 10. Form of Payment
         if (! empty($pnr['fop'])) {
             $lines[] = "  {$elementCounter} FP {$pnr['fop']['details']}";
             $elementCounter++;
         }
 
-        // 9. Commission
+        // 11. Commission
         if (! empty($pnr['commission'])) {
             $lines[] = "  {$elementCounter} FM {$pnr['commission']}";
             $elementCounter++;
         }
 
-        // 10. Received From
+        // 12. Received From
         if (! empty($pnr['receivedFrom'])) {
             $lines[] = "  {$elementCounter} RF {$pnr['receivedFrom']}";
             $elementCounter++;
         }
 
         return $lines;
+    }
+
+    public function formatSeatMap(string $carrier, string $flightNumber, string $equipment, int $segmentNumber): array
+    {
+        $eqName = ($equipment === '77W') ? 'BOEING 777-300ER' : (($equipment === '359') ? 'AIRBUS A350-900' : 'AIRBUS A320');
+
+        return [
+            "--- SEAT MAP : {$carrier} {$flightNumber} - {$eqName} - SEGMENT {$segmentNumber} ---",
+            '     A B C   D E F G   H J K',
+            ' 20  . . .   . . . .   . . .',
+            ' 21  . . X   . . . .   X . .',
+            ' 22  . . .   X X . .   . . .',
+            ' 23  . . .   . . . .   . . .',
+            ' 24  . X .   . . . .   . X .',
+            ' 25  . . .   . . . .   . . .',
+            '( . AVAILABLE   X OCCUPIED )',
+            'USE ST/R/<SEAT> (E.G. ST/R/20K) TO ASSIGN SEAT',
+        ];
+    }
+
+    public function formatPnrHistory(array $pnr, ?int $segmentNumber = null): array
+    {
+        $rloc = $pnr['recordLocator'] ?? 'ACTIVE';
+        $office = $pnr['creationOffice'] ?? 'LON1A0980';
+        $agent = $pnr['creationAgent'] ?? '1234AB';
+        $dateStr = strtoupper(date('dM'));
+        $timeStr = gmdate('Hi').'Z';
+
+        if ($segmentNumber !== null) {
+            $lines = ["--- PNR HISTORY : SEGMENT {$segmentNumber} (RLOC: {$rloc}) ---"];
+            if (! empty($pnr['segments'])) {
+                foreach ($pnr['segments'] as $s) {
+                    if (($s['segmentNumber'] ?? 0) === $segmentNumber) {
+                        $lines[] = " 01 SS {$s['airlineCode']} {$s['flightNumber']} {$s['bookingClass']} {$s['departureDate']} {$s['departureAirport']}{$s['arrivalAirport']} HK{$s['seats']}  {$office}/{$agent}";
+                        $lines[] = ' 02 STATUS HK CONFIRMED VIA AMADEUS INVENTORY';
+                    }
+                }
+            }
+            if (count($lines) === 1) {
+                $lines[] = " NO HISTORY RECORDED FOR SEGMENT {$segmentNumber}";
+            }
+
+            return $lines;
+        }
+
+        $lines = ["--- PNR HISTORY : {$rloc} ---"];
+        if (! empty($pnr['history'])) {
+            foreach ($pnr['history'] as $idx => $histItem) {
+                $idxPad = str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT);
+                $lines[] = " {$idxPad} {$histItem}";
+            }
+        } else {
+            $lines[] = " 01 {$dateStr} {$timeStr} CR-CREATION {$office}/{$agent}";
+        }
+
+        // Add history milestones
+        $counter = count($lines);
+        if (! empty($pnr['passengers'])) {
+            foreach ($pnr['passengers'] as $p) {
+                $cPad = str_pad((string) $counter, 2, '0', STR_PAD_LEFT);
+                $lines[] = " {$cPad} NM1{$p['lastName']}/{$p['firstName']}";
+                $counter++;
+            }
+        }
+        if (! empty($pnr['segments'])) {
+            foreach ($pnr['segments'] as $s) {
+                $cPad = str_pad((string) $counter, 2, '0', STR_PAD_LEFT);
+                $lines[] = " {$cPad} SS {$s['airlineCode']} {$s['flightNumber']} {$s['bookingClass']} {$s['departureDate']} {$s['departureAirport']}{$s['arrivalAirport']} HK{$s['seats']}";
+                $counter++;
+            }
+        }
+        if (! empty($pnr['receivedFrom'])) {
+            $cPad = str_pad((string) $counter, 2, '0', STR_PAD_LEFT);
+            $lines[] = " {$cPad} RF {$pnr['receivedFrom']}";
+        }
+
+        return $lines;
+    }
+
+    public function formatAirlineLocators(array $pnr): array
+    {
+        $rloc = $pnr['recordLocator'] ?? 'ABC123';
+        $lines = [
+            '--- RECORD LOCATOR DISPLAY (RL) ---',
+            "1A / {$rloc}   (AMADEUS CENTRAL SYSTEM)",
+        ];
+
+        $carriers = [];
+        if (! empty($pnr['segments'])) {
+            foreach ($pnr['segments'] as $s) {
+                $carrier = $s['airlineCode'] ?? '';
+                if ($carrier && ! in_array($carrier, ['ARNK', 'OPEN', '1A'], true) && ! in_array($carrier, $carriers, true)) {
+                    $carriers[] = $carrier;
+                }
+            }
+        }
+
+        if (empty($carriers)) {
+            $carriers = ['QR'];
+        }
+
+        foreach ($carriers as $c) {
+            $hostLocator = $c.substr(md5($rloc.$c), 0, 4);
+            $lines[] = "{$c} / {$hostLocator}   (HOST SYSTEM CONFIRMED)";
+        }
+
+        return $lines;
+    }
+
+    public function formatPrintout(array $pnr, bool $full = false): array
+    {
+        $printerName = 'PRT01 (LON1A0980)';
+        $title = $full ? 'FULL HARDCOPY PRINTOUT (WRA)' : 'SCREEN PRINTOUT (WRS)';
+        $pnrDisplay = $this->formatPnrDisplay($pnr);
+
+        return array_merge(
+            [
+                "PRINT JOB SENT TO DEFAULT PRINTER: {$printerName}",
+                "*** {$title} ***",
+                '------------------------------------------------------------',
+            ],
+            $pnrDisplay,
+            [
+                '------------------------------------------------------------',
+                $full ? 'ALL PAGES PRINTED SUCCESSFULLY' : 'PAGE 1 OF 1 PRINTED SUCCESSFULLY',
+            ]
+        );
     }
 }

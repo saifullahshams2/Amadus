@@ -58,7 +58,7 @@ class TerminalController extends Controller
                 ]);
             }
 
-            foreach (['passengers', 'segments', 'contacts', 'tickets', 'tsts', 'specialServiceRequests', 'remarks'] as $key) {
+            foreach (['passengers', 'segments', 'contacts', 'tickets', 'tsts', 'specialServiceRequests', 'remarks', 'options', 'seatRequests', 'history'] as $key) {
                 if (! array_key_exists($key, $state['activePnr']) || $state['activePnr'][$key] === null) {
                     $state['activePnr'][$key] = [];
                 } elseif (! is_array($state['activePnr'][$key])) {

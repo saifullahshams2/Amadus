@@ -60,23 +60,65 @@ class AvailabilityService
         'WY' => ['MCT'],
     ];
 
-    public function search(string $query): AvailabilityResult
+    public function search(string $query, string $displayType = 'AN'): AvailabilityResult
     {
         $clean = strtoupper(trim($query));
-        // Regex for: [DATE: 1-2 digits + 3 letters][ORIG: 3 chars][DEST: 3 chars][/A<carrier>]
-        if (! preg_match('/^(\d{1,2}[A-Z]{3})?([A-Z]{3})([A-Z]{3})(?:\/A([A-Z0-9]{2}))?/', $clean, $matches)) {
+
+        // Parse modifiers separated by slash (e.g. /AEK, /XAUH, /CV, /1200)
+        $slashParts = explode('/', $clean);
+        $primary = array_shift($slashParts);
+
+        $carrierFilter = null;
+        $viaFilter = null;
+        $classFilter = null;
+        $timeFilter = null;
+
+        foreach ($slashParts as $part) {
+            $part = trim($part);
+            if ($part === '') {
+                continue;
+            }
+
+            if (str_starts_with($part, 'A')) {
+                $carrierFilter = substr($part, 1);
+            } elseif (str_starts_with($part, 'X')) {
+                $viaFilter = substr($part, 1);
+            } elseif (str_starts_with($part, 'C')) {
+                $classFilter = substr($part, 1);
+            } elseif (preg_match('/^\d{4}$/', $part)) {
+                $timeFilter = $part;
+            }
+        }
+
+        // Regex for: [DATE: 1-2 digits + 3 letters][ORIG: 3 chars][DEST: 3 chars][optional TIME: 4 digits][optional *RETURN_DATE: *DDMMM]
+        // or [DATE][ORIG][DEST][optional *RETURN_DATE][optional TIME]
+        $pattern1 = '/^(\d{1,2}[A-Z]{3})?([A-Z]{3})([A-Z]{3})(\d{4})?(?:\*(\d{1,2}[A-Z]{3}))?$/';
+        $pattern2 = '/^(\d{1,2}[A-Z]{3})?([A-Z]{3})([A-Z]{3})(?:\*(\d{1,2}[A-Z]{3}))?(\d{4})?$/';
+
+        if (preg_match($pattern1, $primary, $matches) && ! empty($matches[2])) {
+            $dateStr = $matches[1] ?? '';
+            $orig = $matches[2];
+            $dest = $matches[3];
+            $timeInPrimary = ! empty($matches[4]) ? $matches[4] : null;
+            $returnDateStr = ! empty($matches[5]) ? $matches[5] : null;
+        } elseif (preg_match($pattern2, $primary, $matches) && ! empty($matches[2])) {
+            $dateStr = $matches[1] ?? '';
+            $orig = $matches[2];
+            $dest = $matches[3];
+            $returnDateStr = ! empty($matches[4]) ? $matches[4] : null;
+            $timeInPrimary = ! empty($matches[5]) ? $matches[5] : null;
+        } else {
             return new AvailabilityResult(
                 '',
-                ['FORMAT: AN[DATE]<ORIGIN><DESTINATION>[/A<AIRLINE>] (E.G. AN15NOVLHRJFK OR AN20DECDXBLHR/AEK)'],
+                ['FORMAT: AN[DATE]<ORIGIN><DESTINATION>[TIME][*RETURNDATE][/A<AIRLINE>][/X<VIA>][/C<CLASS>]'],
                 [],
                 true
             );
         }
 
-        $dateStr = $matches[1] ?? '';
-        $orig = $matches[2];
-        $dest = $matches[3];
-        $carrierFilter = $matches[4] ?? null;
+        if ($timeInPrimary) {
+            $timeFilter = $timeInPrimary;
+        }
 
         $validOrig = Airport::find($orig) ?? (isset(DecodeService::METRO_CODES[$orig]));
         $validDest = Airport::find($dest) ?? (isset(DecodeService::METRO_CODES[$dest]));
@@ -88,19 +130,78 @@ class AvailabilityService
             return new AvailabilityResult('', ["INVALID DESTINATION CITY/AIRPORT CODE: {$dest}"], [], true);
         }
 
-        // Date calculation
-        $day = 15;
-        $monthStr = 'NOV';
-        $dayName = 'FR';
+        // Outbound date calculation
+        $outboundCalc = $this->calculateDate($dateStr);
+        if ($outboundCalc['isError']) {
+            return new AvailabilityResult('', [$outboundCalc['errorMessage']], [], true);
+        }
+        $formattedDate = $outboundCalc['formattedDate'];
+        $dayName = $outboundCalc['dayName'];
+        $day = $outboundCalc['day'];
 
+        $prefixTitle = ($displayType === 'SN') ? 'SN ' : '';
+        $timeTitle = $timeFilter ? "  {$timeFilter}" : '';
+        $headerLine = "{$prefixTitle}{$formattedDate}-{$dayName}  {$orig}{$dest}{$timeTitle}                                                        ";
+
+        // Generate Outbound Flights (lines 1..6)
+        $outboundResult = $this->generateScheduleLines(
+            orig: $orig,
+            dest: $dest,
+            formattedDate: $formattedDate,
+            day: $day,
+            startLineNum: 1,
+            maxLines: 6,
+            carrierFilter: $carrierFilter,
+            viaFilter: $viaFilter,
+            classFilter: $classFilter,
+            timeFilter: $timeFilter
+        );
+
+        $allOutputLines = $outboundResult['outputLines'];
+        $allSchedules = $outboundResult['schedules'];
+
+        // If return date specified (e.g. AN12MARDOHDXB*15MAR)
+        if ($returnDateStr) {
+            $inboundCalc = $this->calculateDate($returnDateStr);
+            if (! $inboundCalc['isError']) {
+                $retFormattedDate = $inboundCalc['formattedDate'];
+                $retDayName = $inboundCalc['dayName'];
+                $retDay = $inboundCalc['day'];
+
+                $allOutputLines[] = '';
+                $allOutputLines[] = "{$prefixTitle}{$retFormattedDate}-{$retDayName}  {$dest}{$orig}                                                        ";
+
+                $inboundResult = $this->generateScheduleLines(
+                    orig: $dest,
+                    dest: $orig,
+                    formattedDate: $retFormattedDate,
+                    day: $retDay,
+                    startLineNum: 11,
+                    maxLines: 6,
+                    carrierFilter: $carrierFilter,
+                    viaFilter: $viaFilter,
+                    classFilter: $classFilter,
+                    timeFilter: $timeFilter
+                );
+
+                $allOutputLines = array_merge($allOutputLines, $inboundResult['outputLines']);
+                $allSchedules = array_merge($allSchedules, $inboundResult['schedules']);
+            }
+        }
+
+        return new AvailabilityResult($headerLine, $allOutputLines, $allSchedules);
+    }
+
+    private function calculateDate(string $dateStr): array
+    {
         if ($dateStr !== '') {
             if (! preg_match('/^(\d{1,2})([A-Z]{3})$/', $dateStr, $dMatch)) {
-                return new AvailabilityResult('', ["INVALID DATE FORMAT: {$dateStr}. EXPECTED FORMAT: DDMMM (E.G. 15NOV)"], [], true);
+                return ['isError' => true, 'errorMessage' => "INVALID DATE FORMAT: {$dateStr}. EXPECTED FORMAT: DDMMM (E.G. 15NOV)"];
             }
             $day = (int) $dMatch[1];
             $monthStr = $dMatch[2];
             if (! isset(self::MONTH_MAP[$monthStr]) || $day < 1 || $day > 31) {
-                return new AvailabilityResult('', ["INVALID DATE: {$dateStr}"], [], true);
+                return ['isError' => true, 'errorMessage' => "INVALID DATE: {$dateStr}"];
             }
             $monthNum = self::MONTH_MAP[$monthStr];
             $year = (int) date('Y');
@@ -113,11 +214,33 @@ class AvailabilityService
         }
 
         $formattedDate = str_pad((string) $day, 2, '0', STR_PAD_LEFT).$monthStr;
-        $headerLine = "{$formattedDate}-{$dayName}  {$orig}{$dest}                                                        ";
 
+        return [
+            'isError' => false,
+            'day' => $day,
+            'monthStr' => $monthStr,
+            'dayName' => $dayName,
+            'formattedDate' => $formattedDate,
+        ];
+    }
+
+    private function generateScheduleLines(
+        string $orig,
+        string $dest,
+        string $formattedDate,
+        int $day,
+        int $startLineNum,
+        int $maxLines,
+        ?string $carrierFilter,
+        ?string $viaFilter,
+        ?string $classFilter,
+        ?string $timeFilter
+    ): array {
         // Carrier selection
         $carriersToUse = [];
         if ($carrierFilter && Airline::find($carrierFilter)) {
+            $carriersToUse[] = $carrierFilter;
+        } elseif ($carrierFilter) {
             $carriersToUse[] = $carrierFilter;
         } else {
             foreach (self::AIRLINE_HUBS as $carrier => $hubs) {
@@ -140,13 +263,32 @@ class AvailabilityService
             ['dep' => '2215', 'arr' => '0630', 'eq' => '35K', 'offset' => '+1'],
         ];
 
+        // If timeFilter is set (e.g. 1200), rotate times so departure >= timeFilter comes first
+        if ($timeFilter) {
+            $filterInt = (int) $timeFilter;
+            $bestIdx = 0;
+            $smallestDiff = 99999;
+            foreach ($times as $idx => $t) {
+                $depInt = (int) $t['dep'];
+                $diff = ($depInt >= $filterInt) ? ($depInt - $filterInt) : ($depInt + 2400 - $filterInt);
+                if ($diff < $smallestDiff) {
+                    $smallestDiff = $diff;
+                    $bestIdx = $idx;
+                }
+            }
+            $times = array_merge(array_slice($times, $bestIdx), array_slice($times, 0, $bestIdx));
+        }
+
         $schedules = [];
         $outputLines = [];
         $seed = (ord($orig[0]) + ord($dest[0]) + $day) % 99;
-        $lineNum = 1;
+        $lineNum = $startLineNum;
 
         $actualOrig = isset(DecodeService::METRO_CODES[$orig]) ? DecodeService::METRO_CODES[$orig][0] : $orig;
         $actualDest = isset(DecodeService::METRO_CODES[$dest]) ? DecodeService::METRO_CODES[$dest][0] : $dest;
+
+        $stops = $viaFilter ? 1 : 0;
+        $route = $viaFilter ? "/{$actualOrig} {$viaFilter} {$actualDest}" : "/{$actualOrig} {$actualDest}";
 
         for ($i = 0; $i < count($times); $i++) {
             $carrier = $carriersToUse[$i % count($carriersToUse)];
@@ -168,8 +310,23 @@ class AvailabilityService
                 ['classCode' => 'H', 'availableSeats' => 7, 'cabin' => 'ECONOMY'],
                 ['classCode' => 'K', 'availableSeats' => 5, 'cabin' => 'ECONOMY'],
                 ['classCode' => 'L', 'availableSeats' => 4, 'cabin' => 'ECONOMY'],
-                ['classCode' => 'V', 'availableSeats' => 2, 'cabin' => 'ECONOMY'],
+                ['classCode' => 'V', 'availableSeats' => 4, 'cabin' => 'ECONOMY'],
             ];
+
+            // If classFilter is requested, ensure it is available in class array
+            if ($classFilter) {
+                $hasReqClass = false;
+                foreach ($classes as &$cls) {
+                    if ($cls['classCode'] === $classFilter) {
+                        $cls['availableSeats'] = 9;
+                        $hasReqClass = true;
+                        break;
+                    }
+                }
+                if (! $hasReqClass) {
+                    $classes[] = ['classCode' => $classFilter, 'availableSeats' => 9, 'cabin' => 'ECONOMY'];
+                }
+            }
 
             $scheduleItem = [
                 'airlineCode' => $carrier,
@@ -181,7 +338,7 @@ class AvailabilityService
                 'arrivalTime' => $t['arr'],
                 'arrivalDayOffset' => $t['offset'] ?? null,
                 'equipment' => $t['eq'],
-                'stops' => 0,
+                'stops' => $stops,
                 'classes' => $classes,
             ];
 
@@ -193,12 +350,18 @@ class AvailabilityService
 
             $linePrefix = str_pad((string) $lineNum, 2, ' ', STR_PAD_LEFT);
             $carrierFlt = $carrier.' '.str_pad($flightNumber, 3, ' ', STR_PAD_LEFT);
-            $topClasses = 'J9 C9 D9 I9 W9 Y9 B9';
-            $bottomClasses = 'M9 H9 K9 L9 V9 Q9 S9';
-            $route = "/{$actualOrig} {$actualDest}";
+
+            if ($classFilter) {
+                $topClasses = "{$classFilter}9 J9 C9 D9 I9 W9 Y9";
+                $bottomClasses = 'B9 M9 H9 K9 L9 V9 Q9 S9';
+            } else {
+                $topClasses = 'J9 C9 D9 I9 W9 Y9 B9';
+                $bottomClasses = 'M9 H9 K9 L9 V9 Q9 S9';
+            }
+
             $offset = isset($t['offset']) ? $t['offset'] : '  ';
             $timesStr = "{$t['dep']}   {$t['arr']}{$offset}";
-            $tailStr = "{$t['eq']} 0     /E";
+            $tailStr = "{$t['eq']} {$stops}     /E";
 
             $l1 = " {$linePrefix}   {$carrierFlt}  {$topClasses} {$route}  {$timesStr}  {$tailStr}";
             $l2 = "             {$bottomClasses}";
@@ -207,11 +370,14 @@ class AvailabilityService
             $outputLines[] = $l2;
 
             $lineNum++;
-            if ($lineNum > 6) {
+            if (($lineNum - $startLineNum) >= $maxLines) {
                 break;
             }
         }
 
-        return new AvailabilityResult($headerLine, $outputLines, $schedules);
+        return [
+            'outputLines' => $outputLines,
+            'schedules' => $schedules,
+        ];
     }
 }

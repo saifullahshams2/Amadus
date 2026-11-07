@@ -174,6 +174,64 @@ class QueueService
     }
 
     /**
+     * Display specific queue with category and date range (QS2C30D1).
+     *
+     * @return array<int, string>
+     */
+    public function displaySpecificQueue(int $qNum, int $cat, int $dateRange, string $officeId = 'LON1A0980', ?string $userId = null): array
+    {
+        $res = $this->displayQueue($qNum, $officeId, $userId);
+        if (empty($res['items']) || $res['items']->isEmpty()) {
+            return [
+                "--- QUEUE {$qNum} CATEGORY {$cat} DATE RANGE {$dateRange} : {$officeId} ---",
+                'NO PNRS REQUIRING IMMEDIATE ATTENTION IN THIS CATEGORY/RANGE',
+            ];
+        }
+
+        $lines = [
+            "--- QUEUE {$qNum} CATEGORY {$cat} DATE RANGE {$dateRange} : {$officeId} ---",
+            'ITEM  LOCATOR  TRAINEE      URGENCY  DETAILS',
+            '-------------------------------------------------------------',
+        ];
+
+        foreach ($res['items'] as $idx => $item) {
+            $itemNum = str_pad((string) ($idx + 1), 4, ' ', STR_PAD_RIGHT);
+            $loc = str_pad($item->pnr_locator, 8, ' ', STR_PAD_RIGHT);
+            $user = str_pad($item->target_user_id ?: 'ALL', 12, ' ', STR_PAD_RIGHT);
+            $urgency = str_pad($item->pnr_summary['urgency'] ?? 'NORMAL', 8, ' ', STR_PAD_RIGHT);
+            $pax = $item->pnr_summary['passenger'] ?? 'PASSENGER';
+            $lines[] = "{$itemNum}  {$loc} {$user} {$urgency} {$pax} - {$item->message}";
+        }
+
+        return $lines;
+    }
+
+    /**
+     * Place a PNR on a specific queue (QE command).
+     *
+     * @return array<int, string>
+     */
+    public function placeOnQueue(int $qNum, array $pnr, string $officeId = 'LON1A0980', ?string $userId = null): array
+    {
+        $locator = $pnr['recordLocator'] ?? 'PENDNG';
+        $pax = ! empty($pnr['passengers']) ? ($pnr['passengers'][0]['lastName'].'/'.$pnr['passengers'][0]['firstName']) : 'PASSENGER';
+
+        $this->broadcastToQueue(
+            queueNumber: $qNum,
+            category: 'GENERAL',
+            pnrLocator: $locator,
+            pnrSummary: ['passenger' => $pax, 'urgency' => 'NORMAL'],
+            message: 'PLACED VIA QE COMMAND',
+            targetUserId: $userId,
+            officeId: $officeId
+        );
+
+        return [
+            "OK PLACED ON QUEUE {$qNum} / C0 / {$officeId}",
+        ];
+    }
+
+    /**
      * Broadcast or send a test PNR to a queue.
      */
     public function broadcastToQueue(
