@@ -1,9 +1,0 @@
-id,title,severity,timestamp,file
-vuln-0004,Password reset link poisoning via Host header leads to account takeover,HIGH,2026-11-08 16:45:34 UTC,vulnerabilities/vuln-0004.md
-vuln-0005,Unauthenticated PNR disclosure via guest-exempt ownership check in terminal RT retrieval,MEDIUM,2026-11-08 16:52:21 UTC,vulnerabilities/vuln-0005.md
-vuln-0006,Cross-cadet PNR disclosure via unscoped single-letter PNR index (RT/A) and list-line retrieval,MEDIUM,2026-11-08 16:53:26 UTC,vulnerabilities/vuln-0006.md
-vuln-0008,"Unauthenticated installer test-db endpoint: SSRF port-scan oracle, link-local blocklist bypass, and worker-exhaustion DoS",MEDIUM,2026-11-08 17:17:47 UTC,vulnerabilities/vuln-0008.md
-vuln-0007,Any instructor can delete any office's scenario and cascade-delete its student submissions,LOW,2026-11-08 16:54:15 UTC,vulnerabilities/vuln-0007.md
-vuln-0001,"CVE-2026-45070 in symfony/mime 8.1.7 (email header injection, transitive via laravel/framework)",INFO,2026-11-08 16:39:17 UTC,vulnerabilities/vuln-0001.md
-vuln-0002,"CVE-2026-118514 in symfony/http-foundation 8.1.9 (HEAD bypass of method-scoped RequestMatcher rules, transitive via laravel/framework)",INFO,2026-11-08 16:39:52 UTC,vulnerabilities/vuln-0002.md
-vuln-0003,"CVE-2026-118516 in symfony/routing 8.1.9 (host-placeholder path desync bypassing path-based access control, transitive via laravel/framework)",INFO,2026-11-08 16:40:12 UTC,vulnerabilities/vuln-0003.md
