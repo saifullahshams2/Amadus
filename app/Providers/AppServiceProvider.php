@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,7 +32,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Bind password reset links to the configured application URL so the
+        // link origin cannot be poisoned via Host/X-Forwarded-Host headers.
+        ResetPassword::createUrlUsing(function ($notifiable, string $token) {
+            $email = $notifiable->getEmailForPasswordReset();
+            $base = rtrim(config('app.url'), '/');
+
+            return "{$base}/reset-password/{$token}?email=".urlencode($email);
+        });
     }
 
     /**

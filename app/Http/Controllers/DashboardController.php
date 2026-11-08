@@ -453,6 +453,23 @@ class DashboardController extends Controller
             abort(403, 'Forbidden. Instructor access required.');
         }
 
+        $scenario = Scenario::find($id);
+
+        $canDelete = $scenario !== null && (
+            $scenario->created_by === $user->username
+            || trim((string) $scenario->created_by) === 'instructor'
+            || $scenario->created_by === ''
+            || $scenario->created_by === null
+        );
+
+        if (! $scenario || ! $canDelete) {
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['error' => "Scenario '{$id}' not found."], 404);
+            }
+
+            return redirect()->back()->withErrors(['error' => "Scenario '{$id}' not found."]);
+        }
+
         $deleted = $this->scenarios->deleteScenario($id);
 
         if (! $deleted) {

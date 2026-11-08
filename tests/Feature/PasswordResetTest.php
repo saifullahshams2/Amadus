@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -234,5 +235,30 @@ class PasswordResetTest extends TestCase
         ]);
         $res2->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_password_reset_url_is_pinned_to_app_url_and_cannot_be_poisoned(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'victim@amadeus.training',
+            'username' => 'victim_cadet',
+        ]);
+
+        $response = $this->withHeaders([
+            'Host' => 'attacker-controlled.example',
+            'X-Forwarded-Host' => 'attacker-controlled.example',
+        ])->post('/forgot-password', [
+            'email' => 'victim@amadeus.training',
+        ]);
+
+        $response->assertSessionHas('status');
+
+        $notification = new ResetPassword('test-token-xyz');
+        $mail = $notification->toMail($user);
+
+        $expectedBase = rtrim(config('app.url'), '/');
+        $this->assertStringStartsWith($expectedBase, $mail->actionUrl);
+        $this->assertStringNotContainsString('attacker-controlled.example', $mail->actionUrl);
+        $this->assertStringContainsString('/reset-password/test-token-xyz?email=victim%40amadeus.training', $mail->actionUrl);
     }
 }

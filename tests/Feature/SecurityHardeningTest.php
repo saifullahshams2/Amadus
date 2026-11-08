@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Pnr;
+use App\Models\QueueItem;
+use App\Models\Scenario;
 use App\Models\Submission;
 use App\Models\TerminalActivityLog;
 use App\Models\User;
@@ -693,5 +695,319 @@ class SecurityHardeningTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['username']);
+    }
+
+    public function test_guest_session_cannot_retrieve_stored_pnr_via_rt_locator(): void
+    {
+        Pnr::create([
+            'record_locator' => 'GSTP01',
+            'user_id' => 'student',
+            'office_id' => 'LON1A0980',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'GSTP01',
+                'passengers' => [
+                    ['lastName' => 'SECRETPAX', 'firstName' => 'ALICE'],
+                ],
+                'segments' => [],
+            ],
+        ]);
+
+        $res = $this->postJson('/api/terminal/execute', [
+            'command' => 'RT GSTP01',
+            'state' => [],
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertTrue($res->json('isError'));
+        $this->assertEquals('RT_UNAUTHENTICATED', $res->json('commandType'));
+        $this->assertStringContainsString('SIGN IN REQUIRED TO RETRIEVE A STORED PNR', implode(' ', $res->json('outputLines')));
+        $this->assertStringNotContainsString('SECRETPAX', implode(' ', $res->json('outputLines')));
+    }
+
+    public function test_guest_session_cannot_retrieve_stored_pnr_via_rt_surname(): void
+    {
+        Pnr::create([
+            'record_locator' => 'GSTP02',
+            'user_id' => 'student',
+            'office_id' => 'LON1A0980',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'GSTP02',
+                'passengers' => [
+                    ['lastName' => 'DOE', 'firstName' => 'JANE'],
+                ],
+                'segments' => [],
+            ],
+        ]);
+
+        $res = $this->postJson('/api/terminal/execute', [
+            'command' => 'RT/DOE',
+            'state' => [],
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertNotEquals('GSTP02', $res->json('updatedState.activePnr.recordLocator'));
+        $this->assertStringNotContainsString('GSTP02', implode(' ', $res->json('outputLines')));
+    }
+
+    public function test_guest_session_cannot_retrieve_stored_pnrs_via_single_letter_index(): void
+    {
+        Pnr::create([
+            'record_locator' => 'GSTP03',
+            'user_id' => 'student',
+            'office_id' => 'LON1A0980',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'GSTP03',
+                'passengers' => [
+                    ['lastName' => 'ZIMMERMAN', 'firstName' => 'HANS'],
+                ],
+                'segments' => [],
+            ],
+        ]);
+
+        $res = $this->postJson('/api/terminal/execute', [
+            'command' => 'RT/Z',
+            'state' => [],
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertStringNotContainsString('GSTP03', implode(' ', $res->json('outputLines')));
+        $this->assertStringNotContainsString('ZIMMERMAN', implode(' ', $res->json('outputLines')));
+    }
+
+    public function test_cadet_cannot_view_other_cadet_pnrs_via_single_letter_index(): void
+    {
+        $cadet1 = User::create([
+            'username' => 'cadet_one',
+            'name' => 'Cadet One',
+            'email' => 'cadet1@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'is_approved' => true,
+            'office_id' => 'LON1A0980',
+            'agent_id' => 'CD01',
+        ]);
+
+        $cadet2 = User::create([
+            'username' => 'cadet_two',
+            'name' => 'Cadet Two',
+            'email' => 'cadet2@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'is_approved' => true,
+            'office_id' => 'LON1A0980',
+            'agent_id' => 'CD02',
+        ]);
+
+        Pnr::create([
+            'record_locator' => 'CDT101',
+            'user_id' => 'cadet_one',
+            'office_id' => 'LON1A0980',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'CDT101',
+                'passengers' => [
+                    ['lastName' => 'VAUGHN', 'firstName' => 'SARAH'],
+                ],
+                'segments' => [],
+            ],
+        ]);
+
+        $res = $this->actingAs($cadet2)->postJson('/api/terminal/execute', [
+            'command' => 'RT/V',
+            'state' => [],
+        ]);
+
+        $res->assertStatus(200);
+        $output = implode(' ', $res->json('outputLines'));
+        $this->assertStringNotContainsString('CDT101', $output);
+        $this->assertStringNotContainsString('VAUGHN', $output);
+    }
+
+    public function test_cadet_cannot_retrieve_other_cadet_pnr_via_rt_line_with_tampered_state(): void
+    {
+        $cadet1 = User::create([
+            'username' => 'owner_cadet',
+            'name' => 'Owner Cadet',
+            'email' => 'owner@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'is_approved' => true,
+            'office_id' => 'LON1A0980',
+            'agent_id' => 'CD01',
+        ]);
+
+        $cadet2 = User::create([
+            'username' => 'snoop_cadet',
+            'name' => 'Snoop Cadet',
+            'email' => 'snoop@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'is_approved' => true,
+            'office_id' => 'LON1A0980',
+            'agent_id' => 'CD02',
+        ]);
+
+        Pnr::create([
+            'record_locator' => 'OWN001',
+            'user_id' => 'owner_cadet',
+            'office_id' => 'LON1A0980',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'OWN001',
+                'passengers' => [
+                    ['lastName' => 'PRIVATE', 'firstName' => 'RECORD'],
+                ],
+                'segments' => [],
+            ],
+        ]);
+
+        $tamperedState = [
+            'lastPnrList' => [
+                [
+                    'recordLocator' => 'OWN001',
+                    'passengers' => [
+                        ['lastName' => 'PRIVATE', 'firstName' => 'RECORD'],
+                    ],
+                ],
+            ],
+        ];
+
+        $res = $this->actingAs($cadet2)->postJson('/api/terminal/execute', [
+            'command' => 'RT1',
+            'state' => $tamperedState,
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertTrue($res->json('isError'));
+        $this->assertEquals('RT_UNAUTHORIZED', $res->json('commandType'));
+        $this->assertStringContainsString('ACCESS RESTRICTED: PNR BELONGS TO ANOTHER USER', implode(' ', $res->json('outputLines')));
+    }
+
+    public function test_guest_session_cannot_place_on_queue_via_qe(): void
+    {
+        $res1 = $this->postJson('/api/terminal/execute', [
+            'command' => 'QE/LON1A0980/1C0',
+            'state' => [],
+        ]);
+        $res1->assertStatus(200);
+        $this->assertTrue($res1->json('isError'));
+        $this->assertEquals('QUEUE_UNAUTHENTICATED', $res1->json('commandType'));
+
+        $res2 = $this->postJson('/api/terminal/execute', [
+            'command' => 'QE1C0',
+            'state' => [],
+        ]);
+        $res2->assertStatus(200);
+        $this->assertTrue($res2->json('isError'));
+        $this->assertEquals('QUEUE_UNAUTHENTICATED', $res2->json('commandType'));
+
+        $res3 = $this->postJson('/api/terminal/execute', [
+            'command' => 'QE1',
+            'state' => [],
+        ]);
+        $res3->assertStatus(200);
+        $this->assertTrue($res3->json('isError'));
+        $this->assertEquals('QUEUE_UNAUTHENTICATED', $res3->json('commandType'));
+
+        $this->assertEquals(0, QueueItem::where('message', 'like', '%PLACED VIA QE%')->count());
+    }
+
+    public function test_instructor_cannot_delete_another_instructors_custom_scenario(): void
+    {
+        $instA = User::create([
+            'username' => 'instructor_alpha',
+            'name' => 'Instructor Alpha',
+            'email' => 'alpha@instructor.test',
+            'password' => bcrypt('password'),
+            'role' => 'instructor',
+            'is_approved' => true,
+            'office_id' => 'LON1A0980',
+            'agent_id' => 'IA01',
+        ]);
+
+        $instB = User::create([
+            'username' => 'instructor_beta',
+            'name' => 'Instructor Beta',
+            'email' => 'beta@instructor.test',
+            'password' => bcrypt('password'),
+            'role' => 'instructor',
+            'is_approved' => true,
+            'office_id' => 'XOFF22',
+            'agent_id' => 'IB01',
+        ]);
+
+        Scenario::create([
+            'id' => 'SCN-ALPHA-DRILL',
+            'title' => 'Alpha Private Drill',
+            'category' => 'One-way',
+            'difficulty' => 'Intermediate',
+            'description' => 'Drill created by Alpha',
+            'time_limit_minutes' => 20,
+            'passenger_profile' => ['names' => []],
+            'flight_segments' => [],
+            'validation_criteria' => [],
+            'created_by' => 'instructor_alpha',
+        ]);
+
+        Submission::create([
+            'scenario_id' => 'SCN-ALPHA-DRILL',
+            'user_id' => 'student',
+            'status' => 'submitted',
+            'score' => 95,
+        ]);
+
+        // Instructor Beta tries to delete Instructor Alpha's scenario -> 404
+        $deleteRes = $this->actingAs($instB)->deleteJson('/api/instructor/scenarios/SCN-ALPHA-DRILL');
+        $deleteRes->assertStatus(404);
+
+        // Confirm scenario and submissions are preserved
+        $this->assertDatabaseHas('scenarios', ['id' => 'SCN-ALPHA-DRILL']);
+        $this->assertDatabaseHas('submissions', ['scenario_id' => 'SCN-ALPHA-DRILL']);
+
+        // Instructor Alpha can delete their own scenario -> 200
+        $deleteResAlpha = $this->actingAs($instA)->deleteJson('/api/instructor/scenarios/SCN-ALPHA-DRILL');
+        $deleteResAlpha->assertStatus(200);
+        $this->assertDatabaseMissing('scenarios', ['id' => 'SCN-ALPHA-DRILL']);
+    }
+
+    public function test_installer_rejects_ssrf_bypass_variations(): void
+    {
+        $service = app(InstallerService::class);
+
+        // Hex representation of link-local 169.254.169.254
+        $hexResult = $service->testDatabase([
+            'driver' => 'mysql',
+            'host' => '0xa9fea9fe',
+            'port' => 3306,
+            'database' => 'test_db',
+            'username' => 'root',
+            'password' => '',
+        ]);
+        $this->assertFalse($hexResult['success']);
+
+        // Trailing-dot hostname representation
+        $dotResult = $service->testDatabase([
+            'driver' => 'mysql',
+            'host' => '169.254.169.254.',
+            'port' => 3306,
+            'database' => 'test_db',
+            'username' => 'root',
+            'password' => '',
+        ]);
+        $this->assertFalse($dotResult['success']);
+
+        // Unresolvable hostname
+        $unresResult = $service->testDatabase([
+            'driver' => 'mysql',
+            'host' => 'nonexistent-host-'.uniqid().'.test.invalid',
+            'port' => 3306,
+            'database' => 'test_db',
+            'username' => 'root',
+            'password' => '',
+        ]);
+        $this->assertFalse($unresResult['success']);
     }
 }

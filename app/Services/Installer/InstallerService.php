@@ -216,11 +216,21 @@ class InstallerService
             return ['success' => false, 'error' => 'Database name must be alphanumeric and may only contain underscores.'];
         }
 
-        // SSRF protection: block link-local metadata endpoints in any literal form
-        // (IPv4, IPv4-mapped IPv6, or a hostname resolving to them).
+        // SSRF protection: resolve fail-closed so an unresolvable host never
+        // reach PDO, and the DSN must be pinned to the resolved dotted IP so
+        // the driver cannot reinterpret exotic host forms (hex/octal/trailing
+        // dot) that evade literal range checks.
         $hostToCheck = trim($host, ' []');
-        $ip = filter_var($hostToCheck, FILTER_VALIDATE_IP) ? $hostToCheck : gethostbyname($hostToCheck);
-        $packed = @inet_pton((string) $ip);
+        if (filter_var($hostToCheck, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $resolvedIp = $hostToCheck;
+        } else {
+            $resolvedIp = filter_var($hostToCheck, FILTER_VALIDATE_IP) ? $hostToCheck : gethostbyname($hostToCheck);
+            if (! filter_var($resolvedIp, FILTER_VALIDATE_IP)) {
+                return ['success' => false, 'error' => 'Database host could not be resolved to an IP address.'];
+            }
+        }
+
+        $packed = @inet_pton((string) $resolvedIp);
         if ($packed !== false) {
             // Unwrap IPv4-mapped IPv6 (::ffff:169.254.x.x, incl. ::ffff:a9fe:a9fe).
             if (strlen($packed) === 16 && str_starts_with($packed, str_repeat("\0", 10)."\xff\xff")) {
@@ -230,11 +240,39 @@ class InstallerService
             if (strlen($packed) === 4 && str_starts_with($packed, "\xa9\xfe")) {
                 return ['success' => false, 'error' => 'Connection to link-local metadata addresses is forbidden.'];
             }
+
+            // IPv6 link-local fe80::/10 range.
+            if (strlen($packed) === 16 && ord($packed[0]) === 0xFE && (ord($packed[1]) & 0xC0) === 0x80) {
+                return ['success' => false, 'error' => 'Connection to link-local metadata addresses is forbidden.'];
+            }
         }
 
         try {
+            // Bounded TCP pre-flight so unattended probes cannot pin workers
+            // on hosts that accept connections and then stay silent.
+            $socket = @fsockopen($resolvedIp, $port, $errno, $errstr, 2.0);
+            if ($socket === false) {
+                return [
+                    'success' => false,
+                    'error' => 'Database connection failed. Verify the host, port and credentials.',
+                ];
+            }
+            // A real database server speaks first; a silent open port (or a
+            // non-database service) must fail within the read timeout instead
+            // of pinning the worker while the driver waits for a handshake.
+            stream_set_timeout($socket, 2);
+            $handshakeByte = fread($socket, 1);
+            $timedOut = stream_get_meta_data($socket)['timed_out'] ?? false;
+            fclose($socket);
+            if ($handshakeByte === false || $handshakeByte === '' || $timedOut) {
+                return [
+                    'success' => false,
+                    'error' => 'Database connection failed. Verify the host, port and credentials.',
+                ];
+            }
+
             // First connect without specifying database to check server access
-            $dsnNoDb = "mysql:host={$host};port={$port};charset=utf8mb4";
+            $dsnNoDb = "mysql:host={$resolvedIp};port={$port};charset=utf8mb4";
             $pdo = new PDO($dsnNoDb, $username, $password, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_TIMEOUT => 4,

@@ -2195,7 +2195,21 @@ class AmadeusParser
         if (preg_match('/^RT(\d+)$/', $input, $rtLineM)) {
             $lineIdx = (int) $rtLineM[1];
             if (! empty($state['lastPnrList']) && isset($state['lastPnrList'][$lineIdx - 1])) {
-                $state['activePnr'] = $state['lastPnrList'][$lineIdx - 1];
+                $targetPnr = $state['lastPnrList'][$lineIdx - 1];
+                $rloc = $targetPnr['recordLocator'] ?? null;
+                if ($rloc) {
+                    $dbPnr = Pnr::find($rloc);
+                    if ($dbPnr) {
+                        if ($userId === 'guest') {
+                            return new CommandExecutionResult(['SIGN IN REQUIRED TO RETRIEVE A STORED PNR'], $state, true, 'RT_UNAUTHENTICATED');
+                        }
+
+                        if (! $isInstructor && $dbPnr->user_id !== $userId) {
+                            return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER USER'], $state, true, 'RT_UNAUTHORIZED');
+                        }
+                    }
+                }
+                $state['activePnr'] = $targetPnr;
 
                 return new CommandExecutionResult($this->pnr->formatPnrDisplay($state['activePnr']), $state, false, 'RT_LINE');
             }
@@ -2236,7 +2250,11 @@ class AmadeusParser
                 // Alphabetical index (e.g. RT/A)
                 if (strlen($searchQuery) === 1) {
                     $matched = [];
-                    $allPnrs = Pnr::orderBy('updated_at', 'desc')->limit(50)->get();
+                    $indexQuery = Pnr::orderBy('updated_at', 'desc');
+                    if (! $isInstructor) {
+                        $indexQuery->where('user_id', $userId);
+                    }
+                    $allPnrs = $indexQuery->limit(50)->get();
                     foreach ($allPnrs as $item) {
                         $p = $item->data_json;
                         if (! empty($p['passengers'])) {
@@ -2286,7 +2304,7 @@ class AmadeusParser
 
                 // Search by surname (e.g. RT/AHMED or RT/SINGH)
                 $query = Pnr::orderBy('updated_at', 'desc');
-                if (! $isInstructor && $userId !== 'guest') {
+                if (! $isInstructor) {
                     $query->where('user_id', $userId);
                 }
                 $all = $query->limit(50)->get();
@@ -2351,7 +2369,11 @@ class AmadeusParser
             if (strlen($arg) === 6 || strlen($arg) === 12) {
                 $dbPnr = Pnr::find($arg);
                 if ($dbPnr) {
-                    if (! $isInstructor && $dbPnr->user_id !== $userId && $userId !== 'guest') {
+                    if ($userId === 'guest') {
+                        return new CommandExecutionResult(['SIGN IN REQUIRED TO RETRIEVE A STORED PNR'], $state, true, 'RT_UNAUTHENTICATED');
+                    }
+
+                    if (! $isInstructor && $dbPnr->user_id !== $userId) {
                         return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER USER'], $state, true, 'RT_UNAUTHORIZED');
                     }
                     $state['activePnr'] = $dbPnr->data_json;
@@ -2455,6 +2477,10 @@ class AmadeusParser
         }
 
         if (preg_match('/^QE\/([A-Z0-9]+)\/(\d+)C(\d+)$/', $input, $qeOffM)) {
+            if ($userId === 'guest') {
+                return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES (QE)'], $state, true, 'QUEUE_UNAUTHENTICATED');
+            }
+
             $targetOff = $qeOffM[1];
             $qNum = (int) $qeOffM[2];
             $cat = (int) $qeOffM[3];
@@ -2464,23 +2490,35 @@ class AmadeusParser
         }
 
         if (preg_match('/^QE(\d+)C(\d+)$/', $input, $qeCatM)) {
+            if ($userId === 'guest') {
+                return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES (QE)'], $state, true, 'QUEUE_UNAUTHENTICATED');
+            }
+
             $qNum = (int) $qeCatM[1];
             $cat = (int) $qeCatM[2];
-            $office = $state['officeId'] ?? 'LON1A0980';
+            $office = $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980');
             $lines = $this->queue->placeOnOfficeQueue($qNum, $cat, $state['activePnr'], $office, $userId);
 
             return new CommandExecutionResult($lines, $state, false, 'QUEUE_ENTER');
         }
 
         if (preg_match('/^QE(\d+)$/', $input, $qeM)) {
+            if ($userId === 'guest') {
+                return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES (QE)'], $state, true, 'QUEUE_UNAUTHENTICATED');
+            }
+
             $qNum = (int) $qeM[1];
-            $office = $state['officeId'] ?? 'LON1A0980';
+            $office = $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980');
             $lines = $this->queue->placeOnQueue($qNum, $state['activePnr'], $office, $userId);
 
             return new CommandExecutionResult($lines, $state, false, 'QUEUE_ENTER');
         }
 
         if (str_starts_with($input, 'QE/')) {
+            if ($userId === 'guest') {
+                return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES (QE)'], $state, true, 'QUEUE_UNAUTHENTICATED');
+            }
+
             return new CommandExecutionResult([
                 'QE/ - FREE FLOW QUEUE MESSAGE TRANSMITTED',
                 'MESSAGE DELIVERED TO TARGET OFFICE QUEUE BANK',
