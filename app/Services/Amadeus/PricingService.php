@@ -6,10 +6,14 @@ use App\Models\Airport;
 
 class PricingResult
 {
+    /**
+     * @param  array<int, string>  $lines
+     */
     public function __construct(
         public array $lines,
         public ?array $tst = null,
-        public bool $isError = false
+        public bool $isError = false,
+        public ?array $updatedSegments = null
     ) {}
 }
 
@@ -161,6 +165,189 @@ class PricingService
             '08 CFF          RT      NO   -        -     USD     3200.00',
             '09 FFF          RT      NO   -        -     USD     7500.00',
         ];
+
+        return new PricingResult($lines);
+    }
+
+    /**
+     * Handle Fare Diagnostic: FXX/D F-Y2RT or FQPLONSINTYO/S/DF-Y2RT
+     */
+    public function handleFareDiagnostic(string $input, array $pnr): PricingResult
+    {
+        $clean = strtoupper(trim($input));
+        $fareBasis = 'Y2RT';
+        if (preg_match('/F-([A-Z0-9]+)/', $clean, $fbM)) {
+            $fareBasis = $fbM[1];
+        }
+
+        return new PricingResult([
+            "--- AMADEUS FARE DIAGNOSTIC: {$fareBasis} ---",
+            "TARGET FARE BASIS: {$fareBasis}",
+            'RULE AUDIT       : RULE 001 - STANDARD SEASONAL FARE',
+            'ELIGIBILITY      : FLIGHT ROUTING SATISFIES MAXIMUM PERMITTED MILEAGE (MPM)',
+            'MIN / MAX STAY   : 3 DAYS MINIMUM / 12 MONTHS MAXIMUM (QUALIFIED)',
+            'PENALTY / CHG    : NON-REFUNDABLE / REBOOKING PERMITTED WITH USD 150 FEE',
+            'BOOKING CODE     : PRIMARY RBD REQUIRED: Y (CURRENT SEGMENTS COMPLIANT)',
+            'DIAGNOSTIC STATUS: FARE APPLICABLE TO CURRENT ITINERARY',
+        ]);
+    }
+
+    /**
+     * Handle Best Pricer: FXA, FXU2, FXZ2, FXL
+     */
+    public function handleBestPricer(string $input, array $pnr): PricingResult
+    {
+        $clean = strtoupper(trim($input));
+        $segments = $pnr['segments'] ?? [];
+
+        if (empty($segments)) {
+            return new PricingResult(['FXA: NO ITINERARY SEGMENTS TO PRICE'], null, true);
+        }
+
+        // 1. FXU<LINE>: Select cheaper fare, rebook classes, do not create TST
+        if (preg_match('/^FXU(\d+)$/', $clean, $uM)) {
+            $line = $uM[1];
+            $updatedSegs = $segments;
+            foreach ($updatedSegs as &$s) {
+                $s['bookingClass'] = 'V'; // Rebook to lowest class V
+            }
+
+            return new PricingResult([
+                "FXU{$line} - ITINERARY REBOOKED TO LOWER CLASS V WITHOUT TST",
+                'ALL SEGMENTS UPDATED TO CLASS V (STATUS: HK)',
+                'ENTER "FXP" TO PRICE AND STORE NEW TST',
+            ], null, false, $updatedSegs);
+        }
+
+        // 2. FXZ<LINE>: Display lowest possible fare and advise seat availability
+        if (preg_match('/^FXZ(\d+)$/', $clean, $zM)) {
+            $line = $zM[1];
+
+            return new PricingResult([
+                "--- BEST PRICER: LOWEST POSSIBLE FARE ADVISORY (FXZ{$line}) ---",
+                'LOWEST FARE BASIS : VIF (SAVINGS: 40% OFF CURRENT CLASS)',
+                'TOTAL FARE        : USD 390.00 + TAXES USD 130.00 = USD 520.00',
+                'SEAT AVAILABILITY : SEATS AVAILABLE ON REQUESTED FLIGHTS IN V CLASS (V4)',
+                'RECOMMENDED ENTRY : FXU1 TO CONFIRM REBOOKING',
+            ]);
+        }
+
+        // 3. FXL: Best pricer without auto rebooking
+        if ($clean === 'FXL') {
+            return new PricingResult([
+                '--- BEST PRICER: MANUAL REBOOKING LIST (FXL) ---',
+                'LOWEST ALTERNATIVE FARE: USD 520.00 (V CLASS)',
+                'AUTOMATIC REBOOKING SUPPRESSED FOR STANDARD ACCESS CARRIER',
+                'MANUALLY REBOOK SEGMENTS USING SB ENTRY (E.G. SBV)',
+            ]);
+        }
+
+        // Default FXA: Display list of lower fares
+        return new PricingResult([
+            '--- BEST PRICER: LOWER FARES AVAILABLE (FXA) ---',
+            'LN FARE BASIS   CLS   BASE FARE   TAXES    TOTAL FARE   SAVINGS',
+            '-----------------------------------------------------------------',
+            '01 VIF          V     USD 260.00  130.00   USD 390.00   USD 260.00',
+            '02 LIF          L     USD 310.00  130.00   USD 440.00   USD 210.00',
+            '03 KIF          K     USD 360.00  130.00   USD 490.00   USD 160.00',
+            'ENTER "FXU1" TO REBOOK TO LOWEST FARE ON LINE 1',
+        ]);
+    }
+
+    /**
+     * Handle FQC (Currency & ROE), FQA (Baggage), FQN, FQR, FQP, FQM
+     */
+    public function handleFareAuxiliary(string $input): PricingResult
+    {
+        $clean = strtoupper(trim($input));
+
+        // 1. FQC: Currency and Rate of Exchange
+        if (str_starts_with($clean, 'FQC')) {
+            $rest = trim(substr($clean, 3));
+
+            return new PricingResult([
+                "--- FARE QUOTE CURRENCY & ROE: {$rest} (FQC) ---",
+                'IATA BANKERS RATE OF EXCHANGE (ROE) EFFECTIVE CURRENT MONTH:',
+                'USD 1.00 = GBP 0.781200 / EUR 0.923400 / INR 84.120000',
+                'USD 1.00 = QAR 3.640000 / AED 3.672500 / SAR 3.750000',
+                'ROUNDING RULES APPLIED PER IATA RESOLUTION 024A',
+            ]);
+        }
+
+        // 2. FQA: Excess baggage
+        if (str_starts_with($clean, 'FQA')) {
+            return new PricingResult([
+                '--- FARE QUOTE EXCESS BAGGAGE CHARGES (FQA) ---',
+                'PIECE SYSTEM (USA/CANADA)  : USD 150.00 PER ADDITIONAL 23KG BAG',
+                'WEIGHT SYSTEM (INTL)       : 1.5% OF HIGHEST ONE-WAY NORMAL DIRECT ADT FARE',
+                'CALCULATED RATE PER KG     : USD 35.00 / KG EXCESS WEIGHT',
+            ]);
+        }
+
+        // 3. FQN: Fare Quote Notes / Rules
+        if (str_starts_with($clean, 'FQN')) {
+            return new PricingResult([
+                '--- FARE QUOTE RULES & CONDITIONS (FQN) ---',
+                'CATEGORY 04 : FLIGHT APPLICATION - VALID ONLY ON FLIGHTS SPECIFIED',
+                'CATEGORY 05 : ADVANCE RESERVATION / TICKETING - 7 DAYS ADVANCE',
+                'CATEGORY 16 : PENALTIES - NON-REFUNDABLE IN CASE OF CANCEL',
+                'CATEGORY 19 : DISCOUNTS - CHILDREN 25% / INFANTS 90%',
+            ]);
+        }
+
+        // 4. FQR: Fare Quote Routing
+        if (str_starts_with($clean, 'FQR')) {
+            return new PricingResult([
+                '--- FARE QUOTE ROUTING DIRECTORY (FQR) ---',
+                'ROUTING 001 : NON-STOP PERMITTED',
+                'ROUTING 002 : TRANSFER PERMITTED VIA ONE HUB CARRIER POINT',
+                'MAXIMUM PERMITTED MILEAGE (MPM) MUST NOT BE EXCEEDED BY >25%',
+            ]);
+        }
+
+        // 5. FQP: Fare Quote Pricing
+        if (str_starts_with($clean, 'FQP')) {
+            return new PricingResult([
+                '--- FARE QUOTE SPECIFIC ITINERARY PRICING (FQP) ---',
+                'PRICING COMPLIANT WITH HISTORICAL/PUBLISHED TARIFF',
+                'BASE FARE : USD 650.00 / SURCHARGES : USD 130.00 / TOTAL : USD 780.00',
+            ]);
+        }
+
+        // 6. FQM: Fare Quote Mileage
+        if (str_starts_with($clean, 'FQM')) {
+            return new PricingResult([
+                '--- FARE QUOTE MILEAGE AUDIT (FQM) ---',
+                'TICKETED POINT MILEAGE (TPM) : 3450 MILES',
+                'MAXIMUM PERMITTED MILEAGE (MPM): 4140 MILES',
+                'SURCHARGE BAND : WITHIN DIRECT ROUTE TOLERANCE (0% SURCHARGE)',
+            ]);
+        }
+
+        return new PricingResult(["UNKNOWN FARE AUXILIARY ENTRY: {$clean}"], null, true);
+    }
+
+    /**
+     * Display stored TST breakdown (TQT)
+     */
+    public function handleTQT(array $pnr): PricingResult
+    {
+        $tsts = $pnr['tsts'] ?? [];
+        if (empty($tsts)) {
+            return new PricingResult(['TQT: NO STORED TST PRESENT IN ACTIVE PNR'], null, true);
+        }
+
+        $tst = end($tsts);
+        $lines = [
+            "--- STORED TST DISPLAY (TST {$tst['tstNumber']}) ---",
+            "FARE BASIS : {$tst['fareBasis']}",
+            "BASE FARE  : {$tst['currency']} ".number_format($tst['baseFare'], 2, '.', ''),
+        ];
+        foreach ($tst['taxes'] as $tax) {
+            $lines[] = "TAX {$tax['code']}    : {$tst['currency']} ".number_format($tax['amount'], 2, '.', '');
+        }
+        $lines[] = "TOTAL      : {$tst['currency']} ".number_format($tst['total'], 2, '.', '');
+        $lines[] = 'STATUS     : TST VALID / UNTICKETED';
 
         return new PricingResult($lines);
     }

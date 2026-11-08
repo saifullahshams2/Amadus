@@ -380,6 +380,220 @@ class PnrService
         return $lines;
     }
 
+    public function formatPartialPnrDisplay(array $pnr, string $type): array
+    {
+        if (empty($pnr['passengers']) && empty($pnr['segments'])) {
+            return ['NO PNR PRESENT IN WORK AREA'];
+        }
+
+        $rloc = $pnr['recordLocator'] ?? 'ACTIVE';
+        $lines = ["--- PNR PARTIAL DISPLAY ({$type}) : {$rloc} ---"];
+
+        // RTI: Itinerary only
+        if ($type === 'RTI') {
+            if (empty($pnr['segments'])) {
+                $lines[] = 'NO ITINERARY SEGMENTS BOOKED';
+            } else {
+                foreach ($pnr['segments'] as $seg) {
+                    $lines[] = "  {$seg['segmentNumber']}  {$seg['airlineCode']} {$seg['flightNumber']} {$seg['bookingClass']} {$seg['departureDate']} {$seg['departureAirport']}{$seg['arrivalAirport']} HK{$seg['seats']} {$seg['departureTime']} {$seg['arrivalTime']}";
+                }
+            }
+
+            return $lines;
+        }
+
+        // RTG: General facts (OSI/SSR)
+        if ($type === 'RTG') {
+            $facts = $pnr['specialServiceRequests'] ?? [];
+            if (empty($facts)) {
+                $lines[] = 'NO GENERAL FACTS (OSI / SSR) PRESENT';
+            } else {
+                foreach ($facts as $idx => $f) {
+                    $lines[] = '  '.($idx + 1)." {$f['type']} {$f['code']} {$f['text']}";
+                }
+            }
+
+            return $lines;
+        }
+
+        // RTR: Remarks only
+        if ($type === 'RTR') {
+            $remarks = $pnr['remarks'] ?? [];
+            if (empty($remarks)) {
+                $lines[] = 'NO REMARKS RECORDED';
+            } else {
+                foreach ($remarks as $idx => $r) {
+                    $tag = is_array($r) ? ($r['type'] ?? 'RM') : 'RM';
+                    $text = is_array($r) ? ($r['text'] ?? '') : $r;
+                    $lines[] = '  '.($idx + 1)." {$tag} {$text}";
+                }
+            }
+
+            return $lines;
+        }
+
+        // RTF,K,I: Fare, Ticketing, Itinerary
+        if ($type === 'RTF,K,I' || $type === 'RTF') {
+            $lines[] = '--- FARE, TICKETING & ITINERARY ---';
+            if (! empty($pnr['tsts'])) {
+                $t = end($pnr['tsts']);
+                $lines[] = "TST {$t['tstNumber']} - {$t['fareBasis']} TOTAL: {$t['currency']} {$t['total']}";
+            }
+            if (! empty($pnr['ticketing'])) {
+                $lines[] = "TKT: {$pnr['ticketing']['raw']}";
+            }
+            if (! empty($pnr['segments'])) {
+                foreach ($pnr['segments'] as $seg) {
+                    $lines[] = "  {$seg['segmentNumber']}  {$seg['airlineCode']} {$seg['flightNumber']} {$seg['bookingClass']} {$seg['departureDate']} {$seg['departureAirport']}{$seg['arrivalAirport']}";
+                }
+            }
+
+            return $lines;
+        }
+
+        // RT/P<N>: Specific passenger only
+        if (preg_match('/^RT\/P(\d+)$/', $type, $pM)) {
+            $pNum = (int) $pM[1];
+            $paxList = $pnr['passengers'] ?? [];
+            if (! isset($paxList[$pNum - 1])) {
+                return ["RT/P{$pNum}: PASSENGER {$pNum} NOT FOUND IN PNR"];
+            }
+            $p = $paxList[$pNum - 1];
+            $lines[] = "PASSENGER {$pNum}: {$p['lastName']}/{$p['firstName']} ".($p['title'] ?? '');
+            if (! empty($p['tickets'])) {
+                $lines[] = "TICKET: {$p['tickets']}";
+            }
+
+            return $lines;
+        }
+
+        return $this->formatPnrDisplay($pnr);
+    }
+
+    public function formatItineraryPrint(array $pnr, string $format, ?string $lang = null, ?int $paxIdx = null): array
+    {
+        $rloc = $pnr['recordLocator'] ?? 'ACTIVE';
+        $isFrench = ($lang === 'FR');
+
+        $headerTitle = match ($format) {
+            'IBD' => $isFrench ? 'AFFICHAGE DE BASE DU VOYAGE (IBD)' : 'ITINERARY BASIC DISPLAY (IBD)',
+            'IBP' => $isFrench ? 'IMPRESSION DE BASE DU VOYAGE (IBP)' : 'ITINERARY BASIC PRINT (IBP)',
+            'IED' => $isFrench ? 'AFFICHAGE ETENDU DU VOYAGE (IED)' : 'ITINERARY EXTENDED DISPLAY (IED)',
+            'IEP' => $isFrench ? 'IMPRESSION ETENDUE DU VOYAGE (IEP)' : 'ITINERARY EXTENDED PRINT (IEP)',
+            'IEPJ' => $isFrench ? 'ITINERAIRE CONJOINT POUR TOUS LES PASSAGERS (IEPJ)' : 'JOINT ITINERARY PRINT FOR ALL PASSENGERS (IEPJ)',
+            default => 'ITINERARY DOCUMENT',
+        };
+
+        $lines = [
+            "*** {$headerTitle} ***",
+            $isFrench ? "DOSSIER PASSAGER (RLOC) : {$rloc}" : "BOOKING REFERENCE (RLOC) : {$rloc}",
+            $isFrench ? 'EMIS PAR : AMADEUS VOYAGES / LON1A0980' : 'ISSUED BY : AMADEUS TRAVEL ACADEMY / LON1A0980',
+            '------------------------------------------------------------',
+        ];
+
+        // Passenger name
+        $paxList = $pnr['passengers'] ?? [];
+        if ($paxIdx && isset($paxList[$paxIdx - 1])) {
+            $p = $paxList[$paxIdx - 1];
+            $lines[] = ($isFrench ? 'PASSAGER : ' : 'PASSENGER : ').strtoupper($p['lastName']).'/'.strtoupper($p['firstName']).' '.($p['title'] ?? '');
+        } else {
+            foreach ($paxList as $idx => $p) {
+                $lines[] = 'PASSENGER '.($idx + 1).' : '.strtoupper($p['lastName']).'/'.strtoupper($p['firstName']).' '.($p['title'] ?? '');
+            }
+        }
+        $lines[] = '------------------------------------------------------------';
+
+        // Segments
+        foreach ($pnr['segments'] ?? [] as $seg) {
+            $flt = $seg['airlineCode'].$seg['flightNumber'];
+            $route = "{$seg['departureAirport']} -> {$seg['arrivalAirport']}";
+            $date = $seg['departureDate'];
+            $time = "{$seg['departureTime']} / {$seg['arrivalTime']}";
+            $lines[] = "FLIGHT {$flt} - {$date} - {$route} ({$time}) CLS: {$seg['bookingClass']}";
+            if ($format === 'IED' || $format === 'IEP') {
+                $lines[] = $isFrench ? '  ENREGISTREMENT: 2H AVANT LE DEPART / TERMINAL VERIFIE' : '  CHECK-IN: 2 HOURS PRIOR TO DEPARTURE / TERMINAL CONFIRMED';
+                $lines[] = $isFrench ? '  BAGAGE AUTORISE: 1 PIECE 23KG INCLUSE' : '  BAGGAGE ALLOWANCE: 1 PIECE 23KG INCLUDED';
+            }
+        }
+
+        $lines[] = '------------------------------------------------------------';
+        $lines[] = $isFrench ? 'MERCI D AVOIR CHOISI NOTRE COMPAGNIE - BON VOYAGE' : 'THANK YOU FOR CHOOSING AMADEUS - HAVE A PLEASANT FLIGHT';
+
+        return $lines;
+    }
+
+    public function copyPnr(array $originalPnr, string $modifier): array
+    {
+        $newPnr = $originalPnr;
+        $newPnr['recordLocator'] = null;
+        $newPnr['tickets'] = [];
+        $newPnr['history'] = [
+            strtoupper(date('dM')).' '.gmdate('Hi').'Z CR-COPY FROM '.($originalPnr['recordLocator'] ?? 'ORIGINAL'),
+        ];
+
+        // Specific segments copy: RRN/S2,6
+        if (preg_match('/S([0-9,]+)/', $modifier, $sM)) {
+            $wantedSegs = array_map('intval', explode(',', $sM[1]));
+            $newPnr['segments'] = array_values(array_filter(
+                $originalPnr['segments'] ?? [],
+                fn ($s) => in_array($s['segmentNumber'] ?? 0, $wantedSegs, true)
+            ));
+        }
+
+        // Change class: RRN/CY
+        if (preg_match('/C([A-Z])/', $modifier, $cM)) {
+            $newClass = $cM[1];
+            foreach ($newPnr['segments'] as &$s) {
+                $s['bookingClass'] = $newClass;
+            }
+        }
+
+        // Date shift forward: RRN/DP7
+        if (preg_match('/DP(\d+)/', $modifier, $dpM)) {
+            $days = (int) $dpM[1];
+            foreach ($newPnr['segments'] as &$s) {
+                $s['departureDate'] = date('dM', strtotime("+{$days} days"));
+            }
+        }
+
+        // Date shift backward: RRN/DM3
+        if (preg_match('/DM(\d+)/', $modifier, $dmM)) {
+            $days = (int) $dmM[1];
+            foreach ($newPnr['segments'] as &$s) {
+                $s['departureDate'] = date('dM', strtotime("-{$days} days"));
+            }
+        }
+
+        // Passenger count: RRN/4
+        if (preg_match('/^\/?(\d+)$/', $modifier, $paxM)) {
+            $pCount = (int) $paxM[1];
+            $basePax = $originalPnr['passengers'][0] ?? ['lastName' => 'SMITH', 'firstName' => 'JOHN', 'title' => 'MR', 'type' => 'ADT'];
+            $newPaxList = [];
+            for ($i = 1; $i <= $pCount; $i++) {
+                $newPaxList[] = [
+                    'id' => "{$i}.1",
+                    'lastName' => $basePax['lastName'],
+                    'firstName' => "PAX{$i}",
+                    'title' => 'MR',
+                    'type' => 'ADT',
+                ];
+            }
+            $newPnr['passengers'] = $newPaxList;
+        }
+
+        // Passenger data only: RRP/P2
+        if (str_starts_with($modifier, 'P')) {
+            $newPnr['segments'] = [];
+        }
+
+        // Itinerary segments only: RRI
+        if ($modifier === 'I') {
+            $newPnr['passengers'] = [];
+        }
+
+        return $newPnr;
+    }
+
     public function formatPrintout(array $pnr, bool $full = false): array
     {
         $printerName = 'PRT01 (LON1A0980)';

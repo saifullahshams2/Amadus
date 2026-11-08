@@ -256,6 +256,58 @@ class QueueService
     }
 
     /**
+     * Generate Amadeus QTQ (Queue Total Queues) screen lines.
+     *
+     * @return array<int, string>
+     */
+    public function formatQueueListLines(string $officeId = 'LON1A0980'): array
+    {
+        $lines = [
+            "--- AMADEUS CONFIGURED QUEUES FOR OFFICE: {$officeId} (QTQ) ---",
+            'QNUM  CAT  DESCRIPTION',
+            '-----------------------------------------------------------------',
+            ' 01   C0   TICKETING TIME LIMIT (TTL) MONITORING',
+            ' 03   C0   OPTION ELEMENT (OP) TIME LIMITS',
+            ' 07   C0   AIRLINE SCHEDULE CHANGES (TK/UN)',
+            ' 08   C1   CONFIRMED WAITLIST NOTIFICATIONS (HK)',
+            ' 08   C3   DOMESTIC TICKETING QUEUE (TKDO)',
+            ' 08   C5   INTERNATIONAL TICKETING QUEUE (TKIN)',
+            ' 09   C0   GENERAL AIRLINE OTH / OSI / SSR MESSAGES',
+            ' 87   C0   EXCHANGE, REISSUE & REVALIDATION',
+            ' 97   C0   FREE-FLOW AGENCY COMMUNICATION QUEUE',
+            '-----------------------------------------------------------------',
+            'USE "QS<Q>C<CAT>D1" TO START PROCESSING (E.G. QS97C0D1)',
+        ];
+
+        return $lines;
+    }
+
+    /**
+     * Place PNR on specific queue and category, with optional target office.
+     *
+     * @return array<int, string>
+     */
+    public function placeOnOfficeQueue(int $qNum, int $cat, array $pnr, string $targetOffice = 'LON1A0980', ?string $userId = null): array
+    {
+        $locator = $pnr['recordLocator'] ?? 'PENDNG';
+        $pax = ! empty($pnr['passengers']) ? ($pnr['passengers'][0]['lastName'].'/'.$pnr['passengers'][0]['firstName']) : 'PASSENGER';
+
+        $this->broadcastToQueue(
+            queueNumber: $qNum,
+            category: "C{$cat}",
+            pnrLocator: $locator,
+            pnrSummary: ['passenger' => $pax, 'urgency' => 'NORMAL'],
+            message: "PLACED ON Q{$qNum} C{$cat} FOR {$targetOffice}",
+            targetUserId: $userId,
+            officeId: $targetOffice
+        );
+
+        return [
+            "OK PLACED ON QUEUE {$qNum} / C{$cat} / OFFICE {$targetOffice}",
+        ];
+    }
+
+    /**
      * Reset student sandbox or all sandbox states.
      *
      * @return array{clearedQueues: int, clearedLogs: int, resetPnrs: int}
