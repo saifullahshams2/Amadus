@@ -84,34 +84,34 @@
     "semantic_hash": "eee5123722f6ad2fc3bb72e9bd6aff4b"
   },
   "app/Services/Amadeus/AmadeusParser.php": {
-    "mtime": 1794074088.7945607,
-    "seen": 1794075622.1246886,
-    "ast_hash": "9432216185d2423e648757eb44583d0e",
-    "semantic_hash": "9432216185d2423e648757eb44583d0e"
+    "mtime": 1794151668.3909836,
+    "seen": 1794152167.4702442,
+    "ast_hash": "c8f3c100763b62bc0e53cfffce6ce561",
+    "semantic_hash": "c8f3c100763b62bc0e53cfffce6ce561"
   },
   "app/Services/Amadeus/AvailabilityService.php": {
-    "mtime": 1794074088.7945607,
-    "seen": 1794075622.1246896,
-    "ast_hash": "7751d3abec26a6f8715fc5bfa5c1470c",
-    "semantic_hash": "7751d3abec26a6f8715fc5bfa5c1470c"
+    "mtime": 1794150406.2909286,
+    "seen": 1794152167.470246,
+    "ast_hash": "bdb1280446722ed02f72aeb8c90663d1",
+    "semantic_hash": "bdb1280446722ed02f72aeb8c90663d1"
   },
   "app/Services/Amadeus/DecodeService.php": {
-    "mtime": 1792944286.6770666,
-    "seen": 1793127398.0699282,
-    "ast_hash": "ccfe417f1e0948efc2ef92cb2e1fb656",
-    "semantic_hash": "ccfe417f1e0948efc2ef92cb2e1fb656"
+    "mtime": 1794150367.753514,
+    "seen": 1794152167.470248,
+    "ast_hash": "40b290413b405523126308a95f374e89",
+    "semantic_hash": "40b290413b405523126308a95f374e89"
   },
   "app/Services/Amadeus/PnrService.php": {
-    "mtime": 1794074088.7945607,
-    "seen": 1794075622.1246924,
-    "ast_hash": "9eafe070d02711bb60919162e21c745a",
-    "semantic_hash": "9eafe070d02711bb60919162e21c745a"
+    "mtime": 1794150484.9828813,
+    "seen": 1794152167.4702556,
+    "ast_hash": "d96a78284f11cdda80d47792714d6d15",
+    "semantic_hash": "d96a78284f11cdda80d47792714d6d15"
   },
   "app/Services/Amadeus/PricingService.php": {
-    "mtime": 1792944286.6085014,
-    "seen": 1793127398.0699298,
-    "ast_hash": "11b99a01606fb756d59f0eefa64bb862",
-    "semantic_hash": "11b99a01606fb756d59f0eefa64bb862"
+    "mtime": 1794150428.102179,
+    "seen": 1794152167.4702585,
+    "ast_hash": "7765ae0c795f30830c71de41025fb75a",
+    "semantic_hash": "7765ae0c795f30830c71de41025fb75a"
   },
   "app/Services/Amadeus/TicketingService.php": {
     "mtime": 1792944286.5688455,
@@ -450,10 +450,10 @@
     "semantic_hash": "771807e18da323a1ddce75bd8d93d215"
   },
   "app/Services/Amadeus/QueueService.php": {
-    "mtime": 1794074088.7945607,
-    "seen": 1794075622.1246955,
-    "ast_hash": "24fae36e30184dcfc3b32f009a6c2552",
-    "semantic_hash": "24fae36e30184dcfc3b32f009a6c2552"
+    "mtime": 1794150448.010417,
+    "seen": 1794152167.4702628,
+    "ast_hash": "f4eb8a161b749190392266b4596d95cf",
+    "semantic_hash": "f4eb8a161b749190392266b4596d95cf"
   },
   "app/Services/Installer/InstallerService.php": {
     "mtime": 1793386004.7854807,
@@ -966,9 +966,57 @@
     "semantic_hash": "a186c233fa0e51946ccaa8244990a091"
   },
   "amadeus-cmd-2.md": {
-    "mtime": 1794074088.7935605,
-    "seen": 1794075622.1248932,
-    "ast_hash": "11ab9ae85b22fc1e33d67a104307c0a9",
-    "semantic_hash": "11ab9ae85b22fc1e33d67a104307c0a9"
+    "mtime": 1794148002.4016013,
+    "seen": 1794152167.470529,
+    "ast_hash": "f29ede4cc272791ca3ba0fd15913aea3",
+    "semantic_hash": "f29ede4cc272791ca3ba0fd15913aea3"
+  },
+  "app/Services/Amadeus/AisService.php": {
+    "mtime": 1794151230.5981867,
+    "seen": 1794152167.4702404,
+    "ast_hash": "38a154969706ad15bc69cbafb3d3d499",
+    "semantic_hash": "38a154969706ad15bc69cbafb3d3d499"
+  },
+  "app/Services/Amadeus/FlightInfoService.php": {
+    "mtime": 1794150304.2699149,
+    "seen": 1794152167.47025,
+    "ast_hash": "55d651d9448f6e2d632f6c08f6306f95",
+    "semantic_hash": "55d651d9448f6e2d632f6c08f6306f95"
+  },
+  "app/Services/Amadeus/HelpService.php": {
+    "mtime": 1794150242.00944,
+    "seen": 1794152167.4702516,
+    "ast_hash": "bfecb043ac6b768a3fd98764f1dd3cdf",
+    "semantic_hash": "bfecb043ac6b768a3fd98764f1dd3cdf"
+  },
+  "app/Services/Amadeus/HotelCarService.php": {
+    "mtime": 1794150328.767133,
+    "seen": 1794152167.4702525,
+    "ast_hash": "3dd9f24516ebd9e0b6e169cfaf5d11f0",
+    "semantic_hash": "3dd9f24516ebd9e0b6e169cfaf5d11f0"
+  },
+  "app/Services/Amadeus/MathDateService.php": {
+    "mtime": 1794151668.980418,
+    "seen": 1794152167.4702535,
+    "ast_hash": "816226f91beaa6b25b5bf557b5dcf37a",
+    "semantic_hash": "816226f91beaa6b25b5bf557b5dcf37a"
+  },
+  "app/Services/Amadeus/ProfileService.php": {
+    "mtime": 1794151668.6579502,
+    "seen": 1794152167.4702601,
+    "ast_hash": "cf948ea6964cd7e48c4bb708a667a2ed",
+    "semantic_hash": "cf948ea6964cd7e48c4bb708a667a2ed"
+  },
+  "app/Services/Amadeus/TimaticService.php": {
+    "mtime": 1794150273.858668,
+    "seen": 1794152167.4702682,
+    "ast_hash": "09837df2da7ea773dd8c155765c3c576",
+    "semantic_hash": "09837df2da7ea773dd8c155765c3c576"
+  },
+  "tests/Feature/AmadeusCmdReference2Test.php": {
+    "mtime": 1794151615.8878608,
+    "seen": 1794152167.470382,
+    "ast_hash": "2b9a522914138da6564bf1ecf8e91ae7",
+    "semantic_hash": "2b9a522914138da6564bf1ecf8e91ae7"
   }
 }
