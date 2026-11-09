@@ -67,13 +67,13 @@ class DualRoleDashboardTest extends TestCase
         $this->actingAs($instructor)->get('/dashboard/queues')->assertSeeText('Simulated Queue & Sandbox Management');
     }
 
-    public function test_03_unauthenticated_guests_redirect_to_main_page(): void
+    public function test_03_unauthenticated_guests_redirect_to_login(): void
     {
         $response = $this->get('/dashboard');
-        $response->assertRedirect('/');
+        $response->assertRedirect('/login');
 
         $response2 = $this->post('/dashboard/switch-role', ['role' => 'instructor']);
-        $response2->assertRedirect('/');
+        $response2->assertRedirect('/login');
     }
 
     public function test_04_active_pnr_api_returns_structured_data(): void

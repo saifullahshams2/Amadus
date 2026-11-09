@@ -99,7 +99,7 @@ class SecurityHardeningTest extends TestCase
 
     public function test_response_includes_security_headers(): void
     {
-        $response = $this->get('/');
+        $response = $this->get('/login');
 
         $response->assertStatus(200);
         $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
@@ -324,7 +324,7 @@ class SecurityHardeningTest extends TestCase
 
     public function test_response_includes_content_security_policy_header(): void
     {
-        $response = $this->get('/');
+        $response = $this->get('/login');
 
         $response->assertStatus(200);
         $response->assertHeader('Content-Security-Policy');

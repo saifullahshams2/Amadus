@@ -4,7 +4,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstallerController;
 use App\Http\Controllers\InstructorController;
-use App\Http\Controllers\LandingController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\TerminalController;
 use App\Http\Controllers\TrainingController;
@@ -17,8 +16,8 @@ Route::post('/install', [InstallerController::class, 'install'])->name('installe
 Route::get('/install/requirements', [InstallerController::class, 'requirements'])->name('installer.requirements');
 Route::post('/install/test-db', [InstallerController::class, 'testDatabase'])->middleware('throttle:10,1')->name('installer.test-db');
 
-// Main Landing Page (Public 100vh / 100vw Welcome Portal)
-Route::get('/', [LandingController::class, 'index'])->name('landing');
+// Main Page Redirect (WordPress / external site manages the public landing portal)
+Route::redirect('/', '/login')->name('landing');
 
 // Access Dashboard Gateway (Redirects guests to register, authenticated to dashboard)
 Route::get('/access-dashboard', function () {

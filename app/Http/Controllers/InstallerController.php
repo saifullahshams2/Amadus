@@ -23,7 +23,7 @@ class InstallerController extends Controller
     public function show(Request $request): View|RedirectResponse
     {
         if ($this->isAlreadyProvisioned()) {
-            return redirect()->route('landing')->with('info', 'Application is already installed and installer is locked.');
+            return redirect()->route('login')->with('info', 'Application is already installed and installer is locked.');
         }
 
         $requirements = $this->installerService->checkRequirements();
@@ -108,7 +108,7 @@ class InstallerController extends Controller
                 return response()->json(['error' => 'Application is already installed.'], 400);
             }
 
-            return redirect()->route('landing')->with('warning', 'Application is already installed.');
+            return redirect()->route('login')->with('warning', 'Application is already installed.');
         }
 
         $rawAppUrl = $request->input('app_url');

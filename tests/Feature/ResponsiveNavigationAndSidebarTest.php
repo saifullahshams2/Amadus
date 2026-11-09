@@ -78,12 +78,10 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
         $response->assertSee(route('terminal.index'), false);
     }
 
-    public function test_03_index_landing_page_renders_as_is(): void
+    public function test_03_index_main_page_redirects_to_login(): void
     {
         $response = $this->get('/');
-        $response->assertStatus(200);
-        $response->assertSeeText('Amadus');
-        $response->assertSeeText('Master Global Distribution in');
+        $response->assertRedirect('/login');
     }
 
     public function test_04_terminal_page_has_sidebar_menu_and_3_line_icon_for_mobile_and_tablet(): void

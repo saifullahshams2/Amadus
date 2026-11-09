@@ -28,8 +28,8 @@ class InstructorStudentManagementTest extends TestCase
         $student = User::where('role', 'student')->first();
         $instructor = User::where('role', 'instructor')->first();
 
-        // 1. Guest redirected to landing
-        $this->get('/terminal')->assertRedirect('/');
+        // 1. Guest redirected to login
+        $this->get('/terminal')->assertRedirect('/login');
 
         // 2. Unapproved student redirected to pending approval
         $unapproved = User::create([

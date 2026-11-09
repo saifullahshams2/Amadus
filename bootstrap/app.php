@@ -25,7 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'instructor' => EnsureUserIsInstructor::class,
         ]);
 
-        $middleware->redirectGuestsTo(fn () => route('landing'));
+        $middleware->redirectGuestsTo(fn () => route('login'));
 
         $middleware->append(SecurityHeadersMiddleware::class);
         $middleware->append(EnsureAppIsInstalled::class);

@@ -32,7 +32,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         if (! $user) {
-            return redirect()->route('landing');
+            return redirect()->route('login');
         }
 
         // 1. Strict separation: Authenticated students are strictly restricted to student dashboard
@@ -49,7 +49,7 @@ class DashboardController extends Controller
             return $this->instructorView($request, $user, 'dashboard');
         }
 
-        return redirect()->route('landing');
+        return redirect()->route('login');
     }
 
     /**
@@ -60,7 +60,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         if (! $user) {
-            return redirect()->route('landing');
+            return redirect()->route('login');
         }
 
         if ($user->role === 'student') {
@@ -81,7 +81,7 @@ class DashboardController extends Controller
             return $this->instructorView($request, $user, $section);
         }
 
-        return redirect()->route('landing');
+        return redirect()->route('login');
     }
 
     /**
@@ -90,7 +90,7 @@ class DashboardController extends Controller
     public function switchRole(Request $request): RedirectResponse
     {
         if (! Auth::check()) {
-            return redirect()->route('landing');
+            return redirect()->route('login');
         }
 
         abort(403, 'Forbidden. Role switching is not permitted for authenticated accounts.');

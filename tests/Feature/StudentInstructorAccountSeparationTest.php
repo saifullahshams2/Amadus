@@ -107,7 +107,7 @@ class StudentInstructorAccountSeparationTest extends TestCase
         $response->assertStatus(401);
 
         $webResponse = $this->get('/instructor');
-        $webResponse->assertRedirect('/');
+        $webResponse->assertRedirect('/login');
     }
 
     public function test_instructor_has_full_access_to_dashboard_and_web_hub(): void

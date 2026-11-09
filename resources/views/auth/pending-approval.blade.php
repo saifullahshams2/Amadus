@@ -45,15 +45,10 @@
         </div>
 
         <!-- Action Links -->
-        <div class="space-y-2 pt-2">
-            <a href="/login" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs tracking-wider transition-colors shadow-sm flex items-center justify-center gap-2">
+        <div class="pt-2">
+            <a href="{{ route('login') }}" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs tracking-wider transition-colors shadow-sm flex items-center justify-center gap-2">
                 <span>Go to Sign In</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-            </a>
-
-            <a href="/" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-xs transition-colors flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                <span>Return to Home Page</span>
             </a>
         </div>
     </div>

@@ -53,7 +53,7 @@ class EnsureAppIsInstalled
                 return response()->json(['message' => 'Application is already installed and installer is locked.'], 403);
             }
 
-            return redirect()->route('landing')->with('info', 'Application is already installed and installer is locked.');
+            return redirect()->route('login')->with('info', 'Application is already installed and installer is locked.');
         }
 
         // If not installed and trying to access regular application pages, redirect to installer

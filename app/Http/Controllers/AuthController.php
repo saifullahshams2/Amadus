@@ -12,7 +12,7 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (Auth::check()) {
-            return redirect('/');
+            return redirect()->route('dashboard');
         }
 
         return view('auth.login');
@@ -21,7 +21,7 @@ class AuthController extends Controller
     public function showRegister()
     {
         if (Auth::check()) {
-            return redirect('/');
+            return redirect()->route('dashboard');
         }
 
         return view('auth.register');
@@ -148,7 +148,7 @@ class AuthController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect('/')->with('info', 'You have been logged out.');
+        return redirect()->route('login')->with('info', 'You have been logged out.');
     }
 
     public function me(Request $request)

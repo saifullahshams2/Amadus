@@ -16,11 +16,10 @@ class AmadeusGdsIntegrationTest extends TestCase
         $this->seedTestUsers();
     }
 
-    public function test_01_home_page_returns_http_200(): void
+    public function test_01_home_page_redirects_to_login(): void
     {
         $response = $this->get('/');
-        $response->assertStatus(200);
-        $response->assertSee('Amadus');
+        $response->assertRedirect('/login');
     }
 
     public function test_02_student_authentication_succeeds(): void

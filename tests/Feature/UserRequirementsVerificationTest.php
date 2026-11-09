@@ -156,9 +156,9 @@ class UserRequirementsVerificationTest extends TestCase
         $reinstallResponse = $this->postJson('/install', $payload);
         $reinstallResponse->assertStatus(400);
 
-        // Web request to /install redirects to main page
+        // Web request to /install redirects to login
         $webInstallResponse = $this->get('/install');
-        $webInstallResponse->assertRedirect('/');
+        $webInstallResponse->assertRedirect('/login');
     }
 
     public function test_requirement_2_remove_installer_command_locks_installer(): void
@@ -172,30 +172,30 @@ class UserRequirementsVerificationTest extends TestCase
     }
 
     /**
-     * Requirement 3: If no one is logged in, redirect to main page.
+     * Requirement 3: If no one is logged in, redirect to login page.
      */
-    public function test_requirement_3_unauthenticated_dashboard_redirects_to_main_page(): void
+    public function test_requirement_3_unauthenticated_dashboard_redirects_to_login(): void
     {
         $response = $this->get('/dashboard');
-        $response->assertRedirect('/');
+        $response->assertRedirect('/login');
     }
 
-    public function test_requirement_3_unauthenticated_terminal_redirects_to_main_page(): void
+    public function test_requirement_3_unauthenticated_terminal_redirects_to_login(): void
     {
         $response = $this->get('/terminal');
-        $response->assertRedirect('/');
+        $response->assertRedirect('/login');
     }
 
-    public function test_requirement_3_unauthenticated_instructor_hub_redirects_to_main_page(): void
+    public function test_requirement_3_unauthenticated_instructor_hub_redirects_to_login(): void
     {
         $response = $this->get('/instructor');
-        $response->assertRedirect('/');
+        $response->assertRedirect('/login');
     }
 
-    public function test_requirement_3_unauthenticated_switch_role_redirects_to_main_page(): void
+    public function test_requirement_3_unauthenticated_switch_role_redirects_to_login(): void
     {
         $response = $this->post('/dashboard/switch-role', ['role' => 'instructor']);
-        $response->assertRedirect('/');
+        $response->assertRedirect('/login');
     }
 
     public function test_requirement_3_authenticated_user_accesses_protected_routes(): void

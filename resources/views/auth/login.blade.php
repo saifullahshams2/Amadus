@@ -4,12 +4,8 @@
 
 @section('content')
 <div class="min-h-screen w-full flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-y-auto">
-    <!-- Back to Home Link -->
-    <div class="max-w-md w-full mb-4 flex items-center justify-between">
-        <a href="/" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            <span>Back to Home</span>
-        </a>
+    <!-- Top Action Links -->
+    <div class="max-w-md w-full mb-4 flex items-center justify-end">
         <a href="{{ route('register') }}" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">
             Create Account &rarr;
         </a>

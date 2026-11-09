@@ -151,9 +151,9 @@ class InstallerTest extends TestCase
         $dummyInstructor = User::factory()->create(['role' => 'instructor']);
         $this->installerService->markInstalled($dummyInstructor);
 
-        // Attempting to visit /install should redirect to landing / main page
+        // Attempting to visit /install should redirect to login page
         $response = $this->get('/install');
-        $response->assertRedirect('/');
+        $response->assertRedirect('/login');
 
         // JSON post to /install should return 400
         $jsonResponse = $this->postJson('/install', [
@@ -352,7 +352,7 @@ class InstallerTest extends TestCase
         $this->assertFalse($this->installerService->isInstalled());
 
         $response = $this->get('/install');
-        $response->assertRedirect(route('landing'));
+        $response->assertRedirect(route('login'));
         $response->assertSessionHas('info', 'Application is already installed and installer is locked.');
     }
 
@@ -382,7 +382,7 @@ class InstallerTest extends TestCase
         EnsureAppIsInstalled::$bypassInTesting = false;
 
         $response = $this->get('/');
-        $response->assertStatus(200);
+        $response->assertRedirect('/login');
         $this->assertTrue($this->installerService->isInstalled());
         $this->assertFileExists(storage_path('installed'));
     }
