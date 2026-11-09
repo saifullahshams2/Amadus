@@ -1,22 +1,27 @@
-# Graph Report - amadus  (2026-11-08)
+# Graph Report - amadus  (2026-11-09)
 
 ## Corpus Check
-- 170 files · ~301,333 words
+- 167 files · ~303,511 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 22 file(s) not represented in the graph (top: (none) 18, .example 1, .xml 1)
 
 ## Summary
-- 1531 nodes · 2320 edges · 133 communities (72 shown, 61 thin omitted)
-- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 149 edges (avg confidence: 0.86)
+- 1563 nodes · 2369 edges · 127 communities (71 shown, 56 thin omitted)
+- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 153 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `37478bb9`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - Coverage Ledger Validation
 - Security Findings Validation
 - PHP Package Dependencies
-- Application Service Provider
+- InstallerTest
 - Database Migrations & Schema
-- User Authentication & Passwords
+- User
 - Adding a cache to an existing 
 - Dashboard & Scenario Management
 - User Authentication & Passwords
@@ -31,14 +36,14 @@
 - Amadeus Reservation Reference
 - Authentication & Role Middleware
 - Amadeus Command Reference Tests
-- Anti-patterns
+- Security Audit
 - PNR Lifecycle Service
 - Student & Instructor Tests
 - Scenarios & Auto-Grading
-- Dashboard & Scenario Management
+- poc_idor_58e94365.py
 - DualRoleDashboardTest
-- Aircraftphp
-- Hotel & Car Rental System
+- Illuminate\Database\Eloquent\Model
+- AmadeusParser
 - IATA Encode & Decode Engine
 - Scenarios & Auto-Grading
 - A Validation  HTTP input
@@ -61,25 +66,24 @@
 - Back Off Transient Failures
 - AI LLM and Agent Hunting
 - Core discipline include in eve
-- Core hunting method  include i
-- Candidate-verifier prompt
+- UserRequirementsVerificationTest
+- AppServiceProvider
 - API-key and mTLS attack classe
-- Scenarios & Auto-Grading
+- Illuminate\Support\Str
 - Queue Distribution Service
 - Caching Best Practices
 - Add Indexes for Measured Query
 - Apply Global Scopes Sparingly
-- Attack Classes
+- ATTACK-CLASSES.md
 - Broker and queue isolation att
 - Computational amplification at
 - CI and automation attack class
 - PNR Cancellation XEXI
 - Amadeus Carrier Access Levels
-- QueueItemphp
-- AmadeusParserphp
+- .performInstall
 - Flight Availability Service
 - Pricing & Tariff Engine
-- UserFactoryphp
+- TestCase
 - Alta Cryptic Terminal Emulator
 - DashboardSubpagesAndTerminalHe
 - ResponsiveNavigationAndSidebar
@@ -89,7 +93,6 @@
 - Bound Work Inside the Task
 - Endpoint Coverage
 - Other Services Information OS
-- Scenarios & Auto-Grading
 - Flight Operational Info & MCT
 - Date & Math Conversions
 - Choose Between cursor and lazy
@@ -106,12 +109,11 @@
 - Terminal Help System
 - Configuration Best Practices
 - File Layout
-- Customer Profile Engine
 - TicketingServicephp
-- DatabaseSeederphp
-- Architecture summary and compa
+- Illuminate\Foundation\Testing\RefreshDatabase
 - Data Providers
 - Consistency First
+- ScenarioService
 - Retrieve History RHRLH
 - PHPUnitFrameworkTestCase
 - mcpjson
@@ -129,10 +131,10 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `Amadeus Quick Reference Guide` - 54 edges
-2. `User` - 37 edges
-3. `InstallerService` - 34 edges
-4. `TestCase` - 31 edges
-5. `SecurityHardeningTest` - 30 edges
+2. `SecurityHardeningTest` - 46 edges
+3. `User` - 37 edges
+4. `InstallerService` - 34 edges
+5. `TestCase` - 31 edges
 6. `AmadeusCmdReference2Test` - 24 edges
 7. `InstallerTest` - 24 edges
 8. `DashboardController` - 22 edges
@@ -148,8 +150,8 @@
   amadeus-cmd-1.md → amadeus-cmd-2.md
 - `Other Services Information (OS)` --semantically_similar_to--> `Other Service Information`  [INFERRED] [semantically similar]
   amadeus-cmd-1.md → amadeus-cmd-2.md
-- `{closure#2}()` --references--> `User`  [EXTRACTED]
-  app/Http/Controllers/DashboardController.php → app/Models/User.php
+- `Retrieve History (RH/RLH)` --semantically_similar_to--> `PNR History Tracking`  [INFERRED] [semantically similar]
+  amadeus-cmd-1.md → amadeus-cmd-2.md
 
 ## Import Cycles
 - None detected.
@@ -159,7 +161,7 @@
 - **PNR Creation and Booking Lifecycle** — amadeus_cmd_1_name_element, amadeus_cmd_1_segment_sell, amadeus_cmd_1_phone_field, amadeus_cmd_1_ticketing_arrangement, amadeus_cmd_1_received_from, amadeus_cmd_1_end_transaction [EXTRACTED 1.00]
 - **Core GDS Subsystems** — features_trainee_student_dashboard, features_instructor_operations_hub, features_cryptic_terminal_simulator, features_altea_cryptic_command_engine [INFERRED 0.85]
 
-## Communities (133 total, 61 thin omitted)
+## Communities (127 total, 56 thin omitted)
 
 ### Community 0 - "Coverage Ledger Validation"
 Cohesion: 0.06
@@ -173,33 +175,25 @@ Nodes (56): canonicalKey(), append(), encode(), codePointLength(), collect(), co
 Cohesion: 0.04
 Nodes (48): pestphp/pest-plugin, php-http/discovery, autoload, autoload-dev, psr-4, psr-4, config, allow-plugins (+40 more)
 
-### Community 3 - "Application Service Provider"
-Cohesion: 0.06
-Nodes (3): AppServiceProvider, InstallerTest, UserRequirementsVerificationTest
-
 ### Community 4 - "Database Migrations & Schema"
 Cohesion: 0.09
 Nodes (19): {closure#1}(), {closure#2}(), {closure#3}(), {closure#1}(), {closure#2}(), {closure#1}(), {closure#2}(), {closure#3}() (+11 more)
 
-### Community 5 - "User Authentication & Passwords"
-Cohesion: 0.10
-Nodes (6): {closure#1}(), Pnr, User, AmadeusGdsIntegrationTest, ExampleTest, TestCase
+### Community 5 - "User"
+Cohesion: 0.12
+Nodes (5): {closure#2}(), {closure#1}(), LessonProgress, Pnr, User
 
 ### Community 6 - "Adding a cache to an existing "
 Cohesion: 0.06
 Nodes (30): Adding a cache to an existing environment, Adding a database to an existing environment, Checklists for Multi-Step Operations, Custom domain setup, Full environment setup (app + database + cache + domain), New app from scratch, Application Setup, Billing and Usage (+22 more)
 
 ### Community 8 - "User Authentication & Passwords"
-Cohesion: 0.07
-Nodes (5): AuthController, Controller, LandingController, PasswordResetController, TerminalController
+Cohesion: 0.09
+Nodes (3): AuthController, Controller, PasswordResetController
 
 ### Community 9 - "Frontend GDS Type Definitions"
 Cohesion: 0.07
 Nodes (29): AutoGradeResult, ClassroomStudentStatus, CommandDefinition, CommandType, ContactElement, FareElement, FlightSegment, GradingElementCheck (+21 more)
-
-### Community 10 - "Application Installer & Setup"
-Cohesion: 0.16
-Nodes (3): {closure#1}(), InstallerController, InstallerService
 
 ### Community 12 - "APIs  Eloquent Resources"
 Cohesion: 0.07
@@ -223,23 +217,35 @@ Nodes (21): Amadeus Basic Reservation Guide, Flight Availability Display (AN/SN)
 
 ### Community 18 - "Authentication & Role Middleware"
 Cohesion: 0.16
-Nodes (6): EnsureAppIsInstalled, EnsureUserIsInstructor, SecurityHeadersMiddleware, {closure#1}(), {closure#3}(), {closure#4}()
+Nodes (5): EnsureUserIsInstructor, SecurityHeadersMiddleware, {closure#1}(), {closure#3}(), {closure#4}()
 
-### Community 20 - "Anti-patterns"
+### Community 20 - "Security Audit"
+Cohesion: 0.04
+Nodes (42): Core hunting method — include in every hunter prompt, Core validation rules — include in every hunter prompt, Coverage-critic waves, Local validation boundaries, Parent consolidation and ledger update, Phase 2: Run coverage-led hunting waves, Promotion procedure — copy this promotion procedure verbatim into every hunter prompt, Required hunter prompt (+34 more)
+
+### Community 21 - "PNR Lifecycle Service"
+Cohesion: 0.17
+Nodes (3): CommandExecutionResult, PnrService, PnrValidationResult
+
+### Community 22 - "Student & Instructor Tests"
+Cohesion: 0.08
+Nodes (3): Scenario, {closure#1}(), StudentInstructorAccountSeparationTest
+
+### Community 23 - "Scenarios & Auto-Grading"
+Cohesion: 0.14
+Nodes (5): {closure#1}(), {closure#4}(), {closure#5}(), Submission, TerminalActivityLog
+
+### Community 24 - "poc_idor_58e94365.py"
+Cohesion: 0.26
+Nodes (8): api_headers(), execute(), login(), main(), new_session(), phase2(), phase3(), show()
+
+### Community 26 - "Illuminate\Database\Eloquent\Model"
 Cohesion: 0.11
-Nodes (18): Anti-patterns, Core principles, Cost budget, Coverage and prior runs, Full audit planning, Full audit setup, Full audit workflow, Operating modes (+10 more)
+Nodes (8): Aircraft, Airline, Airport, {closure#1}(), {closure#2}(), QueueItem, AisResult, AisService
 
-### Community 24 - "Dashboard & Scenario Management"
-Cohesion: 0.19
-Nodes (6): {closure#1}(), {closure#2}(), {closure#4}(), {closure#5}(), LessonProgress, TerminalActivityLog
-
-### Community 26 - "Aircraftphp"
-Cohesion: 0.21
-Nodes (4): Aircraft, Airline, Airport, AisResult
-
-### Community 27 - "Hotel & Car Rental System"
-Cohesion: 0.20
-Nodes (6): AisService, AmadeusParser, HotelCarResult, HotelCarService, TimaticResult, TimaticService
+### Community 27 - "AmadeusParser"
+Cohesion: 0.12
+Nodes (8): TerminalController, AmadeusParser, HotelCarResult, HotelCarService, ProfileResult, ProfileService, TimaticResult, TimaticService
 
 ### Community 29 - "Scenarios & Auto-Grading"
 Cohesion: 0.17
@@ -266,15 +272,15 @@ Cohesion: 0.18
 Nodes (10): Client-Side and Browser Hunting, Core discipline (include in every agent prompt for this domain), Cross-origin messaging and network attack classes (subagent_type: `general`), Cross-site information leak classes (subagent_type: `general`), DOM and object-state attack classes (subagent_type: `general`), Service-worker and browser-storage attack classes (subagent_type: `general`), UI-redress and navigation attack classes (subagent_type: `general`), Universal moves (apply across the above) (+2 more)
 
 ### Community 37 - "Cloud and Deployment Hunting"
-Cohesion: 0.18
+Cohesion: 0.20
 Nodes (10): Cloud and Deployment Hunting, Configuration and secret lifecycle attack classes (subagent_type: `general`), Container and orchestration attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Ingress, network, and control-plane attack classes (subagent_type: `general`), Managed storage, events, and edge attack classes (subagent_type: `general`), Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+2 more)
 
 ### Community 38 - "Application-state and device-l"
-Cohesion: 0.18
+Cohesion: 0.20
 Nodes (10): Application-state and device-lifecycle attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Deep-link, callback, and navigation attack classes (subagent_type: `general`), Desktop, Mobile, and Local IPC Hunting, Local IPC and exported-component attack classes (subagent_type: `general`), Privileged-helper and local-file attack classes (subagent_type: `general`), Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+2 more)
 
 ### Community 39 - "Binary loading and runtime att"
-Cohesion: 0.18
+Cohesion: 0.20
 Nodes (10): Binary loading and runtime attack classes (subagent_type: `general`), Bounds, integer, and representation attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), FFI and ABI attack classes (subagent_type: `general`), Kernel and privileged-interface attack classes (subagent_type: `general`), Lifetime, type, and concurrency attack classes (subagent_type: `general`), Memory Safety, Binary, and Kernel Hunting, Universal moves (apply across the above) (+2 more)
 
 ### Community 40 - "Basic Usage"
@@ -305,17 +311,13 @@ Nodes (9): AI, LLM, and Agent Hunting, Context, retrieval, and memory attack cla
 Cohesion: 0.20
 Nodes (9): Core discipline (include in every agent prompt for this domain), Data Isolation and Lifecycle Hunting, Deletion, revocation, and lifecycle attack classes (subagent_type: `general`), Derived-data and disclosure attack classes (subagent_type: `general`), Export, backup, restore, and migration attack classes (subagent_type: `general`), Tenant and object-isolation attack classes (subagent_type: `general`), Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+1 more)
 
-### Community 50 - "Core hunting method  include i"
-Cohesion: 0.20
-Nodes (10): Core hunting method — include in every hunter prompt, Core validation rules — include in every hunter prompt, Coverage-critic waves, Local validation boundaries, Parent consolidation and ledger update, Phase 2: Run coverage-led hunting waves, Promotion procedure — copy this promotion procedure verbatim into every hunter prompt, Required hunter prompt (+2 more)
-
-### Community 51 - "Candidate-verifier prompt"
-Cohesion: 0.20
-Nodes (9): Candidate-verifier prompt, `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md`, Phase 3: Independently validate every candidate, Phase 4: Write and validate `findings.json`, Phase 5: Verify the final records with fresh eyes, Phase 6: Produce target-neutral reports from final records, `REPORT.md` (+1 more)
-
 ### Community 52 - "API-key and mTLS attack classe"
-Cohesion: 0.20
+Cohesion: 0.18
 Nodes (10): API-key and mTLS attack classes (subagent_type: `general`), Browser-session attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Federated-identity attack classes (subagent_type: `general`), HTTP framing and cache attack classes (subagent_type: `general`), HTTP-Protocol and Authentication Hunting, MFA, passkey, and account-transition attack classes (subagent_type: `general`), Universal moves (apply across the above) (+2 more)
+
+### Community 53 - "Illuminate\Support\Str"
+Cohesion: 0.09
+Nodes (3): {closure#1}(), {closure#1}(), UserFactory
 
 ### Community 55 - "Caching Best Practices"
 Cohesion: 0.22
@@ -330,7 +332,7 @@ Cohesion: 0.22
 Nodes (8): Apply Global Scopes Sparingly, Cast Date and Time Attributes, Define Attribute Casts, Define Precise Relationship Types, Eloquent Best Practices, Keep Application Queries Model-Aware, Use Local Scopes for Reusable Queries, Use `whereBelongsTo()` for Relationship Queries
 
 ### Community 59 - "Broker and queue isolation att"
-Cohesion: 0.22
+Cohesion: 0.20
 Nodes (9): Broker and queue isolation attack classes (subagent_type: `general`), Core discipline (include in every agent prompt for this domain), Framing, schema, and interpretation attack classes (subagent_type: `general`), Protocols, RPC, and Messaging Hunting, Replay, ordering, and transaction attack classes (subagent_type: `general`), RPC identity and authorization attack classes (subagent_type: `general`), Universal moves (apply across the above), Validation rules (apply before reporting ANY finding here) (+1 more)
 
 ### Community 60 - "Computational amplification at"
@@ -348,10 +350,6 @@ Nodes (8): PNR Cancellation (XE/XI), Connection Points Display, Dual City Pair A
 ### Community 63 - "Amadeus Carrier Access Levels"
 Cohesion: 0.25
 Nodes (9): Amadeus Carrier Access Levels, Availability Change Entries, Amadeus Best Pricer, Direct Access Mode, Fare Diagnostic, PNR Pricing Entries, Segment Sell Entries, Amadeus Segment Status Codes (+1 more)
-
-### Community 64 - "QueueItemphp"
-Cohesion: 0.31
-Nodes (3): {closure#1}(), {closure#2}(), QueueItem
 
 ### Community 69 - "Alta Cryptic Terminal Emulator"
 Cohesion: 0.22
@@ -433,9 +431,9 @@ Nodes (5): Configuration Best Practices, Name Repeated Domain Values, Protect Pr
 Cohesion: 0.33
 Nodes (5): File Layout, Grouping, Naming and Structure, Naming Tests, Test Class and Methods
 
-### Community 100 - "Architecture summary and compa"
-Cohesion: 0.40
-Nodes (5): Architecture summary and companion selection, Deterministic coverage ledger, Phase 1: Map the source and plan coverage, Prior-run input, Reconnaissance
+### Community 99 - "Illuminate\Foundation\Testing\RefreshDatabase"
+Cohesion: 0.16
+Nodes (3): EnsureAppIsInstalled, DatabaseSeeder, AmadeusGdsIntegrationTest
 
 ### Community 101 - "Data Providers"
 Cohesion: 0.40
@@ -451,23 +449,23 @@ Nodes (4): Retrieve History (RH/RLH), PNR History Tracking, Amadeus Queues Manag
 
 ## Knowledge Gaps
 - **424 isolated node(s):** `php`, `concurrently`, `tailwindcss`, `@laravel/multiplex`, `layouts.app` (+419 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 812 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **61 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 833 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **56 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `User` connect `User Authentication & Passwords` to `Userphp`, `AmadeusParserphp`, `UserFactoryphp`, `Dashboard & Scenario Management`, `Queue Distribution Service`, `InstallAppCommandphp`, `Application Installer & Setup`, `Authentication & Role Middleware`, `Scenarios & Auto-Grading`, `Dashboard & Scenario Management`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `User` connect `User` to `AmadeusParserphp`, `Illuminate\Foundation\Testing\RefreshDatabase`, `TestCase`, `DashboardSubpagesAndTerminalHe`, `Dashboard & Scenario Management`, `ScenarioService`, `Application Installer & Setup`, `Authentication & Role Middleware`, `Illuminate\Support\Str`, `Student & Instructor Tests`, `Scenarios & Auto-Grading`?**
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **What connects `php`, `concurrently`, `tailwindcss` to the rest of the system?**
   _424 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Coverage Ledger Validation` be split into smaller, more focused modules?**
-  _Cohesion score 0.06219918548685672 - nodes in this community are weakly interconnected._
-- **Why does `AmadeusParser` connect `Hotel & Car Rental System` to `AmadeusParserphp`, `Flight Availability Service`, `Pricing & Tariff Engine`, `Customer Profile Engine`, `TicketingServicephp`, `User Authentication & Passwords`, `Flight Operational Info & MCT`, `Date & Math Conversions`, `PNR Lifecycle Service`, `Queue Distribution Service`, `Dashboard & Scenario Management`, `IATA Encode & Decode Engine`, `Terminal Help System`?**
-  _High betweenness centrality (0.033) - this node is a cross-community bridge._
+  _Cohesion score 0.06054054054054054 - nodes in this community are weakly interconnected._
+- **Why does `TestCase` connect `TestCase` to `InstructorStudentManagementTes`, `User Authentication & Passwords`, `Illuminate\Foundation\Testing\RefreshDatabase`, `InstallerTest`, `User`, `DashboardSubpagesAndTerminalHe`, `ResponsiveNavigationAndSidebar`, `LandingAndApprovalTest`, `Security Hardening Tests`, `Amadeus Command 2 Feature Tests`, `UserRequirementsVerificationTest`, `Amadeus Command Reference Tests`, `Student & Instructor Tests`, `Scenarios & Auto-Grading`, `DualRoleDashboardTest`?**
+  _High betweenness centrality (0.031) - this node is a cross-community bridge._
 - **Should `Security Findings Validation` be split into smaller, more focused modules?**
-  _Cohesion score 0.05541346973572037 - nodes in this community are weakly interconnected._
-- **Why does `TestCase` connect `User Authentication & Passwords` to `InstructorStudentManagementTes`, `User Authentication & Passwords`, `Application Service Provider`, `DashboardSubpagesAndTerminalHe`, `ResponsiveNavigationAndSidebar`, `LandingAndApprovalTest`, `Security Hardening Tests`, `Amadeus Command 2 Feature Tests`, `Amadeus Command Reference Tests`, `Student & Instructor Tests`, `Scenarios & Auto-Grading`, `DualRoleDashboardTest`?**
-  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+  _Cohesion score 0.05662862159789289 - nodes in this community are weakly interconnected._
+- **Why does `AmadeusParser` connect `AmadeusParser` to `AmadeusParserphp`, `Flight Availability Service`, `Pricing & Tariff Engine`, `TicketingServicephp`, `Flight Operational Info & MCT`, `Date & Math Conversions`, `PNR Lifecycle Service`, `Queue Distribution Service`, `Illuminate\Database\Eloquent\Model`, `IATA Encode & Decode Engine`, `Terminal Help System`?**
+  _High betweenness centrality (0.031) - this node is a cross-community bridge._
 - **Should `PHP Package Dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.04081632653061224 - nodes in this community are weakly interconnected._
