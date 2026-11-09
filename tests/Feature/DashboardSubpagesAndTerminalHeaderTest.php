@@ -84,7 +84,7 @@ class DashboardSubpagesAndTerminalHeaderTest extends TestCase
         $response->assertSee(route('dashboard.section', 'students'), false);
         $response->assertSee(route('dashboard.section', 'builder'), false);
         $response->assertSee(route('dashboard.section', 'gradebook'), false);
-        $response->assertSee(route('dashboard.section', 'queues'), false);
+        $response->assertDontSee(route('dashboard.section', 'queues'), false);
         $response->assertSee(route('dashboard.section', 'analytics'), false);
     }
 
@@ -116,11 +116,9 @@ class DashboardSubpagesAndTerminalHeaderTest extends TestCase
         $resGradebook->assertSeeText('SUBMISSIONS & GRADEBOOK');
         $resGradebook->assertSeeText('Submissions & Gradebook');
 
-        // Queues sub-page
+        // Queues sub-page (removed - redirects to dashboard)
         $resQueues = $this->actingAs($instructor)->get('/dashboard/queues');
-        $resQueues->assertStatus(200);
-        $resQueues->assertSeeText('QUEUE & SANDBOX MANAGER');
-        $resQueues->assertSeeText('Simulated Queue & Sandbox Management');
+        $resQueues->assertRedirect(route('dashboard'));
 
         // Analytics sub-page
         $resAnalytics = $this->actingAs($instructor)->get('/dashboard/analytics');

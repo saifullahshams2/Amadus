@@ -73,7 +73,7 @@ class DashboardController extends Controller
         }
 
         if ($user->role === 'instructor') {
-            $allowedInstructorSections = ['classroom', 'students', 'builder', 'gradebook', 'queues', 'analytics'];
+            $allowedInstructorSections = ['classroom', 'students', 'builder', 'gradebook', 'analytics'];
             if (! in_array($section, $allowedInstructorSections, true)) {
                 return redirect()->route('dashboard');
             }

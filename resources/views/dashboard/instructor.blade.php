@@ -17,7 +17,6 @@
                         @case('students') ENROLLED STUDENT ROSTER @break
                         @case('builder') SCENARIO & DRILL BUILDER @break
                         @case('gradebook') SUBMISSIONS & GRADEBOOK @break
-                        @case('queues') QUEUE & SANDBOX MANAGER @break
                         @case('analytics') CLASSROOM ANALYTICS & AUDIT TRAIL @break
                         @default {{ strtoupper($currentSection) }}
                     @endswitch
@@ -32,7 +31,7 @@
 
     <!-- KPI Summary Row -->
     @if(($currentSection ?? 'dashboard') === 'dashboard')
-    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div>
                 <div class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">Enrolled Trainees</div>
@@ -66,17 +65,6 @@
             </div>
             <div class="w-12 h-12 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-        </div>
-
-        <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
-            <div>
-                <div class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">Queue Bank</div>
-                <div class="text-2xl font-black text-amber-600 mt-1">{{ array_sum(array_column($queueSummary, 'count')) }} PNRs</div>
-                <div class="text-[11px] text-amber-700/80 mt-1 font-medium">Simulated agency queues</div>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
             </div>
         </div>
     </section>
@@ -148,7 +136,7 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <!-- 1. Classroom & Spectator -->
             <a href="{{ route('dashboard.section', 'classroom') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-amber-400 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
                 <div class="space-y-2">
@@ -188,20 +176,6 @@
                 </div>
                 <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-sky-700 font-bold">
                     <span>Build Drills &rarr;</span>
-                </div>
-            </a>
-
-            <!-- 4. Queue & Sandbox Manager -->
-            <a href="{{ route('dashboard.section', 'queues') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-indigo-400 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
-                <div class="space-y-2">
-                    <div class="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    </div>
-                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-indigo-800">Queue & Sandbox</h3>
-                    <p class="text-[11px] text-slate-500 leading-relaxed">Broadcast PNR flight changes into student queues and manage sandbox resets.</p>
-                </div>
-                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-indigo-700 font-bold">
-                    <span>Manage Queues &rarr;</span>
                 </div>
             </a>
         </div>
@@ -559,47 +533,6 @@
     </section>
     @endif
 
-    <!-- Section 4: Simulated Queue & Sandbox Management (Dedicated to /dashboard/queues) -->
-    @if(($currentSection ?? '') === 'queues')
-    <section id="queues" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-        <div class="px-4 sm:px-6 py-3.5 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-                <h2 class="text-sm font-bold text-slate-900 tracking-wide">Simulated Queue & Sandbox Management</h2>
-                <p class="text-xs text-slate-500">Broadcast test PNRs directly to student agency queues or reset sandbox environments</p>
-            </div>
-
-            <div class="flex items-center space-x-2 flex-wrap gap-2">
-                <button @click="showBroadcastModal = true" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                    <span>Broadcast PNR to Queue</span>
-                </button>
-                <button @click="resetSandbox(null)" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-lg text-xs font-bold transition-colors">
-                    Reset Entire Classroom Sandbox
-                </button>
-            </div>
-        </div>
-
-        <div class="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
-            @foreach($queueSummary as $q)
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-xs">
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono text-xs font-bold">Queue {{ $q['queueNumber'] }}</span>
-                            <span class="text-lg font-black text-slate-900 font-mono">{{ $q['count'] }}</span>
-                        </div>
-                        <h4 class="text-xs font-bold text-slate-900 mt-1">{{ $q['name'] }}</h4>
-                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">{{ $q['description'] }}</p>
-                    </div>
-                    <div class="pt-3 border-t border-slate-200 mt-3 flex items-center justify-between text-[11px] font-mono">
-                        <span class="text-slate-500">Amadeus Entry:</span>
-                        <span class="text-emerald-700 font-bold">QD {{ $q['queueNumber'] }}</span>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </section>
-    @endif
-
     <!-- Section 5: Classroom Analytics & Audit Trail (Dedicated to /dashboard/analytics) -->
     @if(($currentSection ?? '') === 'analytics')
     <section id="analytics" class="space-y-6">
@@ -803,73 +736,6 @@
                 <button @click="selectedSubModal = null" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded text-xs">Cancel</button>
                 <button @click="submitGradeOverride()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-xs transition-colors shadow-sm">Save Score & Feedback</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Broadcast PNR to Queue Modal -->
-    <div x-show="showBroadcastModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
-        <div @click.away="showBroadcastModal = false" class="bg-white border border-slate-200 rounded-xl max-w-lg w-full flex flex-col overflow-hidden shadow-2xl">
-            <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-slate-900">Broadcast Test PNR to Queue</h3>
-                <button @click="showBroadcastModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-base">✕</button>
-            </div>
-
-            <form @submit.prevent="broadcastPnr()" class="p-5 space-y-3.5 text-xs">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-600 font-mono mb-1 font-semibold">TARGET QUEUE</label>
-                        <select x-model="broadcastForm.queue_number" class="w-full bg-white border border-slate-300 text-slate-900 text-xs px-3 py-2 rounded outline-none font-mono focus:border-blue-500">
-                            <option value="1">Queue 1 - Ticketing Time Limit</option>
-                            <option value="7">Queue 7 - Schedule Changes</option>
-                            <option value="8">Queue 8 - Waitlist Confirmations</option>
-                            <option value="9">Queue 9 - General Messages</option>
-                            <option value="87">Queue 87 - Exchange & Reissue</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-600 font-mono mb-1 font-semibold">URGENCY</label>
-                        <select x-model="broadcastForm.urgency" class="w-full bg-white border border-slate-300 text-slate-900 text-xs px-3 py-2 rounded outline-none focus:border-blue-500">
-                            <option value="NORMAL">NORMAL</option>
-                            <option value="HIGH">HIGH</option>
-                            <option value="CRITICAL">CRITICAL</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-600 font-mono mb-1 font-semibold">RECORD LOCATOR (6-CHAR)</label>
-                        <input type="text" x-model="broadcastForm.pnr_locator" maxlength="6" placeholder="e.g. M7K2R9" required class="w-full bg-white border border-slate-300 text-slate-900 text-xs px-3 py-2 rounded font-mono uppercase outline-none focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-slate-600 font-mono mb-1 font-semibold">TARGET STUDENT (OR ALL)</label>
-                        <select x-model="broadcastForm.target_user_id" class="w-full bg-white border border-slate-300 text-slate-900 text-xs px-3 py-2 rounded outline-none font-mono focus:border-blue-500">
-                            <option value="">Broadcast to All Students</option>
-                            <template x-for="st in students" :key="st.username">
-                                <option :value="st.username" x-text="st.username + ' (' + st.name + ')'"></option>
-                            </template>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-slate-600 font-mono mb-1 font-semibold">PASSENGER NAME & ITINERARY</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="text" x-model="broadcastForm.passenger" placeholder="e.g. SMITH/JOHN MR" required class="w-full bg-white border border-slate-300 text-slate-900 text-xs px-3 py-1.5 rounded font-mono outline-none focus:border-blue-500">
-                        <input type="text" x-model="broadcastForm.itinerary" placeholder="e.g. LHR-JFK (BA 117)" required class="w-full bg-white border border-slate-300 text-slate-900 text-xs px-3 py-1.5 rounded font-mono outline-none focus:border-blue-500">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-slate-600 font-mono mb-1 font-semibold">QUEUE ADVISORY MESSAGE</label>
-                    <textarea rows="2" x-model="broadcastForm.message" placeholder="e.g. TTL EXPIRING IN 1 HOUR. ISSUE TICKET OR AUTO-CANCEL..." required class="w-full bg-white border border-slate-300 text-slate-900 text-xs p-2.5 rounded outline-none focus:border-blue-500"></textarea>
-                </div>
-
-                <div class="p-3 border-t border-slate-200 bg-slate-50 flex justify-end space-x-2 -mx-5 -mb-5 mt-4">
-                    <button type="button" @click="showBroadcastModal = false" class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded text-xs">Cancel</button>
-                    <button type="submit" class="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded text-xs shadow-sm">Broadcast PNR</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -1271,18 +1137,6 @@ function instructorDashboard() {
         overrideScore: 100,
         instructorFeedback: '',
 
-        showBroadcastModal: false,
-        broadcastForm: {
-            queue_number: 1,
-            category: 'TICKETING',
-            urgency: 'NORMAL',
-            pnr_locator: '',
-            target_user_id: '',
-            passenger: '',
-            itinerary: '',
-            message: ''
-        },
-
         init() {},
 
         get filteredStudents() {
@@ -1432,28 +1286,6 @@ function instructorDashboard() {
             }
         },
 
-        async broadcastPnr() {
-            try {
-                const res = await fetch('/api/instructor/queues/broadcast', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify(this.broadcastForm)
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    await customAlert(`PNR ${this.broadcastForm.pnr_locator} broadcasted to Queue ${this.broadcastForm.queue_number}!`, 'Broadcast Successful', 'success');
-                    this.showBroadcastModal = false;
-                    window.location.reload();
-                }
-            } catch (e) {
-                await customAlert('Failed to broadcast PNR to queue.', 'Broadcast Error', 'error');
-            }
-        },
-
         openCreateStudentModal() {
             this.studentCreateError = '';
             this.newStudent = {
@@ -1565,32 +1397,6 @@ function instructorDashboard() {
             }).catch(async () => {
                 await customPrompt('Copy student credentials below:', text, 'Student Credentials');
             });
-        },
-
-        async resetSandbox(studentUsername) {
-            const msg = studentUsername ? `Reset sandbox for ${studentUsername}?` : 'Are you sure you want to reset the entire classroom sandbox? All pending queue items and logs will be purged.';
-            if (!await customConfirm(msg, 'Reset Sandbox', { type: 'danger', confirmText: 'Reset Sandbox' })) {
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/instructor/sandbox/reset', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({ target_user_id: studentUsername })
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    await customAlert(data.message, 'Sandbox Reset', 'success');
-                    window.location.reload();
-                }
-            } catch (e) {
-                await customAlert('Sandbox reset failed.', 'Reset Error', 'error');
-            }
         }
     };
 }

@@ -158,13 +158,7 @@
                     <span>Submissions & Gradebook</span>
                 </a>
 
-                {{-- 6. Queue & Sandbox Manager --}}
-                <a href="{{ route('dashboard.section', 'queues') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors {{ ($currentSection ?? '') === 'queues' ? 'bg-amber-50 text-amber-800 font-bold border border-amber-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
-                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    <span>Queue & Sandbox Manager</span>
-                </a>
-
-                {{-- 7. Classroom Analytics --}}
+                {{-- 6. Classroom Analytics --}}
                 <a href="{{ route('dashboard.section', 'analytics') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors {{ ($currentSection ?? '') === 'analytics' ? 'bg-amber-50 text-amber-800 font-bold border border-amber-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
                     <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                     <span>Classroom Analytics</span>
@@ -376,13 +370,7 @@
                                 <span>Submissions & Gradebook</span>
                             </a>
 
-                            {{-- 6. Queue & Sandbox Manager --}}
-                            <a href="{{ route('dashboard.section', 'queues') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors {{ ($currentSection ?? '') === 'queues' ? 'bg-amber-50 text-amber-800 font-bold border border-amber-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
-                                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                <span>Queue & Sandbox Manager</span>
-                            </a>
-
-                            {{-- 7. Classroom Analytics --}}
+                            {{-- 6. Classroom Analytics --}}
                             <a href="{{ route('dashboard.section', 'analytics') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors {{ ($currentSection ?? '') === 'analytics' ? 'bg-amber-50 text-amber-800 font-bold border border-amber-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
                                 <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                                 <span>Classroom Analytics</span>

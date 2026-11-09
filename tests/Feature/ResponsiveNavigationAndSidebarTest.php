@@ -73,7 +73,7 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
         $response->assertSee(route('dashboard.section', 'students'), false);
         $response->assertSee(route('dashboard.section', 'builder'), false);
         $response->assertSee(route('dashboard.section', 'gradebook'), false);
-        $response->assertSee(route('dashboard.section', 'queues'), false);
+        $response->assertDontSee(route('dashboard.section', 'queues'), false);
         $response->assertSee(route('dashboard.section', 'analytics'), false);
         $response->assertSee(route('terminal.index'), false);
     }
@@ -166,9 +166,9 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
         $instructorDash->assertDontSeeText('Simulated Queue & Sandbox Management');
         $instructorDash->assertDontSeeText('Classroom Analytics & Audit Trail');
 
-        // But instructor subpages have them
+        // But instructor subpages have them (and queues redirects to dashboard)
         $this->actingAs($instructor)->get('/dashboard/classroom')->assertSeeText('Live Classroom Grid & Spectator');
         $this->actingAs($instructor)->get('/dashboard/builder')->assertSeeText('Scenario & Drill Builder');
-        $this->actingAs($instructor)->get('/dashboard/queues')->assertSeeText('Simulated Queue & Sandbox Management');
+        $this->actingAs($instructor)->get('/dashboard/queues')->assertRedirect(route('dashboard'));
     }
 }

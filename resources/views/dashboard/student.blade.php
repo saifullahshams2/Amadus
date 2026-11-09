@@ -30,7 +30,7 @@
 
     <!-- Section 1: Top Metrics & KPI Overview -->
     @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'analytics')
-    <section id="analytics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <section id="analytics" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Accuracy Rate Gauge Card -->
         <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div>
@@ -75,18 +75,6 @@
             </div>
             <div class="w-12 h-12 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-        </div>
-
-        <!-- Active Queue Bank Summary -->
-        <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
-            <div>
-                <div class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">Queues on File</div>
-                <div class="text-2xl font-black text-amber-600 mt-1">{{ array_sum(array_column($queueSummary, 'count')) }} PNRs</div>
-                <div class="text-[11px] text-amber-700/80 mt-1 font-medium">Q1 (Ticketing) & Q7 (Sched)</div>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
             </div>
         </div>
     </section>
@@ -296,7 +284,7 @@
         <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <h2 class="text-sm font-bold text-slate-900 tracking-wide">Assigned Booking Scenarios & Drills</h2>
-                <p class="text-xs text-slate-500">Practice core flight reservations, passenger profiles, and queue notifications</p>
+                <p class="text-xs text-slate-500">Practice core flight reservations, passenger profiles, and itinerary management</p>
             </div>
 
             <!-- Category Filter Tabs -->
@@ -304,7 +292,7 @@
                 <button @click="selectedCategory = 'ALL'" :class="selectedCategory === 'ALL' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">All</button>
                 <button @click="selectedCategory = 'Round-trip'" :class="selectedCategory === 'Round-trip' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Round-trip</button>
                 <button @click="selectedCategory = 'Infant-in-lap'" :class="selectedCategory === 'Infant-in-lap' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Infant-in-lap</button>
-                <button @click="selectedCategory = 'Schedule Exchange'" :class="selectedCategory === 'Schedule Exchange' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Queues</button>
+                <button @click="selectedCategory = 'Schedule Exchange'" :class="selectedCategory === 'Schedule Exchange' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Schedule Exchange</button>
             </div>
         </div>
 

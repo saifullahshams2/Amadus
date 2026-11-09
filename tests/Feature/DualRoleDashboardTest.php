@@ -64,7 +64,7 @@ class DualRoleDashboardTest extends TestCase
         // Verify kept in respective subpages
         $this->actingAs($instructor)->get('/dashboard/classroom')->assertSeeText('Live Classroom Grid & Spectator');
         $this->actingAs($instructor)->get('/dashboard/builder')->assertSeeText('Scenario & Drill Builder');
-        $this->actingAs($instructor)->get('/dashboard/queues')->assertSeeText('Simulated Queue & Sandbox Management');
+        $this->actingAs($instructor)->get('/dashboard/queues')->assertRedirect(route('dashboard'));
     }
 
     public function test_03_unauthenticated_guests_redirect_to_login(): void
