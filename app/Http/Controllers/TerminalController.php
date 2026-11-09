@@ -71,6 +71,16 @@ class TerminalController extends Controller
 
         $userId = $user?->username ?? 'guest';
 
+        // Bind office and agent identity to authenticated user so client state cannot spoof tenant identity
+        if ($user) {
+            if (! empty($user->office_id)) {
+                $state['officeId'] = $user->office_id;
+            }
+            if (! empty($user->agent_id)) {
+                $state['agentId'] = $user->agent_id;
+            }
+        }
+
         $startTime = microtime(true);
         $execResult = $this->parser->execute($command, $state, $userId);
         $durationMs = (int) round((microtime(true) - $startTime) * 1000);

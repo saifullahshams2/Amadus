@@ -71,6 +71,16 @@ class AmadeusParser
         $user = ($userId !== 'guest') ? User::where('username', $userId)->first() : null;
         $isInstructor = $user?->role === 'instructor';
 
+        // Bind office and agent identity to authenticated user so client state cannot spoof tenant identity
+        if ($user) {
+            if (! empty($user->office_id)) {
+                $state['officeId'] = $user->office_id;
+            }
+            if (! empty($user->agent_id)) {
+                $state['agentId'] = $user->agent_id;
+            }
+        }
+
         // Track last command for HE/
         $lastExecutedCmd = $state['lastCommand'] ?? null;
         $state['lastCommand'] = $input;
@@ -1184,14 +1194,14 @@ class AmadeusParser
             if (str_starts_with($input, 'TKDO')) {
                 $rest = trim(substr($input, 4));
                 $state['activePnr']['ticketing'] = ['type' => 'TKDO', 'raw' => $input, 'date' => $rest];
-                $this->queue->placeOnOfficeQueue(8, 3, $state['activePnr'], $state['officeId'] ?? 'LON1A0980', $userId);
+                $this->queue->placeOnOfficeQueue(8, 3, $state['activePnr'], $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980'), $userId);
 
                 return new CommandExecutionResult(["OK {$input} - AUTO QUEUED TO Q8C3 (DOMESTIC TICKETING)"], $state, false, 'TICKETING_ELEMENT');
             }
             if (str_starts_with($input, 'TKIN')) {
                 $rest = trim(substr($input, 4));
                 $state['activePnr']['ticketing'] = ['type' => 'TKIN', 'raw' => $input, 'date' => $rest];
-                $this->queue->placeOnOfficeQueue(8, 5, $state['activePnr'], $state['officeId'] ?? 'LON1A0980', $userId);
+                $this->queue->placeOnOfficeQueue(8, 5, $state['activePnr'], $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980'), $userId);
 
                 return new CommandExecutionResult(["OK {$input} - AUTO QUEUED TO Q8C5 (INTL TICKETING)"], $state, false, 'TICKETING_ELEMENT');
             }
@@ -1691,7 +1701,7 @@ class AmadeusParser
                     Pnr::create([
                         'record_locator' => $splitRloc,
                         'user_id' => $userId,
-                        'office_id' => $state['officeId'] ?? 'LON1A0980',
+                        'office_id' => $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980'),
                         'status' => 'CONFIRMED',
                         'data_json' => $childPnr,
                     ]);
@@ -1887,16 +1897,23 @@ class AmadeusParser
             }
 
             $rloc = $state['activePnr']['recordLocator'];
-            $office = $state['officeId'] ?? 'LON1A0980';
-            $agent = $state['agentId'] ?? '1234AB';
+            $office = $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980');
+            $agent = $user?->agent_id ?? ($state['agentId'] ?? '1234AB');
             $status = ! empty($state['activePnr']['tickets']) ? 'TICKETED' : 'CONFIRMED';
 
             // Commit to database within transaction
             try {
-                DB::transaction(function () use ($rloc, $userId, $isInstructor, $office, $status, $state) {
+                DB::transaction(function () use ($rloc, $userId, $user, $isInstructor, $office, $status, $state) {
                     $existingPnr = Pnr::where('record_locator', $rloc)->lockForUpdate()->first();
-                    if ($existingPnr && ! $isInstructor && $existingPnr->user_id !== $userId) {
-                        throw new \RuntimeException("UNAUTHORIZED TO OVERWRITE RECORD LOCATOR: {$rloc}");
+                    if ($existingPnr) {
+                        if (! $isInstructor && $existingPnr->user_id !== $userId) {
+                            throw new \RuntimeException("UNAUTHORIZED TO OVERWRITE RECORD LOCATOR: {$rloc}");
+                        }
+
+                        $userOffice = $user?->office_id ?: 'LON1A0980';
+                        if ($isInstructor && $user && $existingPnr->office_id !== $userOffice) {
+                            throw new \RuntimeException("ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE: {$rloc}");
+                        }
                     }
 
                     Pnr::updateOrCreate(
@@ -1934,20 +1951,31 @@ class AmadeusParser
 
         // 44. IGNORE: IG, IR
         if ($input === 'IG') {
-            $state['activePnr'] = $this->pnr->createEmptyPnr($state['officeId'] ?? 'LON1A0980', $state['agentId'] ?? '1234AB');
+            $effectiveOffice = $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980');
+            $effectiveAgent = $user?->agent_id ?? ($state['agentId'] ?? '1234AB');
+            $state['activePnr'] = $this->pnr->createEmptyPnr($effectiveOffice, $effectiveAgent);
 
             return new CommandExecutionResult(['IGNORED'], $state, false, 'IG');
         }
         if ($input === 'IR') {
             if (! empty($state['activePnr']['recordLocator'])) {
                 $dbPnr = Pnr::find($state['activePnr']['recordLocator']);
-                if ($dbPnr && ($isInstructor || $dbPnr->user_id === $userId)) {
-                    $state['activePnr'] = $dbPnr->data_json;
+                if ($dbPnr) {
+                    $userOffice = $user?->office_id ?: 'LON1A0980';
+                    $allowed = $isInstructor
+                        ? ($user && $dbPnr->office_id === $userOffice)
+                        : ($dbPnr->user_id === $userId);
 
-                    return new CommandExecutionResult($this->pnr->formatPnrDisplay($state['activePnr']), $state, false, 'IR');
+                    if ($allowed) {
+                        $state['activePnr'] = $dbPnr->data_json;
+
+                        return new CommandExecutionResult($this->pnr->formatPnrDisplay($state['activePnr']), $state, false, 'IR');
+                    }
                 }
             }
-            $state['activePnr'] = $this->pnr->createEmptyPnr($state['officeId'] ?? 'LON1A0980', $state['agentId'] ?? '1234AB');
+            $effectiveOffice = $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980');
+            $effectiveAgent = $user?->agent_id ?? ($state['agentId'] ?? '1234AB');
+            $state['activePnr'] = $this->pnr->createEmptyPnr($effectiveOffice, $effectiveAgent);
 
             return new CommandExecutionResult(['IGNORED'], $state, false, 'IR');
         }
@@ -2207,6 +2235,11 @@ class AmadeusParser
                         if (! $isInstructor && $dbPnr->user_id !== $userId) {
                             return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER USER'], $state, true, 'RT_UNAUTHORIZED');
                         }
+
+                        $userOffice = $user?->office_id ?: 'LON1A0980';
+                        if ($isInstructor && $user && $dbPnr->office_id !== $userOffice) {
+                            return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE'], $state, true, 'RT_UNAUTHORIZED');
+                        }
                     }
                 }
                 $state['activePnr'] = $targetPnr;
@@ -2253,6 +2286,8 @@ class AmadeusParser
                     $indexQuery = Pnr::orderBy('updated_at', 'desc');
                     if (! $isInstructor) {
                         $indexQuery->where('user_id', $userId);
+                    } else {
+                        $indexQuery->where('office_id', $user?->office_id ?: 'LON1A0980');
                     }
                     $allPnrs = $indexQuery->limit(50)->get();
                     foreach ($allPnrs as $item) {
@@ -2306,6 +2341,8 @@ class AmadeusParser
                 $query = Pnr::orderBy('updated_at', 'desc');
                 if (! $isInstructor) {
                     $query->where('user_id', $userId);
+                } else {
+                    $query->where('office_id', $user?->office_id ?: 'LON1A0980');
                 }
                 $all = $query->limit(50)->get();
                 $matchedPnrs = [];
@@ -2376,6 +2413,11 @@ class AmadeusParser
                     if (! $isInstructor && $dbPnr->user_id !== $userId) {
                         return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER USER'], $state, true, 'RT_UNAUTHORIZED');
                     }
+
+                    $userOffice = $user?->office_id ?: 'LON1A0980';
+                    if ($isInstructor && $user && $dbPnr->office_id !== $userOffice) {
+                        return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE'], $state, true, 'RT_UNAUTHORIZED');
+                    }
                     $state['activePnr'] = $dbPnr->data_json;
 
                     return new CommandExecutionResult($this->pnr->formatPnrDisplay($state['activePnr']), $state, false, 'RT_LOCATOR');
@@ -2408,12 +2450,20 @@ class AmadeusParser
 
             if (! empty($state['activePnr']['recordLocator'])) {
                 $existingPnr = Pnr::find($state['activePnr']['recordLocator']);
-                if ($existingPnr && ! $isInstructor && $existingPnr->user_id !== $userId) {
-                    return new CommandExecutionResult(["UNAUTHORIZED TO TICKET RECORD: {$state['activePnr']['recordLocator']}"], $state, true, 'TTP_UNAUTHORIZED');
+                if ($existingPnr) {
+                    if (! $isInstructor && $existingPnr->user_id !== $userId) {
+                        return new CommandExecutionResult(["UNAUTHORIZED TO TICKET RECORD: {$state['activePnr']['recordLocator']}"], $state, true, 'TTP_UNAUTHORIZED');
+                    }
+
+                    $userOffice = $user?->office_id ?: 'LON1A0980';
+                    if ($isInstructor && $user && $existingPnr->office_id !== $userOffice) {
+                        return new CommandExecutionResult(["ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE: {$state['activePnr']['recordLocator']}"], $state, true, 'TTP_UNAUTHORIZED');
+                    }
                 }
             }
 
-            $res = $this->ticketing->issueTicketTTP($state['activePnr'], $state['officeId'] ?? 'LON1A0980');
+            $effectiveOffice = $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980');
+            $res = $this->ticketing->issueTicketTTP($state['activePnr'], $effectiveOffice);
             if ($res->isError) {
                 return new CommandExecutionResult($res->lines, $state, true, 'TTP_ERROR');
             }
@@ -2445,7 +2495,7 @@ class AmadeusParser
 
         // 51. QUEUE COMMANDS: QT, QTQ, QS, QS97C0D1, QE8C1, QE..., QD..., QDEF, QDIE, QU, QN, QI
         if ($input === 'QTQ') {
-            $office = $state['officeId'] ?? 'LON1A0980';
+            $office = $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980');
             $lines = $this->queue->formatQueueListLines($office);
 
             return new CommandExecutionResult($lines, $state, false, 'QUEUE_LIST');
@@ -2456,7 +2506,7 @@ class AmadeusParser
                 return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES (QS/QT)'], $state, true, 'QUEUE_UNAUTHENTICATED');
             }
 
-            $office = $state['officeId'] ?? 'LON1A0980';
+            $office = $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980');
             $lines = $this->queue->formatQueueSummaryLines($office, $userId);
 
             return new CommandExecutionResult($lines, $state, false, 'QUEUE_SUMMARY');
@@ -2467,7 +2517,7 @@ class AmadeusParser
                 return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES'], $state, true, 'QUEUE_UNAUTHENTICATED');
             }
 
-            $office = $state['officeId'] ?? 'LON1A0980';
+            $office = $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980');
             $qNum = (int) $qscM[1];
             $cat = (int) $qscM[2];
             $dateRange = (int) $qscM[3];
@@ -2551,7 +2601,7 @@ class AmadeusParser
                 return new CommandExecutionResult(['GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES (QD)'], $state, true, 'QUEUE_UNAUTHENTICATED');
             }
 
-            $office = $state['officeId'] ?? 'LON1A0980';
+            $office = $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980');
             $arg = trim(substr($input, 2));
 
             // Delay with date/time: QD09DEC/1200

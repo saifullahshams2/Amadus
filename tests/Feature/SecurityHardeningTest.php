@@ -1010,4 +1010,463 @@ class SecurityHardeningTest extends TestCase
         ]);
         $this->assertFalse($unresResult['success']);
     }
+
+    public function test_authenticated_cadet_cannot_override_office_via_state_in_queue_commands(): void
+    {
+        $cadet = User::create([
+            'username' => 'cadet_office_test',
+            'name' => 'Cadet Office Test',
+            'email' => 'cadet_office@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'is_approved' => true,
+            'office_id' => 'LON1A0980',
+            'agent_id' => 'CO01',
+        ]);
+
+        QueueItem::create([
+            'office_id' => 'NYC1A0111',
+            'queue_number' => 1,
+            'category' => 0,
+            'pnr_locator' => 'NYCQ01',
+            'pnr_summary' => ['locator' => 'NYCQ01', 'passenger' => 'SECRET/NYC'],
+            'message' => 'SECRET NYC QUEUE ADVISORY',
+            'status' => 'PENDING',
+        ]);
+
+        $resQd = $this->actingAs($cadet)->postJson('/api/terminal/execute', [
+            'command' => 'QD1',
+            'state' => ['officeId' => 'NYC1A0111'],
+        ]);
+
+        $resQd->assertStatus(200);
+        $qdOutput = implode(' ', $resQd->json('outputLines'));
+        $this->assertStringNotContainsString('NYCQ01', $qdOutput);
+        $this->assertStringNotContainsString('SECRET NYC QUEUE ADVISORY', $qdOutput);
+        $this->assertEquals('LON1A0980', $resQd->json('updatedState.officeId'));
+
+        $resQs = $this->actingAs($cadet)->postJson('/api/terminal/execute', [
+            'command' => 'QS',
+            'state' => ['officeId' => 'NYC1A0111'],
+        ]);
+
+        $resQs->assertStatus(200);
+        $qsOutput = implode(' ', $resQs->json('outputLines'));
+        $this->assertStringContainsString('LON1A0980', $qsOutput);
+        $this->assertStringNotContainsString('NYC1A0111', $qsOutput);
+        $this->assertEquals('LON1A0980', $resQs->json('updatedState.officeId'));
+    }
+
+    public function test_authenticated_cadet_cannot_commit_pnr_into_foreign_office_via_state(): void
+    {
+        $cadet = User::create([
+            'username' => 'cadet_pnr_test',
+            'name' => 'Cadet PNR Test',
+            'email' => 'cadet_pnr@test.local',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'is_approved' => true,
+            'office_id' => 'LON1A0980',
+            'agent_id' => 'CP01',
+        ]);
+
+        $tamperedState = [
+            'officeId' => 'NYC1A0111',
+            'agentId' => 'CP01',
+            'activePnr' => [
+                'recordLocator' => null,
+                'passengers' => [
+                    ['lastName' => 'TAYLOR', 'firstName' => 'JAMES', 'title' => 'MR', 'type' => 'ADT'],
+                ],
+                'segments' => [
+                    [
+                        'segmentNumber' => 1,
+                        'airlineCode' => 'BA',
+                        'flightNumber' => '175',
+                        'bookingClass' => 'Y',
+                        'departureDate' => '20DEC',
+                        'departureAirport' => 'LHR',
+                        'arrivalAirport' => 'JFK',
+                        'departureTime' => '1000',
+                        'arrivalTime' => '1300',
+                        'seats' => 1,
+                        'status' => 'HK',
+                    ],
+                ],
+                'contacts' => [
+                    ['id' => 1, 'type' => 'PHONE', 'detail' => 'LON 020-1234-5678'],
+                ],
+                'ticketing' => ['type' => 'TKOK', 'raw' => 'TKOK'],
+                'receivedFrom' => 'JAMES',
+            ],
+        ];
+
+        $res = $this->actingAs($cadet)->postJson('/api/terminal/execute', [
+            'command' => 'ET',
+            'state' => $tamperedState,
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertFalse($res->json('isError'));
+
+        $rloc = $res->json('updatedState.activePnr.recordLocator');
+        $this->assertNotEmpty($rloc);
+
+        $dbPnr = Pnr::where('record_locator', $rloc)->first();
+        $this->assertNotNull($dbPnr);
+        $this->assertEquals('LON1A0980', $dbPnr->office_id);
+        $this->assertNotEquals('NYC1A0111', $dbPnr->office_id);
+    }
+
+    public function test_instructor_cannot_retrieve_foreign_office_pnr_via_rt_locator(): void
+    {
+        $instructor = User::where('role', 'instructor')->first();
+        $this->assertNotNull($instructor);
+        $instructor->update(['office_id' => 'LON1A0980']);
+
+        Pnr::create([
+            'record_locator' => 'NYCP01',
+            'user_id' => 'student',
+            'office_id' => 'NYC1A0111',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'NYCP01',
+                'creationOffice' => 'NYC1A0111',
+                'passengers' => [
+                    ['lastName' => 'FOREIGNER', 'firstName' => 'BOB', 'title' => 'MR', 'type' => 'ADT'],
+                ],
+                'segments' => [],
+            ],
+        ]);
+
+        $res = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
+            'command' => 'RT NYCP01',
+            'state' => [],
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertTrue($res->json('isError'));
+        $this->assertEquals('RT_UNAUTHORIZED', $res->json('commandType'));
+        $this->assertStringContainsString('ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE', implode(' ', $res->json('outputLines')));
+    }
+
+    public function test_instructor_cannot_retrieve_foreign_office_pnr_via_rt_line(): void
+    {
+        $instructor = User::where('role', 'instructor')->first();
+        $this->assertNotNull($instructor);
+        $instructor->update(['office_id' => 'LON1A0980']);
+
+        Pnr::create([
+            'record_locator' => 'NYCP02',
+            'user_id' => 'student',
+            'office_id' => 'NYC1A0111',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'NYCP02',
+                'creationOffice' => 'NYC1A0111',
+                'passengers' => [
+                    ['lastName' => 'FOREIGNER', 'firstName' => 'ALICE', 'title' => 'MS', 'type' => 'ADT'],
+                ],
+                'segments' => [],
+            ],
+        ]);
+
+        $state = [
+            'lastPnrList' => [
+                [
+                    'recordLocator' => 'NYCP02',
+                    'creationOffice' => 'NYC1A0111',
+                    'passengers' => [
+                        ['lastName' => 'FOREIGNER', 'firstName' => 'ALICE', 'title' => 'MS', 'type' => 'ADT'],
+                    ],
+                    'segments' => [],
+                ],
+            ],
+        ];
+
+        $res = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
+            'command' => 'RT1',
+            'state' => $state,
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertTrue($res->json('isError'));
+        $this->assertEquals('RT_UNAUTHORIZED', $res->json('commandType'));
+        $this->assertStringContainsString('ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE', implode(' ', $res->json('outputLines')));
+    }
+
+    public function test_instructor_index_search_is_scoped_to_instructors_office(): void
+    {
+        $instructor = User::where('role', 'instructor')->first();
+        $this->assertNotNull($instructor);
+        $instructor->update(['office_id' => 'LON1A0980']);
+
+        Pnr::create([
+            'record_locator' => 'LONGR1',
+            'user_id' => 'student',
+            'office_id' => 'LON1A0980',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'LONGR1',
+                'creationOffice' => 'LON1A0980',
+                'passengers' => [
+                    ['lastName' => 'GARCIA', 'firstName' => 'MARIA', 'title' => 'MS', 'type' => 'ADT'],
+                ],
+                'segments' => [
+                    [
+                        'segmentNumber' => 1,
+                        'airlineCode' => 'BA',
+                        'flightNumber' => '100',
+                        'bookingClass' => 'Y',
+                        'departureDate' => '15DEC',
+                        'departureAirport' => 'LHR',
+                        'arrivalAirport' => 'JFK',
+                        'departureTime' => '1000',
+                        'arrivalTime' => '1300',
+                        'seats' => 1,
+                        'status' => 'HK',
+                    ],
+                ],
+            ],
+        ]);
+
+        Pnr::create([
+            'record_locator' => 'NYCGR2',
+            'user_id' => 'student',
+            'office_id' => 'NYC1A0111',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'NYCGR2',
+                'creationOffice' => 'NYC1A0111',
+                'passengers' => [
+                    ['lastName' => 'GARCIA', 'firstName' => 'CARLOS', 'title' => 'MR', 'type' => 'ADT'],
+                ],
+                'segments' => [
+                    [
+                        'segmentNumber' => 1,
+                        'airlineCode' => 'AA',
+                        'flightNumber' => '200',
+                        'bookingClass' => 'Y',
+                        'departureDate' => '15DEC',
+                        'departureAirport' => 'JFK',
+                        'arrivalAirport' => 'MIA',
+                        'departureTime' => '1400',
+                        'arrivalTime' => '1700',
+                        'seats' => 1,
+                        'status' => 'HK',
+                    ],
+                ],
+            ],
+        ]);
+
+        // Search single letter index RT/G
+        $resIndex = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
+            'command' => 'RT/G',
+            'state' => [],
+        ]);
+
+        $resIndex->assertStatus(200);
+        $indexOutput = implode(' ', $resIndex->json('outputLines'));
+        $this->assertStringContainsString('LONGR1', $indexOutput);
+        $this->assertStringNotContainsString('NYCGR2', $indexOutput);
+
+        // Search by surname RT/GARCIA
+        $resSurname = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
+            'command' => 'RT/GARCIA',
+            'state' => [],
+        ]);
+
+        $resSurname->assertStatus(200);
+        $surnameOutput = implode(' ', $resSurname->json('outputLines'));
+        $this->assertStringContainsString('LONGR1', $surnameOutput);
+        $this->assertStringNotContainsString('NYCGR2', $surnameOutput);
+    }
+
+    public function test_instructor_cannot_ticket_foreign_office_pnr_via_ttp(): void
+    {
+        $instructor = User::where('role', 'instructor')->first();
+        $this->assertNotNull($instructor);
+        $instructor->update(['office_id' => 'LON1A0980']);
+
+        Pnr::create([
+            'record_locator' => 'NYCT01',
+            'user_id' => 'student',
+            'office_id' => 'NYC1A0111',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'NYCT01',
+                'creationOffice' => 'NYC1A0111',
+                'passengers' => [
+                    ['lastName' => 'WILLIAMS', 'firstName' => 'SARAH', 'title' => 'MS', 'type' => 'ADT'],
+                ],
+                'segments' => [
+                    [
+                        'segmentNumber' => 1,
+                        'airlineCode' => 'BA',
+                        'flightNumber' => '175',
+                        'bookingClass' => 'Y',
+                        'departureDate' => '25DEC',
+                        'departureAirport' => 'LHR',
+                        'arrivalAirport' => 'JFK',
+                        'departureTime' => '1000',
+                        'arrivalTime' => '1300',
+                        'seats' => 1,
+                        'status' => 'HK',
+                    ],
+                ],
+                'contacts' => [
+                    ['id' => 1, 'type' => 'PHONE', 'detail' => 'LON 020-1234-5678'],
+                ],
+                'ticketing' => ['type' => 'TKOK', 'raw' => 'TKOK'],
+            ],
+        ]);
+
+        $state = [
+            'activePnr' => [
+                'recordLocator' => 'NYCT01',
+                'passengers' => [
+                    ['lastName' => 'WILLIAMS', 'firstName' => 'SARAH', 'title' => 'MS', 'type' => 'ADT'],
+                ],
+                'segments' => [
+                    [
+                        'segmentNumber' => 1,
+                        'airlineCode' => 'BA',
+                        'flightNumber' => '175',
+                        'bookingClass' => 'Y',
+                        'departureDate' => '25DEC',
+                        'departureAirport' => 'LHR',
+                        'arrivalAirport' => 'JFK',
+                        'departureTime' => '1000',
+                        'arrivalTime' => '1300',
+                        'seats' => 1,
+                        'status' => 'HK',
+                    ],
+                ],
+                'contacts' => [
+                    ['id' => 1, 'type' => 'PHONE', 'detail' => 'LON 020-1234-5678'],
+                ],
+                'ticketing' => ['type' => 'TKOK', 'raw' => 'TKOK'],
+            ],
+        ];
+
+        $res = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
+            'command' => 'TTP',
+            'state' => $state,
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertTrue($res->json('isError'));
+        $this->assertEquals('TTP_UNAUTHORIZED', $res->json('commandType'));
+        $this->assertStringContainsString('ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE', implode(' ', $res->json('outputLines')));
+
+        $dbPnr = Pnr::find('NYCT01');
+        $this->assertEquals('CONFIRMED', $dbPnr->status);
+    }
+
+    public function test_instructor_cannot_overwrite_foreign_office_pnr_via_et(): void
+    {
+        $instructor = User::where('role', 'instructor')->first();
+        $this->assertNotNull($instructor);
+        $instructor->update(['office_id' => 'LON1A0980']);
+
+        Pnr::create([
+            'record_locator' => 'NYCO01',
+            'user_id' => 'student',
+            'office_id' => 'NYC1A0111',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'NYCO01',
+                'creationOffice' => 'NYC1A0111',
+                'passengers' => [
+                    ['lastName' => 'DOE', 'firstName' => 'JOHN', 'title' => 'MR', 'type' => 'ADT'],
+                ],
+                'segments' => [],
+            ],
+        ]);
+
+        $tamperedState = [
+            'activePnr' => [
+                'recordLocator' => 'NYCO01',
+                'passengers' => [
+                    ['lastName' => 'OVERWRITE', 'firstName' => 'ATTEMPT', 'title' => 'MR', 'type' => 'ADT'],
+                ],
+                'segments' => [
+                    [
+                        'segmentNumber' => 1,
+                        'airlineCode' => 'BA',
+                        'flightNumber' => '175',
+                        'bookingClass' => 'Y',
+                        'departureDate' => '15NOV',
+                        'departureAirport' => 'LHR',
+                        'arrivalAirport' => 'JFK',
+                        'departureTime' => '1000',
+                        'arrivalTime' => '1300',
+                        'seats' => 1,
+                        'status' => 'HK',
+                    ],
+                ],
+                'contacts' => [
+                    ['id' => 1, 'type' => 'PHONE', 'detail' => 'LON 123456'],
+                ],
+                'ticketing' => ['type' => 'TKOK', 'raw' => 'TKOK'],
+                'receivedFrom' => 'ATTEMPT',
+            ],
+        ];
+
+        $res = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
+            'command' => 'ET',
+            'state' => $tamperedState,
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertTrue($res->json('isError'));
+        $this->assertEquals('ET_UNAUTHORIZED', $res->json('commandType'));
+        $this->assertStringContainsString('ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE', implode(' ', $res->json('outputLines')));
+
+        $dbPnr = Pnr::find('NYCO01');
+        $this->assertEquals('student', $dbPnr->user_id);
+        $this->assertEquals('NYC1A0111', $dbPnr->office_id);
+        $this->assertEquals('DOE', $dbPnr->data_json['passengers'][0]['lastName']);
+    }
+
+    public function test_instructor_cannot_redisplay_foreign_office_pnr_via_ir(): void
+    {
+        $instructor = User::where('role', 'instructor')->first();
+        $this->assertNotNull($instructor);
+        $instructor->update(['office_id' => 'LON1A0980']);
+
+        Pnr::create([
+            'record_locator' => 'NYCI01',
+            'user_id' => 'student',
+            'office_id' => 'NYC1A0111',
+            'status' => 'CONFIRMED',
+            'data_json' => [
+                'recordLocator' => 'NYCI01',
+                'creationOffice' => 'NYC1A0111',
+                'passengers' => [
+                    ['lastName' => 'SECRET', 'firstName' => 'PERSON', 'title' => 'MR', 'type' => 'ADT'],
+                ],
+                'segments' => [],
+            ],
+        ]);
+
+        $state = [
+            'activePnr' => [
+                'recordLocator' => 'NYCI01',
+                'passengers' => [
+                    ['lastName' => 'TAMPERED', 'firstName' => 'UNSAVED'],
+                ],
+            ],
+        ];
+
+        $res = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
+            'command' => 'IR',
+            'state' => $state,
+        ]);
+
+        $res->assertStatus(200);
+        $this->assertEquals(['IGNORED'], $res->json('outputLines'));
+        $this->assertEmpty($res->json('updatedState.activePnr.recordLocator'));
+        $this->assertEquals('LON1A0980', $res->json('updatedState.officeId'));
+    }
 }
