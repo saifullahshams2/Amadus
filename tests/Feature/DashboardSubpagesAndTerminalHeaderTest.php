@@ -31,8 +31,8 @@ class DashboardSubpagesAndTerminalHeaderTest extends TestCase
         $response->assertSeeText('Dashboard');
         $response->assertSee(route('dashboard.section', 'workspace'), false);
         $response->assertSee(route('dashboard.section', 'drills'), false);
-        $response->assertSee(route('dashboard.section', 'validator'), false);
-        $response->assertSee(route('dashboard.section', 'analytics'), false);
+        $response->assertDontSee(route('dashboard.section', 'validator'), false);
+        $response->assertDontSee(route('dashboard.section', 'analytics'), false);
     }
 
     public function test_02_user_can_access_dedicated_subpages(): void
@@ -48,23 +48,13 @@ class DashboardSubpagesAndTerminalHeaderTest extends TestCase
         $drills->assertStatus(200);
         $drills->assertSeeText('ASSIGNMENTS & DRILLS');
         $drills->assertSeeText('Assigned Booking Scenarios & Drills');
-
-        $validator = $this->actingAs($user)->get('/dashboard/validator');
-        $validator->assertStatus(200);
-        $validator->assertSeeText('CRYPTIC SYNTAX VALIDATOR');
-        $validator->assertSeeText('Interactive Cryptic Entry Validator');
-
-        $analytics = $this->actingAs($user)->get('/dashboard/analytics');
-        $analytics->assertStatus(200);
-        $analytics->assertSeeText('LEARNING ANALYTICS');
-        $analytics->assertSeeText('Syntax Accuracy');
     }
 
-    public function test_03_removed_admin_sections_redirect_to_dashboard(): void
+    public function test_03_removed_subpages_redirect_to_dashboard(): void
     {
         $user = $this->user();
 
-        foreach (['classroom', 'students', 'builder', 'gradebook', 'queues'] as $section) {
+        foreach (['validator', 'analytics', 'classroom', 'students', 'builder', 'gradebook', 'queues'] as $section) {
             $this->actingAs($user)
                 ->get('/dashboard/'.$section)
                 ->assertRedirect(route('dashboard'));

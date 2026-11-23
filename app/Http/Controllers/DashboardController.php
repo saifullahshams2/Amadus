@@ -45,7 +45,7 @@ class DashboardController extends Controller
             return redirect()->route('login');
         }
 
-        $allowedSections = ['workspace', 'drills', 'validator', 'analytics'];
+        $allowedSections = ['workspace', 'drills'];
         if (! in_array($section, $allowedSections, true)) {
             return redirect()->route('dashboard');
         }

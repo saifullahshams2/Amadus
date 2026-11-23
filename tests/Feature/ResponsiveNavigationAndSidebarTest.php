@@ -42,8 +42,8 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
         $response->assertSee(route('dashboard'), false);
         $response->assertSee(route('dashboard.section', 'workspace'), false);
         $response->assertSee(route('dashboard.section', 'drills'), false);
-        $response->assertSee(route('dashboard.section', 'validator'), false);
-        $response->assertSee(route('dashboard.section', 'analytics'), false);
+        $response->assertDontSee(route('dashboard.section', 'validator'), false);
+        $response->assertDontSee(route('dashboard.section', 'analytics'), false);
         $response->assertSee(route('terminal.index'), false);
     }
 
@@ -107,18 +107,20 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
         $response->assertSee('window.customPrompt', false);
     }
 
-    public function test_07_dashboard_sections_removed_from_main_and_kept_in_subpages(): void
+    public function test_07_training_hub_removed_and_validator_moved_to_main_dashboard(): void
     {
         $user = $this->user();
 
         $dashboard = $this->actingAs($user)->get('/dashboard');
         $dashboard->assertStatus(200);
         $dashboard->assertDontSeeText('AMADEUS Cryptic Terminal');
+        $dashboard->assertDontSeeText('Trainee Training Modules & Workspace');
         $dashboard->assertDontSeeText('Assigned Booking Scenarios & Drills');
-        $dashboard->assertDontSeeText('Interactive Cryptic Entry Validator');
+        $dashboard->assertSeeText('Interactive Cryptic Entry Validator');
 
         $this->actingAs($user)->get('/dashboard/workspace')->assertSeeText('Current Active PNR Status');
         $this->actingAs($user)->get('/dashboard/drills')->assertSeeText('Assigned Booking Scenarios & Drills');
-        $this->actingAs($user)->get('/dashboard/validator')->assertSeeText('Interactive Cryptic Entry Validator');
+        $this->actingAs($user)->get('/dashboard/validator')->assertRedirect(route('dashboard'));
+        $this->actingAs($user)->get('/dashboard/analytics')->assertRedirect(route('dashboard'));
     }
 }

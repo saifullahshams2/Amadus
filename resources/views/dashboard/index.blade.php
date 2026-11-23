@@ -15,8 +15,6 @@
                     @switch($currentSection)
                         @case('workspace') OVERVIEW & ACTIVE PNR @break
                         @case('drills') ASSIGNMENTS & DRILLS @break
-                        @case('validator') CRYPTIC SYNTAX VALIDATOR @break
-                        @case('analytics') LEARNING ANALYTICS @break
                         @default {{ strtoupper($currentSection) }}
                     @endswitch
                 </span>
@@ -29,7 +27,7 @@
     @endif
 
     <!-- Section 1: Top Metrics & KPI Overview -->
-    @if(($currentSection ?? 'dashboard') === 'dashboard' || ($currentSection ?? '') === 'analytics')
+    @if(($currentSection ?? 'dashboard') === 'dashboard')
     <section id="analytics" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Accuracy Rate Gauge Card -->
         <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
@@ -76,66 +74,6 @@
             <div class="w-12 h-12 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-        </div>
-    </section>
-    @endif
-
-    @if(($currentSection ?? 'dashboard') === 'dashboard')
-    <!-- Training Modules Quick Hub on Main Dashboard -->
-    <section class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
-            <div>
-                <h2 class="text-sm font-bold text-slate-900 tracking-wide">Trainee Training Modules & Workspace</h2>
-                <p class="text-xs text-slate-500">Access individual simulator components and dedicated training sub-pages</p>
-            </div>
-            <a href="{{ route('terminal.index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm self-start sm:self-auto">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <span>Launch Practice Terminal</span>
-            </a>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-            <!-- 1. Workspace & Active PNR -->
-            <a href="{{ route('dashboard.section', 'workspace') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-blue-300 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
-                <div class="space-y-2">
-                    <div class="w-9 h-9 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    </div>
-                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-blue-700">Overview & Active PNR</h3>
-                    <p class="text-[11px] text-slate-500 leading-relaxed">Inspect live PNR segments, passenger names, PRINT status indicators, and TST ticket fares.</p>
-                </div>
-                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-blue-600 font-bold">
-                    <span>Open Workspace &rarr;</span>
-                </div>
-            </a>
-
-            <!-- 2. Assignments & Drills -->
-            <a href="{{ route('dashboard.section', 'drills') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-blue-300 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
-                <div class="space-y-2">
-                    <div class="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                    </div>
-                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-blue-700">Assignments & Drills</h3>
-                    <p class="text-[11px] text-slate-500 leading-relaxed">Practice realistic reservation scenarios, check validation rubrics, and submit completed bookings.</p>
-                </div>
-                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-blue-600 font-bold">
-                    <span>View Drills &rarr;</span>
-                </div>
-            </a>
-
-            <!-- 3. Cryptic Validator -->
-            <a href="{{ route('dashboard.section', 'validator') }}" class="group bg-slate-50 hover:bg-white border border-slate-200 hover:border-blue-300 p-4 rounded-xl transition-all shadow-xs flex flex-col justify-between">
-                <div class="space-y-2">
-                    <div class="w-9 h-9 rounded-lg bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    </div>
-                    <h3 class="text-xs font-bold text-slate-800 group-hover:text-blue-700">Cryptic Syntax Validator</h3>
-                    <p class="text-[11px] text-slate-500 leading-relaxed">Interactive syntax tester with real-time feedback, regular expression validation, and mistake hints.</p>
-                </div>
-                <div class="mt-4 pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-blue-600 font-bold">
-                    <span>Test Syntax &rarr;</span>
-                </div>
-            </a>
         </div>
     </section>
     @endif
@@ -340,7 +278,7 @@
     @endif
 
     <!-- Section 4: Live Syntax Validator & Error Log (Dedicated to /dashboard/validator) -->
-    @if(($currentSection ?? '') === 'validator')
+    @if(($currentSection ?? 'dashboard') === 'dashboard')
     <section id="validator" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Left Column: Interactive Cryptic Entry Validator -->
