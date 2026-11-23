@@ -378,10 +378,10 @@
     "semantic_hash": "da1be6ad1959670f9d1b964ea748507f"
   },
   "app/Http/Controllers/DashboardController.php": {
-    "mtime": 1795427762.1005664,
-    "seen": 1795428865.310742,
-    "ast_hash": "4c55b384ac4506ee36e1152fcb545884",
-    "semantic_hash": "4c55b384ac4506ee36e1152fcb545884"
+    "mtime": 1795450984.2371438,
+    "seen": 1795459928.3827977,
+    "ast_hash": "89efcae9b3b9364793d36428e9a36370",
+    "semantic_hash": "89efcae9b3b9364793d36428e9a36370"
   },
   "app/Http/Controllers/InstallerController.php": {
     "mtime": 1795427254.5263681,
@@ -468,10 +468,10 @@
     "semantic_hash": "f14097e0c3a6b81564ef35b75c32fbcb"
   },
   "resources/views/layouts/dashboard.blade.php": {
-    "mtime": 1795427325.0786192,
-    "seen": 1795428865.3109255,
-    "ast_hash": "6b77bfa436dd60879a666f37ffda9657",
-    "semantic_hash": "6b77bfa436dd60879a666f37ffda9657"
+    "mtime": 1795450950.2243986,
+    "seen": 1795459928.3830166,
+    "ast_hash": "179502a607928347513d9264c8c8e8d3",
+    "semantic_hash": "179502a607928347513d9264c8c8e8d3"
   },
   "skills-lock.json": {
     "mtime": 1792945476.734542,
@@ -858,10 +858,10 @@
     "semantic_hash": "f70f071e433190fa1a1bc3ca8a5e09e0"
   },
   "tests/Feature/DashboardSubpagesAndTerminalHeaderTest.php": {
-    "mtime": 1795427569.6602857,
-    "seen": 1795428865.3109493,
-    "ast_hash": "4a20cc4ec54a74fec8f3aae23f8e1a73",
-    "semantic_hash": "4a20cc4ec54a74fec8f3aae23f8e1a73"
+    "mtime": 1795451110.6007783,
+    "seen": 1795459928.3830469,
+    "ast_hash": "5477f5e869fb755a27884c11a704c434",
+    "semantic_hash": "5477f5e869fb755a27884c11a704c434"
   },
   "resources/views/partials/dynamic-popup.blade.php": {
     "mtime": 1793264049.9910889,
@@ -870,28 +870,16 @@
     "semantic_hash": "9ec19c072c46240f02643c369aed0f06"
   },
   "tests/Feature/ResponsiveNavigationAndSidebarTest.php": {
-    "mtime": 1795427579.6624837,
-    "seen": 1795428865.310961,
-    "ast_hash": "417ef9edbd919baa5466aea6fd5dcc94",
-    "semantic_hash": "417ef9edbd919baa5466aea6fd5dcc94"
+    "mtime": 1795451176.807086,
+    "seen": 1795459928.3830621,
+    "ast_hash": "a30ea0b3852f32126521be61dbff2238",
+    "semantic_hash": "a30ea0b3852f32126521be61dbff2238"
   },
   "tests/Feature/AmadeusCmdReferenceTest.php": {
     "mtime": 1794074088.7945607,
     "seen": 1794075622.1247842,
     "ast_hash": "16f6c09d67197dfc63b88d979d5b53b4",
     "semantic_hash": "16f6c09d67197dfc63b88d979d5b53b4"
-  },
-  "amadeus-cmd-1.md": {
-    "mtime": 1794074088.7925606,
-    "seen": 1794075622.124892,
-    "ast_hash": "a186c233fa0e51946ccaa8244990a091",
-    "semantic_hash": "a186c233fa0e51946ccaa8244990a091"
-  },
-  "amadeus-cmd-2.md": {
-    "mtime": 1794148002.4016013,
-    "seen": 1794152167.470529,
-    "ast_hash": "f29ede4cc272791ca3ba0fd15913aea3",
-    "semantic_hash": "f29ede4cc272791ca3ba0fd15913aea3"
   },
   "app/Services/Amadeus/AisService.php": {
     "mtime": 1794151230.5981867,
@@ -954,9 +942,9 @@
     "semantic_hash": "90b9f4b0b71d302b5fab37ddf60d3d5d"
   },
   "resources/views/dashboard/index.blade.php": {
-    "mtime": 1795427762.1010706,
-    "seen": 1795428865.3109176,
-    "ast_hash": "d9c4170ba09713ed6c5ec2e3c9fbd36d",
-    "semantic_hash": "d9c4170ba09713ed6c5ec2e3c9fbd36d"
+    "mtime": 1795451272.6109054,
+    "seen": 1795459928.3830073,
+    "ast_hash": "ddcbad2d9960234f2de4ffa69302a6da",
+    "semantic_hash": "ddcbad2d9960234f2de4ffa69302a6da"
   }
 }
