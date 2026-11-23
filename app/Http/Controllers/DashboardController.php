@@ -2,11 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LessonProgress;
 use App\Models\Pnr;
-use App\Models\QueueItem;
-use App\Models\Scenario;
-use App\Models\Submission;
 use App\Models\TerminalActivityLog;
 use App\Models\User;
 use App\Services\Amadeus\QueueService;
@@ -25,7 +21,7 @@ class DashboardController extends Controller
     ) {}
 
     /**
-     * Unified Dashboard View.
+     * Personal Dashboard View.
      */
     public function index(Request $request): View|RedirectResponse
     {
@@ -35,21 +31,7 @@ class DashboardController extends Controller
             return redirect()->route('login');
         }
 
-        // 1. Strict separation: Authenticated students are strictly restricted to student dashboard
-        if ($user->role === 'student') {
-            if ($request->query('role') === 'instructor') {
-                abort(403, 'Forbidden. Students cannot access the instructor dashboard.');
-            }
-
-            return $this->studentView($request, $user, 'dashboard');
-        }
-
-        // 2. Strict separation: Authenticated instructors are strictly restricted to instructor dashboard
-        if ($user->role === 'instructor') {
-            return $this->instructorView($request, $user, 'dashboard');
-        }
-
-        return redirect()->route('login');
+        return $this->dashboardView($user, 'dashboard');
     }
 
     /**
@@ -63,52 +45,27 @@ class DashboardController extends Controller
             return redirect()->route('login');
         }
 
-        if ($user->role === 'student') {
-            $allowedStudentSections = ['workspace', 'drills', 'validator', 'analytics'];
-            if (! in_array($section, $allowedStudentSections, true)) {
-                return redirect()->route('dashboard');
-            }
-
-            return $this->studentView($request, $user, $section);
+        $allowedSections = ['workspace', 'drills', 'validator', 'analytics'];
+        if (! in_array($section, $allowedSections, true)) {
+            return redirect()->route('dashboard');
         }
 
-        if ($user->role === 'instructor') {
-            $allowedInstructorSections = ['classroom', 'students', 'builder', 'gradebook', 'analytics'];
-            if (! in_array($section, $allowedInstructorSections, true)) {
-                return redirect()->route('dashboard');
-            }
-
-            return $this->instructorView($request, $user, $section);
-        }
-
-        return redirect()->route('login');
+        return $this->dashboardView($user, $section);
     }
 
     /**
-     * Role switching endpoint. Unauthenticated guests are redirected to main page.
+     * Compile and render the personal dashboard.
      */
-    public function switchRole(Request $request): RedirectResponse
+    protected function dashboardView(User $user, string $currentSection = 'dashboard'): View
     {
-        if (! Auth::check()) {
-            return redirect()->route('login');
-        }
-
-        abort(403, 'Forbidden. Role switching is not permitted for authenticated accounts.');
-    }
-
-    /**
-     * Compile and render Student Dashboard.
-     */
-    protected function studentView(Request $request, ?User $user, string $currentSection = 'dashboard'): View
-    {
-        $username = $user?->username ?? 'student';
-        $officeId = $user?->office_id ?? 'LON1A0980';
+        $username = $user->username;
+        $officeId = $user->office_id ?? 'LON1A0980';
 
         // 1. Current Active PNR
         $activePnr = Pnr::where('user_id', $username)->orderBy('updated_at', 'desc')->first();
 
-        // 2. Assigned Scenarios with student progress
-        $scenarioList = $this->scenarios->getScenariosForStudent($username);
+        // 2. Practice Scenarios with progress
+        $scenarioList = $this->scenarios->getScenariosForUser($username);
 
         // 3. Learning Analytics & Recent Errors
         $recentLogs = TerminalActivityLog::where('user_id', $username)
@@ -127,8 +84,7 @@ class DashboardController extends Controller
 
         $efficiencyScore = min(100, max(50, (int) round(100 - ($accuracyRate < 100 ? (100 - $accuracyRate) * 0.8 : 0))));
 
-        $completedCount = $scenarioList->where('status', 'reviewed')->count()
-            + $scenarioList->where('status', 'submitted')->count();
+        $completedCount = $scenarioList->where('status', 'submitted')->count();
 
         $recentErrorsWithHints = $errorLogs->take(5)->map(function (TerminalActivityLog $log) {
             $val = $this->analyzeSyntax($log->command);
@@ -141,12 +97,11 @@ class DashboardController extends Controller
             ];
         })->values();
 
-        // 5. Active Queue Summary
+        // 4. Active Queue Summary
         $queueSummary = $this->queues->getSummary($officeId, $username);
 
-        return view('dashboard.student', [
+        return view('dashboard.index', [
             'user' => $user,
-            'activeRole' => 'student',
             'currentSection' => $currentSection,
             'activePnr' => $activePnr,
             'scenarios' => $scenarioList,
@@ -164,97 +119,6 @@ class DashboardController extends Controller
     }
 
     /**
-     * Compile and render Instructor Dashboard.
-     */
-    protected function instructorView(Request $request, ?User $user, string $currentSection = 'dashboard'): View
-    {
-        $officeId = $user?->office_id ?? 'LON1A0980';
-
-        // 1. Enrolled Students with Live Session Status
-        $students = User::where('role', 'student')->where('is_approved', true)
-            ->where('office_id', $officeId)
-            ->get();
-        $pendingApprovals = User::where('role', 'student')->where('is_approved', false)
-            ->where('office_id', $officeId)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $studentStatuses = $students->map(function (User $st) {
-            $recentLogs = TerminalActivityLog::where('user_id', $st->username)
-                ->orderBy('created_at', 'desc')
-                ->limit(20)
-                ->get();
-
-            $lastLog = $recentLogs->first();
-            $lastActiveDiff = $lastLog ? now()->diffInMinutes($lastLog->created_at) : 999;
-            $recentErrors = $recentLogs->take(5)->where('is_error', true)->count();
-
-            // Determine status: Online, In Terminal, Idle, Error Loop
-            if ($lastActiveDiff <= 2) {
-                $status = ($recentErrors >= 3) ? 'Error Loop' : 'In Terminal';
-            } elseif ($lastActiveDiff <= 15) {
-                $status = 'Online';
-            } else {
-                $status = 'Idle';
-            }
-
-            $submissionsCount = Submission::where('user_id', $st->username)->whereIn('status', ['submitted', 'reviewed'])->count();
-            $activePnr = Pnr::where('user_id', $st->username)->orderBy('updated_at', 'desc')->first();
-
-            return [
-                'id' => $st->id,
-                'username' => $st->username,
-                'name' => $st->name,
-                'email' => $st->email,
-                'office_id' => $st->office_id,
-                'agent_id' => $st->agent_id,
-                'status' => $status,
-                'last_command' => $lastLog?->command ?? 'None',
-                'last_active' => $lastLog ? $lastLog->created_at->diffForHumans() : 'Never',
-                'total_commands' => TerminalActivityLog::where('user_id', $st->username)->count(),
-                'submissions_count' => $submissionsCount,
-                'active_pnr_locator' => $activePnr?->record_locator,
-                'error_rate' => $recentLogs->count() > 0 ? (int) round(($recentLogs->where('is_error', true)->count() / $recentLogs->count()) * 100) : 0,
-            ];
-        });
-
-        // 2. Scenarios list for builder overview
-        $scenarios = Scenario::orderBy('created_at', 'desc')->get();
-
-        // 3. Submissions & Gradebook
-        $submissions = Submission::whereHas('user', fn ($q) => $q->where('office_id', $officeId))
-            ->with(['scenario', 'user'])
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get();
-
-        // 4. Queue Summary & Simulated Queue Items
-        $queueSummary = $this->queues->getSummary($officeId);
-        $pendingQueueItems = QueueItem::pending()->where('office_id', $officeId)->orderBy('created_at', 'desc')->limit(20)->get();
-
-        // 5. Recent PNR audit trail
-        $recentPnrs = Pnr::where('office_id', $officeId)->orderBy('updated_at', 'desc')->limit(20)->get();
-        $allPnrs = Pnr::where('office_id', $officeId)->orderBy('updated_at', 'desc')->limit(100)->get();
-        $officeUsernames = $students->pluck('username')->merge($pendingApprovals->pluck('username'));
-        $progress = LessonProgress::whereIn('user_id', $officeUsernames)->get();
-
-        return view('dashboard.instructor', [
-            'user' => $user,
-            'activeRole' => 'instructor',
-            'currentSection' => $currentSection,
-            'students' => $studentStatuses,
-            'pendingApprovals' => $pendingApprovals,
-            'scenarios' => $scenarios,
-            'submissions' => $submissions,
-            'queueSummary' => $queueSummary,
-            'pendingQueueItems' => $pendingQueueItems,
-            'recentPnrs' => $recentPnrs,
-            'allPnrs' => $allPnrs,
-            'progress' => $progress,
-        ]);
-    }
-
-    /**
      * API: Get Current Active PNR for inspection drawer.
      */
     public function getActivePnrApi(Request $request): JsonResponse
@@ -264,19 +128,7 @@ class DashboardController extends Controller
             return response()->json(['error' => 'Unauthenticated.'], 401);
         }
 
-        // Only instructors can inspect another user's active PNR via ?user=
-        $userId = ($currentUser->role === 'instructor' && $request->filled('user'))
-            ? $request->query('user')
-            : $currentUser->username;
-
-        if ($userId !== $currentUser->username) {
-            $target = User::where('username', $userId)
-                ->where('office_id', $currentUser->office_id)
-                ->first();
-            abort_unless($target !== null, 404);
-        }
-
-        $pnr = Pnr::where('user_id', $userId)->orderBy('updated_at', 'desc')->first();
+        $pnr = Pnr::where('user_id', $currentUser->username)->orderBy('updated_at', 'desc')->first();
 
         if (! $pnr) {
             return response()->json([
@@ -310,23 +162,18 @@ class DashboardController extends Controller
     public function validateSyntaxApi(Request $request): JsonResponse
     {
         $raw = $request->input('command', '');
-        $res = $this->analyzeSyntax($raw);
 
-        return response()->json($res);
+        return response()->json($this->analyzeSyntax($raw));
     }
 
     /**
-     * API: Submit a Scenario for Automated Grading.
+     * API: Submit a Practice Scenario for Automated Grading.
      */
     public function submitScenarioApi(Request $request, string $id): JsonResponse
     {
         $user = Auth::user();
         if (! $user) {
             return response()->json(['error' => 'Unauthenticated.'], 401);
-        }
-
-        if ($user->role === 'student' && ! $user->is_approved) {
-            return response()->json(['error' => 'Cadet account requires instructor approval.'], 403);
         }
 
         $username = $user->username;
@@ -342,7 +189,7 @@ class DashboardController extends Controller
         $latestPnr = $pnrQuery->orderBy('updated_at', 'desc')->first();
         if (! $latestPnr) {
             return response()->json([
-                'error' => 'No stored PNR found for this cadet. Complete and store the booking in the terminal before submitting.',
+                'error' => 'No stored PNR found. Complete and store the booking in the terminal before submitting.',
             ], 422);
         }
 
@@ -369,208 +216,6 @@ class DashboardController extends Controller
             'success' => true,
             'submission' => $submission,
             'grade' => $submission->auto_grade_results,
-        ]);
-    }
-
-    /**
-     * API: Spectate a Student's Live Terminal Activity.
-     */
-    public function spectateStudentApi(Request $request, string $username): JsonResponse
-    {
-        $student = User::where('username', $username)
-            ->where('office_id', Auth::user()->office_id)
-            ->first();
-        if (! $student) {
-            return response()->json(['error' => 'Student not found'], 404);
-        }
-
-        $logs = TerminalActivityLog::where('user_id', $username)
-            ->orderBy('created_at', 'asc')
-            ->limit(100)
-            ->get();
-
-        $activePnr = Pnr::where('user_id', $username)->orderBy('updated_at', 'desc')->first();
-
-        return response()->json([
-            'student' => [
-                'username' => $student->username,
-                'name' => $student->name,
-                'office_id' => $student->office_id,
-                'agent_id' => $student->agent_id,
-            ],
-            'activePnrLocator' => $activePnr?->record_locator,
-            'logs' => $logs->map(fn (TerminalActivityLog $l) => [
-                'id' => $l->id,
-                'command' => $l->command,
-                'output_lines' => $l->output_lines,
-                'is_error' => $l->is_error,
-                'command_type' => $l->command_type,
-                'execution_time_ms' => $l->execution_time_ms,
-                'timestamp' => $l->created_at->format('H:i:s'),
-                'time_ago' => $l->created_at->diffForHumans(),
-            ]),
-        ]);
-    }
-
-    /**
-     * API: Create New Scenario via Scenario Builder.
-     */
-    public function createScenarioApi(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'id' => 'required|string|unique:scenarios,id',
-            'title' => 'required|string|max:255',
-            'category' => 'required|string',
-            'difficulty' => 'required|string|in:Beginner,Intermediate,Advanced',
-            'description' => 'required|string',
-            'passenger_profile' => 'required|array',
-            'flight_segments' => 'required|array',
-            'validation_criteria' => 'required|array',
-            'time_limit_minutes' => 'required|integer|min:5|max:120',
-        ]);
-
-        $validated['created_by'] = Auth::user()?->username ?? 'instructor';
-
-        $scenario = Scenario::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'scenario' => $scenario,
-        ], 201);
-    }
-
-    /**
-     * API / Web: Delete Scenario & Drill.
-     */
-    public function deleteScenario(Request $request, string $id): JsonResponse|RedirectResponse
-    {
-        $user = Auth::user();
-        if (! $user || $user->role !== 'instructor') {
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json(['error' => 'Instructor access required.'], 403);
-            }
-
-            abort(403, 'Forbidden. Instructor access required.');
-        }
-
-        $scenario = Scenario::find($id);
-
-        $canDelete = $scenario !== null && (
-            $scenario->created_by === $user->username
-            || trim((string) $scenario->created_by) === 'instructor'
-            || $scenario->created_by === ''
-            || $scenario->created_by === null
-        );
-
-        if (! $scenario || ! $canDelete) {
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json(['error' => "Scenario '{$id}' not found."], 404);
-            }
-
-            return redirect()->back()->withErrors(['error' => "Scenario '{$id}' not found."]);
-        }
-
-        $deleted = $this->scenarios->deleteScenario($id);
-
-        if (! $deleted) {
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json(['error' => "Scenario '{$id}' not found."], 404);
-            }
-
-            return redirect()->back()->withErrors(['error' => "Scenario '{$id}' not found."]);
-        }
-
-        if ($request->wantsJson() || $request->is('api/*')) {
-            return response()->json([
-                'success' => true,
-                'message' => "Scenario '{$id}' deleted successfully.",
-                'deleted_id' => $id,
-            ]);
-        }
-
-        return redirect()->back()->with('success', "Scenario '{$id}' deleted successfully.");
-    }
-
-    /**
-     * API: Override Submission Score & Add Feedback.
-     */
-    public function gradeSubmissionApi(Request $request, string $id): JsonResponse
-    {
-        $validated = $request->validate([
-            'score' => 'required|integer|min:0|max:100',
-            'feedback' => 'nullable|string',
-        ]);
-
-        $submission = Submission::with('user')->findOrFail($id);
-        abort_unless(
-            $submission->user !== null && $submission->user->office_id === Auth::user()->office_id,
-            404
-        );
-
-        $submission = $this->scenarios->overrideGrade(
-            $id,
-            $validated['score'],
-            $validated['feedback'] ?? null
-        );
-
-        return response()->json([
-            'success' => true,
-            'submission' => $submission,
-        ]);
-    }
-
-    /**
-     * API: Broadcast PNR to Student Queues.
-     */
-    public function broadcastQueueApi(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'queue_number' => 'required|integer|in:1,7,8,9,87',
-            'category' => 'required|string',
-            'pnr_locator' => 'required|string|size:6',
-            'message' => 'required|string',
-            'target_user_id' => 'nullable|string',
-            'passenger' => 'required|string',
-            'itinerary' => 'required|string',
-            'urgency' => 'required|string|in:NORMAL,HIGH,CRITICAL',
-        ]);
-
-        $officeId = Auth::user()?->office_id ?? 'LON1A0980';
-
-        $item = $this->queues->broadcastToQueue(
-            $validated['queue_number'],
-            $validated['category'],
-            $validated['pnr_locator'],
-            [
-                'passenger' => $validated['passenger'],
-                'itinerary' => $validated['itinerary'],
-                'urgency' => $validated['urgency'],
-            ],
-            $validated['message'],
-            $validated['target_user_id'] ?: null,
-            $officeId
-        );
-
-        return response()->json([
-            'success' => true,
-            'queueItem' => $item,
-        ], 201);
-    }
-
-    /**
-     * API: Reset Sandbox per Student or Whole Batch.
-     */
-    public function resetSandboxApi(Request $request): JsonResponse
-    {
-        $targetUserId = $request->input('target_user_id'); // null resets all
-        $officeId = Auth::user()?->office_id ?? 'LON1A0980';
-
-        $res = $this->queues->resetSandbox($targetUserId, $officeId);
-
-        return response()->json([
-            'success' => true,
-            'message' => $targetUserId ? "Sandbox reset successfully for {$targetUserId}" : 'Entire classroom sandbox reset successfully',
-            'cleared' => $res,
         ]);
     }
 

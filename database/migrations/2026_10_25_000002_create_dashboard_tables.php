@@ -19,7 +19,7 @@ return new class extends Migration
             $table->longText('flight_segments');
             $table->longText('validation_criteria');
             $table->integer('time_limit_minutes')->default(30);
-            $table->string('created_by')->default('instructor');
+            $table->string('created_by')->default('system');
             $table->timestamps();
         });
 
@@ -31,14 +31,11 @@ return new class extends Migration
             $table->string('status')->default('not_started'); // not_started, in_progress, submitted, reviewed
             $table->integer('score')->default(0);
             $table->longText('auto_grade_results')->nullable();
-            $table->integer('manual_override_score')->nullable();
-            $table->text('instructor_feedback')->nullable();
             $table->longText('terminal_logs')->nullable();
             $table->string('pnr_record_locator', 6)->nullable();
             $table->longText('pnr_snapshot')->nullable();
             $table->integer('time_elapsed_seconds')->default(0);
             $table->timestamp('submitted_at')->nullable();
-            $table->timestamp('reviewed_at')->nullable();
             $table->timestamps();
         });
 
@@ -56,7 +53,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 4. Terminal Activity Logs (For Live Classroom Spectate & Analytics)
+        // 4. Terminal Activity Logs (For Personal Learning Analytics)
         Schema::create('terminal_activity_logs', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('user_id')->index();

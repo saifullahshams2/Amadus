@@ -9,38 +9,23 @@ use Illuminate\Support\Facades\Hash;
 abstract class TestCase extends BaseTestCase
 {
     /**
-     * Helper to provision test users for feature tests (since demo accounts are removed from production seeders).
+     * Helper to provision the single application user for feature tests.
      *
-     * @return array{student: User, instructor: User}
+     * @return array{user: User}
      */
     protected function seedTestUsers(): array
     {
-        $student = User::firstOrCreate(
+        $user = User::firstOrCreate(
             ['username' => 'student'],
             [
-                'name' => 'Test Student',
+                'name' => 'Test User',
                 'email' => 'student@amadeus-gds.demo',
                 'password' => Hash::make('amadeus123'),
-                'role' => 'student',
-                'is_approved' => true,
                 'office_id' => 'LON1A0980',
                 'agent_id' => '1234AB',
             ]
         );
 
-        $instructor = User::firstOrCreate(
-            ['username' => 'instructor'],
-            [
-                'name' => 'Test Instructor',
-                'email' => 'instructor@amadeus-gds.demo',
-                'password' => Hash::make('amadeus123'),
-                'role' => 'instructor',
-                'is_approved' => true,
-                'office_id' => 'LON1A0980',
-                'agent_id' => 'IN01GS',
-            ]
-        );
-
-        return ['student' => $student, 'instructor' => $instructor];
+        return ['user' => $user];
     }
 }

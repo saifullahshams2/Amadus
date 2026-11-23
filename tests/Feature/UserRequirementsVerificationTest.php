@@ -34,19 +34,15 @@ class UserRequirementsVerificationTest extends TestCase
     }
 
     /**
-     * Requirement 1: Verify demo accounts are removed from database and frontend UI/login page.
+     * Requirement 1: Demo accounts are not seeded and the login page exposes no demo helpers.
      */
     public function test_requirement_1_seeder_does_not_seed_demo_accounts_or_demo_data(): void
     {
-        // Run DatabaseSeeder
         $this->seed(DatabaseSeeder::class);
 
-        // Confirm student and instructor demo users do NOT exist
         $this->assertDatabaseMissing('users', ['username' => 'student']);
         $this->assertDatabaseMissing('users', ['username' => 'instructor']);
         $this->assertEquals(0, User::count(), 'DatabaseSeeder must not seed any demo accounts into users table.');
-
-        // Confirm no demo submissions or activity logs exist
         $this->assertEquals(0, Submission::where('user_id', 'student')->count());
         $this->assertEquals(0, TerminalActivityLog::where('user_id', 'student')->count());
     }
@@ -65,16 +61,16 @@ class UserRequirementsVerificationTest extends TestCase
 
     public function test_requirement_1_dashboard_has_no_guest_demo_perspective_switcher(): void
     {
-        $student = User::factory()->create(['role' => 'student']);
+        $user = User::factory()->create();
 
-        $response = $this->actingAs($student)->get('/dashboard');
+        $response = $this->actingAs($user)->get('/dashboard');
         $response->assertStatus(200);
         $response->assertDontSee('ACTIVE PERSPECTIVE');
         $response->assertDontSee('DEV/DEMO');
     }
 
     /**
-     * Requirement 2: Installer for first time install, removable/locked, only instructor created, SQLite and MySQL options.
+     * Requirement 2: Installer supports SQLite/MySQL and provisions exactly one normal user.
      */
     public function test_requirement_2_installer_presents_sqlite_and_mysql_options(): void
     {
@@ -89,7 +85,6 @@ class UserRequirementsVerificationTest extends TestCase
 
     public function test_requirement_2_database_test_endpoint_supports_sqlite_and_mysql(): void
     {
-        // 1. Test SQLite option
         $sqliteRes = $this->postJson('/install/test-db', [
             'driver' => 'sqlite',
             'database_path' => 'database/database.sqlite',
@@ -97,13 +92,11 @@ class UserRequirementsVerificationTest extends TestCase
         $sqliteRes->assertStatus(200);
         $sqliteRes->assertJson(['success' => true]);
 
-        // 2. Test invalid driver is rejected
         $invalidRes = $this->postJson('/install/test-db', [
             'driver' => 'unsupported_driver',
         ]);
         $invalidRes->assertStatus(422);
 
-        // 3. Test MySQL driver validation
         $mysqlRes = $this->postJson('/install/test-db', [
             'driver' => 'mysql',
             'host' => '127.0.0.1',
@@ -111,23 +104,22 @@ class UserRequirementsVerificationTest extends TestCase
             'database' => 'amadeus_gds',
             'username' => 'root',
         ]);
-        // Result is either 200 (if MySQL is running locally) or 422 with a specific connection error message
         $this->assertContains($mysqlRes->status(), [200, 422]);
         $this->assertArrayHasKey('success', $mysqlRes->json());
     }
 
-    public function test_requirement_2_installer_creates_only_instructor_account_and_locks(): void
+    public function test_requirement_2_installer_creates_only_a_normal_user_and_locks(): void
     {
         $payload = [
             'database_driver' => 'sqlite',
             'db_path' => 'database/database.sqlite',
-            'name' => 'Lead Flight Instructor',
-            'username' => 'sky_instructor',
-            'email' => 'sky.instructor@academy.test',
+            'name' => 'Lead User',
+            'username' => 'sky_user',
+            'email' => 'sky.user@academy.test',
             'password' => 'Pass@Word123',
             'password_confirmation' => 'Pass@Word123',
             'office_id' => 'LON1A0980',
-            'agent_id' => 'IN01GS',
+            'agent_id' => '1234AB',
         ];
 
         $response = $this->postJson('/install', $payload);
@@ -135,30 +127,22 @@ class UserRequirementsVerificationTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
-            'instructor' => [
-                'username' => 'sky_instructor',
-                'role' => 'instructor',
+            'user' => [
+                'username' => 'sky_user',
             ],
         ]);
 
-        // Verify only the instructor account exists in database
         $this->assertEquals(1, User::count());
         $user = User::first();
-        $this->assertEquals('sky_instructor', $user->username);
-        $this->assertEquals('instructor', $user->role);
-        $this->assertTrue($user->is_approved);
+        $this->assertEquals('sky_user', $user->username);
 
-        // Verify installer is marked as installed & locked
         $this->assertTrue($this->installerService->isInstalled());
         $this->assertFileExists(storage_path('installed'));
 
-        // Verify re-installation is locked and rejected
         $reinstallResponse = $this->postJson('/install', $payload);
         $reinstallResponse->assertStatus(400);
 
-        // Web request to /install redirects to login
-        $webInstallResponse = $this->get('/install');
-        $webInstallResponse->assertRedirect('/login');
+        $this->get('/install')->assertRedirect('/login');
     }
 
     public function test_requirement_2_remove_installer_command_locks_installer(): void
@@ -172,43 +156,30 @@ class UserRequirementsVerificationTest extends TestCase
     }
 
     /**
-     * Requirement 3: If no one is logged in, redirect to login page.
+     * Requirement 3: Guests are redirected to login; admin surfaces no longer exist.
      */
-    public function test_requirement_3_unauthenticated_dashboard_redirects_to_login(): void
+    public function test_requirement_3_unauthenticated_pages_redirect_to_login(): void
     {
-        $response = $this->get('/dashboard');
-        $response->assertRedirect('/login');
+        $this->get('/dashboard')->assertRedirect('/login');
+        $this->get('/terminal')->assertRedirect('/login');
     }
 
-    public function test_requirement_3_unauthenticated_terminal_redirects_to_login(): void
+    public function test_requirement_3_removed_admin_routes_are_not_available(): void
     {
-        $response = $this->get('/terminal');
-        $response->assertRedirect('/login');
-    }
-
-    public function test_requirement_3_unauthenticated_instructor_hub_redirects_to_login(): void
-    {
-        $response = $this->get('/instructor');
-        $response->assertRedirect('/login');
-    }
-
-    public function test_requirement_3_unauthenticated_switch_role_redirects_to_login(): void
-    {
-        $response = $this->post('/dashboard/switch-role', ['role' => 'instructor']);
-        $response->assertRedirect('/login');
+        $this->get('/instructor')->assertNotFound();
+        $this->post('/dashboard/switch-role', ['role' => 'instructor'])->assertStatus(405);
+        $this->post('/instructor/exit-impersonation')->assertNotFound();
     }
 
     public function test_requirement_3_authenticated_user_accesses_protected_routes(): void
     {
-        $student = User::factory()->create(['role' => 'student', 'is_approved' => true]);
+        $user = User::factory()->create();
 
-        // Terminal is accessible when logged in
-        $terminalRes = $this->actingAs($student)->get('/terminal');
+        $terminalRes = $this->actingAs($user)->get('/terminal');
         $terminalRes->assertStatus(200);
 
-        // Dashboard is accessible when logged in
-        $dashRes = $this->actingAs($student)->get('/dashboard');
+        $dashRes = $this->actingAs($user)->get('/dashboard');
         $dashRes->assertStatus(200);
-        $dashRes->assertSee('TRAINEE AGENT DESK');
+        $dashRes->assertSeeText('AGENT DESK');
     }
 }

@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Middleware\EnsureAppIsInstalled;
-use App\Http\Middleware\EnsureUserIsInstructor;
 use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,10 +18,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             // Stateless external webhooks should be listed here if needed
-        ]);
-
-        $middleware->alias([
-            'instructor' => EnsureUserIsInstructor::class,
         ]);
 
         $middleware->redirectGuestsTo(fn () => route('login'));

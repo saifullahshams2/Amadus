@@ -4,8 +4,6 @@ namespace App\Services\Amadeus;
 
 use App\Models\Pnr;
 use App\Models\QueueItem;
-use App\Models\TerminalActivityLog;
-use App\Models\User;
 use Illuminate\Support\Collection;
 
 class QueueService
@@ -304,40 +302,6 @@ class QueueService
 
         return [
             "OK PLACED ON QUEUE {$qNum} / C{$cat} / OFFICE {$targetOffice}",
-        ];
-    }
-
-    /**
-     * Reset student sandbox or all sandbox states.
-     *
-     * @return array{clearedQueues: int, clearedLogs: int, resetPnrs: int}
-     */
-    public function resetSandbox(?string $targetUserId = null, string $officeId = 'LON1A0980'): array
-    {
-        $queueQuery = QueueItem::where('office_id', $officeId);
-        // Activity logs carry no office column, so scope them through the
-        // usernames that belong to this office. A classroom reset must never
-        // delete another office's training records or audit trail.
-        $logQuery = TerminalActivityLog::whereIn(
-            'user_id',
-            User::where('office_id', $officeId)->pluck('username')
-        );
-        $pnrQuery = Pnr::where('office_id', $officeId);
-
-        if ($targetUserId) {
-            $queueQuery->where('target_user_id', $targetUserId);
-            $logQuery->where('user_id', $targetUserId);
-            $pnrQuery->where('user_id', $targetUserId);
-        }
-
-        $clearedQueues = $queueQuery->delete();
-        $clearedLogs = $logQuery->delete();
-        $resetPnrs = $pnrQuery->delete();
-
-        return [
-            'clearedQueues' => $clearedQueues,
-            'clearedLogs' => $clearedLogs,
-            'resetPnrs' => $resetPnrs,
         ];
     }
 }

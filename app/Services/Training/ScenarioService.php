@@ -9,11 +9,11 @@ use Illuminate\Support\Collection;
 class ScenarioService
 {
     /**
-     * Get all scenarios with submission state for a specific student.
+     * Get all scenarios with submission state for a specific user.
      *
      * @return Collection<int, array>
      */
-    public function getScenariosForStudent(string $userId): Collection
+    public function getScenariosForUser(string $userId): Collection
     {
         $scenarios = Scenario::orderBy('created_at', 'asc')->get();
         $submissions = Submission::where('user_id', $userId)->get()->keyBy('scenario_id');
@@ -33,13 +33,10 @@ class ScenarioService
                 'time_limit_minutes' => $sc->time_limit_minutes,
                 'created_by' => $sc->created_by,
                 'status' => $sub?->status ?? 'not_started',
-                'score' => $sub?->final_score ?? 0,
+                'score' => $sub?->score ?? 0,
                 'auto_grade_results' => $sub?->auto_grade_results,
-                'manual_override_score' => $sub?->manual_override_score,
-                'instructor_feedback' => $sub?->instructor_feedback,
                 'time_elapsed_seconds' => $sub?->time_elapsed_seconds ?? 0,
                 'submitted_at' => $sub?->submitted_at?->toIso8601String(),
-                'reviewed_at' => $sub?->reviewed_at?->toIso8601String(),
                 'submission_id' => $sub?->id,
             ];
         });
@@ -258,40 +255,5 @@ class ScenarioService
                 'submitted_at' => now(),
             ]
         );
-    }
-
-    /**
-     * Manual score override and inline feedback by instructor.
-     */
-    public function overrideGrade(
-        string $submissionId,
-        int $newScore,
-        ?string $feedback = null
-    ): Submission {
-        $sub = Submission::findOrFail($submissionId);
-        $sub->update([
-            'manual_override_score' => max(0, min(100, $newScore)),
-            'instructor_feedback' => $feedback,
-            'status' => 'reviewed',
-            'reviewed_at' => now(),
-        ]);
-
-        return $sub;
-    }
-
-    /**
-     * Delete a scenario and all associated student submissions.
-     */
-    public function deleteScenario(string $scenarioId): bool
-    {
-        $scenario = Scenario::find($scenarioId);
-        if (! $scenario) {
-            return false;
-        }
-
-        // Purge associated student submissions
-        Submission::where('scenario_id', $scenarioId)->delete();
-
-        return (bool) $scenario->delete();
     }
 }

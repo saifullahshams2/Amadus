@@ -501,7 +501,7 @@ class InstallerService
     }
 
     /**
-     * Create the primary flight instructor account.
+     * Create the single application user account.
      *
      * @param array{
      *     name: string,
@@ -512,7 +512,7 @@ class InstallerService
      *     agent_id?: string
      * } $data
      */
-    public function createInstructor(array $data): User
+    public function createUser(array $data): User
     {
         // Never modify an existing account during installation: a re-opened
         // installer must not be able to take over a provisioned account.
@@ -527,21 +527,19 @@ class InstallerService
         }
 
         return User::create([
-            'name' => $data['name'] ?? 'Flight Instructor',
+            'name' => $data['name'] ?? 'Amadus User',
             'username' => $data['username'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'role' => 'instructor',
-            'is_approved' => true,
             'office_id' => $data['office_id'] ?? 'LON1A0980',
-            'agent_id' => $data['agent_id'] ?? 'IN01GS',
+            'agent_id' => $data['agent_id'] ?? '1234AB',
         ]);
     }
 
     /**
      * Mark the application as installed by writing the lock file.
      */
-    public function markInstalled(User $instructor, ?string $dbDriver = null): void
+    public function markInstalled(User $user, ?string $dbDriver = null): void
     {
         $driver = $dbDriver ?: config('database.default', 'sqlite');
 
@@ -552,12 +550,11 @@ class InstallerService
             'database_driver' => $driver,
             'installer_locked' => true,
             'installed_by' => [
-                'id' => $instructor->id,
-                'username' => $instructor->username,
-                'email' => $instructor->email,
-                'role' => 'instructor',
-                'office_id' => $instructor->office_id,
-                'agent_id' => $instructor->agent_id,
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'office_id' => $user->office_id,
+                'agent_id' => $user->agent_id,
             ],
         ];
 

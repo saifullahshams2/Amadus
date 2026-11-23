@@ -126,7 +126,6 @@ class PasswordResetTest extends TestCase
             'email' => 'skywalker@amadeus.training',
             'username' => 'skywalker',
             'password' => Hash::make('oldPassword123!'),
-            'is_approved' => true,
         ]);
 
         $token = Password::broker()->createToken($user);
@@ -215,7 +214,6 @@ class PasswordResetTest extends TestCase
             'email' => 'duallogin@amadeus.training',
             'username' => 'callsign_dual',
             'password' => Hash::make('secretFlight123!'),
-            'is_approved' => true,
         ]);
 
         // 1. Login with callsign/username

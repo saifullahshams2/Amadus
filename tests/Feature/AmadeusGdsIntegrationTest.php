@@ -34,7 +34,6 @@ class AmadeusGdsIntegrationTest extends TestCase
             'success' => true,
             'user' => [
                 'username' => 'student',
-                'role' => 'student',
             ],
         ]);
     }
@@ -70,7 +69,7 @@ class AmadeusGdsIntegrationTest extends TestCase
         $this->assertTrue(str_contains($lines, 'BOEING 777-300ER'));
     }
 
-    public function test_04_full_pnr_creation_pricing_eticketing_and_instructor_audit(): void
+    public function test_04_full_pnr_creation_pricing_and_eticketing(): void
     {
         // 1. Log in as student
         $loginRes = $this->postJson('/api/auth/login', [
@@ -163,18 +162,12 @@ class AmadeusGdsIntegrationTest extends TestCase
         $this->assertTrue(str_contains($lines, 'ELECTRONIC TICKET RECORD'));
         $this->assertTrue(str_contains($lines, 'OPEN'));
 
-        // 13. Instructor login & PNR audit
-        $instLogin = $this->postJson('/api/auth/login', [
-            'username' => 'instructor',
-            'password' => 'amadeus123',
+        // 13. The signed-in user can retrieve their own stored PNR
+        $activePnr = $this->getJson('/api/dashboard/active-pnr');
+        $activePnr->assertStatus(200);
+        $activePnr->assertJson([
+            'hasActivePnr' => true,
+            'recordLocator' => $rloc,
         ]);
-        $instLogin->assertStatus(200);
-
-        $instData = $this->getJson('/api/instructor/students');
-        $instData->assertStatus(200);
-        $this->assertNotEmpty($instData->json('students'));
-
-        $matchingPnr = collect($instData->json('pnrs'))->firstWhere('record_locator', $rloc);
-        $this->assertNotNull($matchingPnr, "Instructor should find student PNR {$rloc}");
     }
 }

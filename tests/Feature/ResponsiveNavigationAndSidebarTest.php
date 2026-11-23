@@ -18,30 +18,27 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
         $this->seedTestUsers();
     }
 
-    public function test_01_dashboard_layout_has_mobile_and_tablet_header_elements_for_student(): void
+    protected function user(): User
     {
-        $student = User::where('role', 'student')->first();
+        return User::where('username', 'student')->firstOrFail();
+    }
 
-        $response = $this->actingAs($student)->get('/dashboard');
+    public function test_01_dashboard_layout_has_mobile_and_tablet_header_elements(): void
+    {
+        $response = $this->actingAs($this->user())->get('/dashboard');
         $response->assertStatus(200);
 
-        // 1. Mobile & tablet header has logo on left (xl:hidden)
         $response->assertSee('xl:hidden', false);
         $response->assertSee('airplane-ticket.png', false);
         $response->assertSeeText('Amadus');
-
-        // 2. Mobile & tablet header has 3-line menu icon button on right
         $response->assertSee('@click="mobileSidebarOpen = true"', false);
-        $response->assertSee('d="M4 6h16M4 12h16M4 18h16"', false); // 3-line SVG path
-
-        // 3. Sidebar drawer opens 80% with cross icon and 20% click-to-close backdrop
+        $response->assertSee('d="M4 6h16M4 12h16M4 18h16"', false);
         $response->assertSee('w-[80vw]', false);
         $response->assertSee('max-w-[80vw]', false);
-        $response->assertSee('@click="mobileSidebarOpen = false"', false); // Backdrop click & cross icon click
-        $response->assertSee('d="M6 18L18 6M6 6l12 12"', false); // Cross icon SVG path
+        $response->assertSee('@click="mobileSidebarOpen = false"', false);
+        $response->assertSee('d="M6 18L18 6M6 6l12 12"', false);
 
-        // 4. All menu links moved into the mobile sidebar drawer
-        $response->assertSeeText('TRAINEE DESK');
+        $response->assertSeeText('AGENT DESK');
         $response->assertSee(route('dashboard'), false);
         $response->assertSee(route('dashboard.section', 'workspace'), false);
         $response->assertSee(route('dashboard.section', 'drills'), false);
@@ -50,77 +47,49 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
         $response->assertSee(route('terminal.index'), false);
     }
 
-    public function test_02_dashboard_layout_has_mobile_and_tablet_header_elements_for_instructor(): void
+    public function test_02_dashboard_does_not_expose_admin_or_instructor_navigation(): void
     {
-        $instructor = User::where('role', 'instructor')->first();
-
-        $response = $this->actingAs($instructor)->get('/dashboard');
+        $response = $this->actingAs($this->user())->get('/dashboard');
         $response->assertStatus(200);
 
-        // 1. Header has logo on left and 3-line menu icon on right
-        $response->assertSee('@click="mobileSidebarOpen = true"', false);
-        $response->assertSee('d="M4 6h16M4 12h16M4 18h16"', false);
-
-        // 2. 80% drawer with cross icon and backdrop click
-        $response->assertSee('w-[80vw]', false);
-        $response->assertSee('@click="mobileSidebarOpen = false"', false);
-        $response->assertSee('d="M6 18L18 6M6 6l12 12"', false);
-
-        // 3. All instructor menus moved into the sidebar drawer
-        $response->assertSeeText('COMMAND CENTER');
-        $response->assertSee(route('dashboard'), false);
-        $response->assertSee(route('dashboard.section', 'classroom'), false);
-        $response->assertSee(route('dashboard.section', 'students'), false);
-        $response->assertSee(route('dashboard.section', 'builder'), false);
-        $response->assertSee(route('dashboard.section', 'gradebook'), false);
-        $response->assertDontSee(route('dashboard.section', 'queues'), false);
-        $response->assertSee(route('dashboard.section', 'analytics'), false);
-        $response->assertSee(route('terminal.index'), false);
+        $response->assertDontSeeText('COMMAND CENTER');
+        $response->assertDontSee(route('dashboard.section', 'classroom'), false);
+        $response->assertDontSee(route('dashboard.section', 'students'), false);
+        $response->assertDontSee(route('dashboard.section', 'builder'), false);
+        $response->assertDontSee(route('dashboard.section', 'gradebook'), false);
     }
 
     public function test_03_index_main_page_redirects_to_login(): void
     {
-        $response = $this->get('/');
-        $response->assertRedirect('/login');
+        $this->get('/')->assertRedirect('/login');
     }
 
-    public function test_04_terminal_page_has_sidebar_menu_and_3_line_icon_for_mobile_and_tablet(): void
+    public function test_04_terminal_page_has_sidebar_menu_and_3_line_icon(): void
     {
-        $student = User::where('role', 'student')->first();
-
-        $response = $this->actingAs($student)->get('/terminal');
+        $response = $this->actingAs($this->user())->get('/terminal');
         $response->assertStatus(200);
 
-        // 1. Mobile & tablet header has logo on left (xl:hidden) and 3-line menu icon on right
         $response->assertSee('xl:hidden', false);
         $response->assertSee('airplane-ticket.png', false);
         $response->assertSee('@click="mobileSidebarOpen = true"', false);
-        $response->assertSee('d="M4 6h16M4 12h16M4 18h16"', false); // 3-line SVG path
-
-        // 2. Sidebar drawer opens 80% with cross icon and 20% click-to-close backdrop
+        $response->assertSee('d="M4 6h16M4 12h16M4 18h16"', false);
         $response->assertSee('w-[80vw]', false);
         $response->assertSee('max-w-[80vw]', false);
-        $response->assertSee('@click="mobileSidebarOpen = false"', false); // Backdrop click & cross icon click
-        $response->assertSee('d="M6 18L18 6M6 6l12 12"', false); // Cross icon SVG path
-
-        // 3. Navigation links back to dashboard are present in sidebar
+        $response->assertSee('@click="mobileSidebarOpen = false"', false);
+        $response->assertSee('d="M6 18L18 6M6 6l12 12"', false);
         $response->assertSee(route('dashboard'), false);
     }
 
     public function test_05_terminal_page_has_all_terminal_types_in_sidebar_menu(): void
     {
-        $student = User::where('role', 'student')->first();
-
-        $response = $this->actingAs($student)->get('/terminal');
+        $response = $this->actingAs($this->user())->get('/terminal');
         $response->assertStatus(200);
 
-        // 1. All terminal types moved to sidebar menu
         $response->assertSeeText('TERMINAL TYPE');
         $response->assertSeeText('Modern Web');
         $response->assertSeeText('Classic CRT Green');
         $response->assertSeeText('Classic CRT Amber');
 
-        // 2. Terminal theme switching Alpine handlers exist in sidebar
         $response->assertSee('@click="theme = \'modern\'"', false);
         $response->assertSee('@click="theme = \'crt-green\'"', false);
         $response->assertSee('@click="theme = \'crt-amber\'"', false);
@@ -128,12 +97,9 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
 
     public function test_06_dynamic_custom_popup_is_rendered_and_available(): void
     {
-        $student = User::where('role', 'student')->first();
-
-        $response = $this->actingAs($student)->get('/dashboard');
+        $response = $this->actingAs($this->user())->get('/dashboard');
         $response->assertStatus(200);
 
-        // Verify dynamic custom popup elements are present
         $response->assertSee('id="dynamic-popup-container"', false);
         $response->assertSee('id="dynamic-popup-card"', false);
         $response->assertSee('window.customAlert', false);
@@ -143,32 +109,16 @@ class ResponsiveNavigationAndSidebarTest extends TestCase
 
     public function test_07_dashboard_sections_removed_from_main_and_kept_in_subpages(): void
     {
-        $student = User::where('role', 'student')->first();
-        $instructor = User::where('role', 'instructor')->first();
+        $user = $this->user();
 
-        // 1. Student /dashboard does not have these sections
-        $studentDash = $this->actingAs($student)->get('/dashboard');
-        $studentDash->assertStatus(200);
-        $studentDash->assertDontSeeText('AMADEUS Cryptic Terminal');
-        $studentDash->assertDontSeeText('Assigned Booking Scenarios & Drills');
-        $studentDash->assertDontSeeText('Interactive Cryptic Entry Validator');
+        $dashboard = $this->actingAs($user)->get('/dashboard');
+        $dashboard->assertStatus(200);
+        $dashboard->assertDontSeeText('AMADEUS Cryptic Terminal');
+        $dashboard->assertDontSeeText('Assigned Booking Scenarios & Drills');
+        $dashboard->assertDontSeeText('Interactive Cryptic Entry Validator');
 
-        // But student subpages have them (AMADEUS Cryptic Terminal completely removed from workspace per requirements)
-        $this->actingAs($student)->get('/dashboard/workspace')->assertDontSeeText('AMADEUS Cryptic Terminal');
-        $this->actingAs($student)->get('/dashboard/workspace')->assertSeeText('Current Active PNR Status');
-        $this->actingAs($student)->get('/dashboard/drills')->assertSeeText('Assigned Booking Scenarios & Drills');
-        $this->actingAs($student)->get('/dashboard/validator')->assertSeeText('Interactive Cryptic Entry Validator');
-
-        // 2. Instructor /dashboard does not have these sections
-        $instructorDash = $this->actingAs($instructor)->get('/dashboard');
-        $instructorDash->assertStatus(200);
-        $instructorDash->assertDontSeeText('Live Classroom Grid & Spectator');
-        $instructorDash->assertDontSeeText('Simulated Queue & Sandbox Management');
-        $instructorDash->assertDontSeeText('Classroom Analytics & Audit Trail');
-
-        // But instructor subpages have them (and queues redirects to dashboard)
-        $this->actingAs($instructor)->get('/dashboard/classroom')->assertSeeText('Live Classroom Grid & Spectator');
-        $this->actingAs($instructor)->get('/dashboard/builder')->assertSeeText('Scenario & Drill Builder');
-        $this->actingAs($instructor)->get('/dashboard/queues')->assertRedirect(route('dashboard'));
+        $this->actingAs($user)->get('/dashboard/workspace')->assertSeeText('Current Active PNR Status');
+        $this->actingAs($user)->get('/dashboard/drills')->assertSeeText('Assigned Booking Scenarios & Drills');
+        $this->actingAs($user)->get('/dashboard/validator')->assertSeeText('Interactive Cryptic Entry Validator');
     }
 }

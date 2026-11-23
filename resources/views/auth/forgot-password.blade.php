@@ -56,7 +56,7 @@
                 Remember your credentials? <a href="{{ route('login') }}" class="text-blue-600 font-semibold hover:underline">Sign In</a>
             </div>
             <div>
-                Don't have an account yet? <a href="{{ route('register') }}" class="text-blue-600 font-semibold hover:underline">Register as Cadet</a>
+                Need help signing in? <a href="{{ route('password.request') }}" class="text-blue-600 font-semibold hover:underline">Reset your password</a>
             </div>
         </div>
     </div>

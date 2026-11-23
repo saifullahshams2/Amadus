@@ -45,7 +45,7 @@ class QueueItem extends Model
         return $query->where('status', 'PENDING');
     }
 
-    public function scopeForStudent(Builder $query, string $officeId, ?string $userId = null): Builder
+    public function scopeForUser(Builder $query, string $officeId, ?string $userId = null): Builder
     {
         return $query->where('office_id', $officeId)
             ->where(function (Builder $q) use ($userId): void {

@@ -142,7 +142,7 @@ class DatabaseSeeder extends Seeder
                     'requireETicket' => false,
                 ],
                 'time_limit_minutes' => 25,
-                'created_by' => 'instructor',
+                'created_by' => 'system',
             ],
             [
                 'id' => 'SCN-MC-02',
@@ -168,7 +168,7 @@ class DatabaseSeeder extends Seeder
                     'requireETicket' => false,
                 ],
                 'time_limit_minutes' => 35,
-                'created_by' => 'instructor',
+                'created_by' => 'system',
             ],
             [
                 'id' => 'SCN-QE-03',
@@ -193,7 +193,7 @@ class DatabaseSeeder extends Seeder
                     'requireETicket' => false,
                 ],
                 'time_limit_minutes' => 30,
-                'created_by' => 'instructor',
+                'created_by' => 'system',
             ],
             [
                 'id' => 'SCN-TK-04',
@@ -218,7 +218,7 @@ class DatabaseSeeder extends Seeder
                     'requireETicket' => true,
                 ],
                 'time_limit_minutes' => 20,
-                'created_by' => 'instructor',
+                'created_by' => 'system',
             ],
         ];
 

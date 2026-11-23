@@ -4,17 +4,14 @@
  */
 
 // ==========================================
-// 1. User & Role RBAC
+// 1. User Profile
 // ==========================================
-
-export type Role = 'student' | 'instructor';
 
 export interface User {
     id: number;
     username: string;
     name: string;
     email: string;
-    role: Role;
     office_id: string; // e.g. "LON1A0980"
     agent_id: string;  // e.g. "1234AB"
     created_at?: string;
@@ -174,8 +171,7 @@ export interface Scenario {
 export type SubmissionStatus =
     | 'not_started'
     | 'in_progress'
-    | 'submitted'
-    | 'reviewed';
+    | 'submitted';
 
 export interface GradingElementCheck {
     code: string;       // e.g. "NM", "AP", "SS", "TK", "RF", "FXP", "TTP"
@@ -203,14 +199,11 @@ export interface Submission {
     status: SubmissionStatus;
     score: number;
     auto_grade_results?: AutoGradeResult;
-    manual_override_score?: number | null;
-    instructor_feedback?: string | null;
     terminal_logs?: TerminalLog[];
     pnr_record_locator?: string | null;
     pnr_snapshot?: PNR | null;
     time_elapsed_seconds: number;
     submitted_at?: string | null;
-    reviewed_at?: string | null;
     created_at?: string;
     updated_at?: string;
 }
@@ -255,7 +248,7 @@ export interface QueueSummary {
 }
 
 // ==========================================
-// 6. Terminal Logging, Live Classroom & Spectator
+// 6. Terminal Logging & Analytics
 // ==========================================
 
 export type CommandType =
@@ -280,23 +273,6 @@ export interface TerminalLog {
     command_type: CommandType;
     execution_time_ms: number;
     created_at: string;
-}
-
-export type ClassroomStudentStatus =
-    | 'Online'
-    | 'In Terminal'
-    | 'Idle'
-    | 'Error Loop';
-
-export interface StudentClassroomCard {
-    user: User;
-    status: ClassroomStudentStatus;
-    lastActive: string;
-    currentCommand?: string;
-    recentErrorRate: number; // percentage
-    activePnrLocator?: string;
-    totalCommandsExecuted: number;
-    completedScenariosCount: number;
 }
 
 // ==========================================

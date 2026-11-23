@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('role')->default('student');
+            $table->string('role')->default('user');
             $table->string('office_id')->default('LON1A0980');
             $table->string('agent_id')->default('1234AB');
             $table->rememberToken();

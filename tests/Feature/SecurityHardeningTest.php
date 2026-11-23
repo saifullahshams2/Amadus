@@ -4,8 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Pnr;
 use App\Models\QueueItem;
-use App\Models\Scenario;
-use App\Models\Submission;
 use App\Models\TerminalActivityLog;
 use App\Models\User;
 use App\Services\Installer\InstallerService;
@@ -25,26 +23,6 @@ class SecurityHardeningTest extends TestCase
         parent::setUp();
         $this->seed();
         $this->seedTestUsers();
-    }
-
-    public function test_registration_cannot_escalate_to_instructor_role(): void
-    {
-        $response = $this->postJson('/api/auth/register', [
-            'username' => 'attacker',
-            'email' => 'attacker@example.com',
-            'password' => 'secret123',
-            'role' => 'instructor',
-        ]);
-
-        $response->assertStatus(201);
-        $this->assertDatabaseHas('users', [
-            'username' => 'attacker',
-            'role' => 'student',
-        ]);
-        $this->assertDatabaseMissing('users', [
-            'username' => 'attacker',
-            'role' => 'instructor',
-        ]);
     }
 
     public function test_web_terminal_execute_enforces_csrf_protection(): void
@@ -130,8 +108,6 @@ class SecurityHardeningTest extends TestCase
             'name' => 'Student Two',
             'email' => 'student2@example.com',
             'password' => bcrypt('password123'),
-            'role' => 'student',
-            'is_approved' => true,
             'office_id' => 'LON1A0980',
             'agent_id' => '5678CD',
         ]);
@@ -195,36 +171,6 @@ class SecurityHardeningTest extends TestCase
         $pnrInDb = Pnr::find('SEC001');
         $this->assertEquals('student', $pnrInDb->user_id);
         $this->assertEquals('VICTIM', $pnrInDb->data_json['passengers'][0]['lastName']);
-    }
-
-    public function test_instructor_can_retrieve_any_student_pnr(): void
-    {
-        Pnr::create([
-            'record_locator' => 'INS001',
-            'user_id' => 'student',
-            'office_id' => 'LON1A0980',
-            'status' => 'CONFIRMED',
-            'data_json' => [
-                'recordLocator' => 'INS001',
-                'passengers' => [
-                    ['lastName' => 'SMITH', 'firstName' => 'JOHN'],
-                ],
-                'segments' => [],
-            ],
-        ]);
-
-        $instructor = User::where('role', 'instructor')->first();
-        $this->actingAs($instructor);
-
-        $res = $this->postJson('/api/terminal/execute', [
-            'command' => 'RT INS001',
-            'state' => [],
-        ]);
-
-        $res->assertStatus(200);
-        $this->assertFalse($res->json('isError'));
-        $output = implode(' ', $res->json('outputLines'));
-        $this->assertStringContainsString('SMITH/JOHN', $output);
     }
 
     public function test_unauthenticated_user_cannot_save_or_view_training_progress(): void
@@ -370,27 +316,6 @@ class SecurityHardeningTest extends TestCase
         $response->assertStatus(401);
     }
 
-    public function test_unapproved_student_cannot_execute_terminal_commands(): void
-    {
-        $unapproved = User::create([
-            'username' => 'unapproved_cadet',
-            'name' => 'Pending Cadet',
-            'email' => 'unapproved@amadeus.training',
-            'password' => bcrypt('password123'),
-            'role' => 'student',
-            'is_approved' => false,
-            'office_id' => 'LON1A0980',
-            'agent_id' => '1234AB',
-        ]);
-
-        $response = $this->actingAs($unapproved)->postJson('/api/terminal/execute', [
-            'command' => 'HE',
-            'state' => [],
-        ]);
-
-        $response->assertStatus(403);
-    }
-
     public function test_guest_session_cannot_persist_pnr_via_et(): void
     {
         $validState = [
@@ -435,15 +360,6 @@ class SecurityHardeningTest extends TestCase
         $output = implode(' ', $res->json('outputLines'));
         $this->assertStringContainsString('GUEST SESSION: LOGIN REQUIRED', $output);
         $this->assertDatabaseMissing('pnrs', ['record_locator' => 'GST001']);
-    }
-
-    public function test_exit_impersonation_rejects_get_requests(): void
-    {
-        $student = User::where('username', 'student')->first();
-        $response = $this->actingAs($student)->get('/instructor/exit-impersonation');
-
-        // GET method is no longer allowed
-        $response->assertStatus(405);
     }
 
     public function test_installer_blocks_sqlite_path_traversal(): void
@@ -506,164 +422,6 @@ class SecurityHardeningTest extends TestCase
         $this->assertStringContainsString('GUEST SESSION: LOGIN REQUIRED TO ACCESS QUEUES', implode(' ', $qdRes->json('outputLines')));
     }
 
-    public function test_instructor_cannot_access_or_mutate_cross_office_students(): void
-    {
-        $instA = User::create([
-            'username' => 'inst_a',
-            'name' => 'Instructor A',
-            'email' => 'insta@test.local',
-            'password' => bcrypt('password'),
-            'role' => 'instructor',
-            'is_approved' => true,
-            'office_id' => 'ACADA001',
-            'agent_id' => 'INA1',
-        ]);
-
-        $cadetA = User::create([
-            'username' => 'cadet_a',
-            'name' => 'Cadet A',
-            'email' => 'cadeta@test.local',
-            'password' => bcrypt('password'),
-            'role' => 'student',
-            'is_approved' => true,
-            'office_id' => 'ACADA001',
-            'agent_id' => 'CDA1',
-        ]);
-
-        $cadetB = User::create([
-            'username' => 'cadet_b',
-            'name' => 'Cadet B',
-            'email' => 'cadetb@test.local',
-            'password' => bcrypt('password'),
-            'role' => 'student',
-            'is_approved' => false,
-            'office_id' => 'ACADB001',
-            'agent_id' => 'CDB1',
-        ]);
-
-        Pnr::create([
-            'record_locator' => 'CADB01',
-            'user_id' => $cadetB->username,
-            'office_id' => 'ACADB001',
-            'status' => 'CONFIRMED',
-            'data_json' => ['recordLocator' => 'CADB01'],
-        ]);
-
-        $submission = Submission::create([
-            'scenario_id' => 'SCN-RT-01',
-            'user_id' => $cadetB->username,
-            'score' => 50,
-            'status' => 'submitted',
-        ]);
-
-        $this->actingAs($instA);
-
-        // 1. Roster scoping
-        $roster = $this->getJson('/api/instructor/students');
-        $roster->assertStatus(200);
-        $studentUsernames = collect($roster->json('students'))->pluck('username');
-        $pendingUsernames = collect($roster->json('pendingStudents'))->pluck('username');
-        $this->assertTrue($studentUsernames->contains('cadet_a'));
-        $this->assertFalse($studentUsernames->contains('cadet_b'));
-        $this->assertFalse($pendingUsernames->contains('cadet_b'));
-
-        // 2. Active PNR scoping
-        $activePnr = $this->getJson('/api/dashboard/active-pnr?user=cadet_b');
-        $activePnr->assertStatus(404);
-
-        // 3. Spectate scoping
-        $spectate = $this->getJson('/api/instructor/spectate/cadet_b');
-        $spectate->assertStatus(404);
-
-        // 4. Approve scoping
-        $approve = $this->postJson("/api/instructor/students/{$cadetB->id}/approve");
-        $approve->assertStatus(404);
-
-        // 5. Reject scoping
-        $reject = $this->postJson("/api/instructor/students/{$cadetB->id}/reject");
-        $reject->assertStatus(404);
-
-        // 6. Delete scoping
-        $delete = $this->deleteJson("/api/instructor/students/{$cadetB->id}");
-        $delete->assertStatus(404);
-
-        // 7. Impersonate scoping
-        $impersonate = $this->postJson("/api/instructor/students/{$cadetB->id}/impersonate");
-        $impersonate->assertStatus(404);
-
-        // 8. Grade scoping
-        $grade = $this->postJson("/api/instructor/submissions/{$submission->id}/grade", [
-            'score' => 95,
-        ]);
-        $grade->assertStatus(404);
-    }
-
-    public function test_sandbox_reset_is_scoped_to_instructors_office(): void
-    {
-        $instC = User::create([
-            'username' => 'inst_c',
-            'name' => 'Instructor C',
-            'email' => 'instc@test.local',
-            'password' => bcrypt('password'),
-            'role' => 'instructor',
-            'is_approved' => true,
-            'office_id' => 'ACADC001',
-            'agent_id' => 'INC1',
-        ]);
-
-        $cadetC = User::create([
-            'username' => 'cadet_c',
-            'name' => 'Cadet C',
-            'email' => 'cadetc@test.local',
-            'password' => bcrypt('password'),
-            'role' => 'student',
-            'is_approved' => true,
-            'office_id' => 'ACADC001',
-            'agent_id' => 'CDC1',
-        ]);
-
-        $cadetD = User::create([
-            'username' => 'cadet_d',
-            'name' => 'Cadet D',
-            'email' => 'cadetd@test.local',
-            'password' => bcrypt('password'),
-            'role' => 'student',
-            'is_approved' => true,
-            'office_id' => 'ACADD001',
-            'agent_id' => 'CDD1',
-        ]);
-
-        TerminalActivityLog::create([
-            'user_id' => 'cadet_c',
-            'command' => 'AN15NOVLHRJFK',
-            'output_lines' => ['OK'],
-            'is_error' => false,
-            'command_type' => 'AVAILABILITY',
-            'execution_time_ms' => 10,
-        ]);
-
-        TerminalActivityLog::create([
-            'user_id' => 'cadet_d',
-            'command' => 'DAN LHR',
-            'output_lines' => ['OK'],
-            'is_error' => false,
-            'command_type' => 'DECODE',
-            'execution_time_ms' => 10,
-        ]);
-
-        $this->actingAs($instC);
-
-        $response = $this->postJson('/api/instructor/sandbox/reset');
-        $response->assertStatus(200);
-
-        $this->assertDatabaseMissing('terminal_activity_logs', [
-            'user_id' => 'cadet_c',
-        ]);
-        $this->assertDatabaseHas('terminal_activity_logs', [
-            'user_id' => 'cadet_d',
-        ]);
-    }
-
     public function test_terminal_execute_normalises_missing_active_pnr_keys_without_500(): void
     {
         $response = $this->postJson('/api/terminal/execute', [
@@ -677,24 +435,6 @@ class SecurityHardeningTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertFalse($response->json('isError'));
-    }
-
-    public function test_registration_normalises_case_and_rejects_duplicate_with_422(): void
-    {
-        User::factory()->create([
-            'username' => 'existingcadet',
-            'email' => 'existing@example.test',
-        ]);
-
-        $response = $this->postJson('/api/auth/register', [
-            'username' => 'ExistingCadet',
-            'email' => 'different@example.test',
-            'password' => 'Passw0rd!23',
-            'password_confirmation' => 'Passw0rd!23',
-        ]);
-
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['username']);
     }
 
     public function test_guest_session_cannot_retrieve_stored_pnr_via_rt_locator(): void
@@ -784,8 +524,6 @@ class SecurityHardeningTest extends TestCase
             'name' => 'Cadet One',
             'email' => 'cadet1@test.local',
             'password' => bcrypt('password'),
-            'role' => 'student',
-            'is_approved' => true,
             'office_id' => 'LON1A0980',
             'agent_id' => 'CD01',
         ]);
@@ -795,8 +533,6 @@ class SecurityHardeningTest extends TestCase
             'name' => 'Cadet Two',
             'email' => 'cadet2@test.local',
             'password' => bcrypt('password'),
-            'role' => 'student',
-            'is_approved' => true,
             'office_id' => 'LON1A0980',
             'agent_id' => 'CD02',
         ]);
@@ -833,8 +569,6 @@ class SecurityHardeningTest extends TestCase
             'name' => 'Owner Cadet',
             'email' => 'owner@test.local',
             'password' => bcrypt('password'),
-            'role' => 'student',
-            'is_approved' => true,
             'office_id' => 'LON1A0980',
             'agent_id' => 'CD01',
         ]);
@@ -844,8 +578,6 @@ class SecurityHardeningTest extends TestCase
             'name' => 'Snoop Cadet',
             'email' => 'snoop@test.local',
             'password' => bcrypt('password'),
-            'role' => 'student',
-            'is_approved' => true,
             'office_id' => 'LON1A0980',
             'agent_id' => 'CD02',
         ]);
@@ -915,64 +647,6 @@ class SecurityHardeningTest extends TestCase
         $this->assertEquals(0, QueueItem::where('message', 'like', '%PLACED VIA QE%')->count());
     }
 
-    public function test_instructor_cannot_delete_another_instructors_custom_scenario(): void
-    {
-        $instA = User::create([
-            'username' => 'instructor_alpha',
-            'name' => 'Instructor Alpha',
-            'email' => 'alpha@instructor.test',
-            'password' => bcrypt('password'),
-            'role' => 'instructor',
-            'is_approved' => true,
-            'office_id' => 'LON1A0980',
-            'agent_id' => 'IA01',
-        ]);
-
-        $instB = User::create([
-            'username' => 'instructor_beta',
-            'name' => 'Instructor Beta',
-            'email' => 'beta@instructor.test',
-            'password' => bcrypt('password'),
-            'role' => 'instructor',
-            'is_approved' => true,
-            'office_id' => 'XOFF22',
-            'agent_id' => 'IB01',
-        ]);
-
-        Scenario::create([
-            'id' => 'SCN-ALPHA-DRILL',
-            'title' => 'Alpha Private Drill',
-            'category' => 'One-way',
-            'difficulty' => 'Intermediate',
-            'description' => 'Drill created by Alpha',
-            'time_limit_minutes' => 20,
-            'passenger_profile' => ['names' => []],
-            'flight_segments' => [],
-            'validation_criteria' => [],
-            'created_by' => 'instructor_alpha',
-        ]);
-
-        Submission::create([
-            'scenario_id' => 'SCN-ALPHA-DRILL',
-            'user_id' => 'student',
-            'status' => 'submitted',
-            'score' => 95,
-        ]);
-
-        // Instructor Beta tries to delete Instructor Alpha's scenario -> 404
-        $deleteRes = $this->actingAs($instB)->deleteJson('/api/instructor/scenarios/SCN-ALPHA-DRILL');
-        $deleteRes->assertStatus(404);
-
-        // Confirm scenario and submissions are preserved
-        $this->assertDatabaseHas('scenarios', ['id' => 'SCN-ALPHA-DRILL']);
-        $this->assertDatabaseHas('submissions', ['scenario_id' => 'SCN-ALPHA-DRILL']);
-
-        // Instructor Alpha can delete their own scenario -> 200
-        $deleteResAlpha = $this->actingAs($instA)->deleteJson('/api/instructor/scenarios/SCN-ALPHA-DRILL');
-        $deleteResAlpha->assertStatus(200);
-        $this->assertDatabaseMissing('scenarios', ['id' => 'SCN-ALPHA-DRILL']);
-    }
-
     public function test_installer_rejects_ssrf_bypass_variations(): void
     {
         $service = app(InstallerService::class);
@@ -1018,8 +692,6 @@ class SecurityHardeningTest extends TestCase
             'name' => 'Cadet Office Test',
             'email' => 'cadet_office@test.local',
             'password' => bcrypt('password'),
-            'role' => 'student',
-            'is_approved' => true,
             'office_id' => 'LON1A0980',
             'agent_id' => 'CO01',
         ]);
@@ -1064,8 +736,6 @@ class SecurityHardeningTest extends TestCase
             'name' => 'Cadet PNR Test',
             'email' => 'cadet_pnr@test.local',
             'password' => bcrypt('password'),
-            'role' => 'student',
-            'is_approved' => true,
             'office_id' => 'LON1A0980',
             'agent_id' => 'CP01',
         ]);
@@ -1116,357 +786,5 @@ class SecurityHardeningTest extends TestCase
         $this->assertNotNull($dbPnr);
         $this->assertEquals('LON1A0980', $dbPnr->office_id);
         $this->assertNotEquals('NYC1A0111', $dbPnr->office_id);
-    }
-
-    public function test_instructor_cannot_retrieve_foreign_office_pnr_via_rt_locator(): void
-    {
-        $instructor = User::where('role', 'instructor')->first();
-        $this->assertNotNull($instructor);
-        $instructor->update(['office_id' => 'LON1A0980']);
-
-        Pnr::create([
-            'record_locator' => 'NYCP01',
-            'user_id' => 'student',
-            'office_id' => 'NYC1A0111',
-            'status' => 'CONFIRMED',
-            'data_json' => [
-                'recordLocator' => 'NYCP01',
-                'creationOffice' => 'NYC1A0111',
-                'passengers' => [
-                    ['lastName' => 'FOREIGNER', 'firstName' => 'BOB', 'title' => 'MR', 'type' => 'ADT'],
-                ],
-                'segments' => [],
-            ],
-        ]);
-
-        $res = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
-            'command' => 'RT NYCP01',
-            'state' => [],
-        ]);
-
-        $res->assertStatus(200);
-        $this->assertTrue($res->json('isError'));
-        $this->assertEquals('RT_UNAUTHORIZED', $res->json('commandType'));
-        $this->assertStringContainsString('ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE', implode(' ', $res->json('outputLines')));
-    }
-
-    public function test_instructor_cannot_retrieve_foreign_office_pnr_via_rt_line(): void
-    {
-        $instructor = User::where('role', 'instructor')->first();
-        $this->assertNotNull($instructor);
-        $instructor->update(['office_id' => 'LON1A0980']);
-
-        Pnr::create([
-            'record_locator' => 'NYCP02',
-            'user_id' => 'student',
-            'office_id' => 'NYC1A0111',
-            'status' => 'CONFIRMED',
-            'data_json' => [
-                'recordLocator' => 'NYCP02',
-                'creationOffice' => 'NYC1A0111',
-                'passengers' => [
-                    ['lastName' => 'FOREIGNER', 'firstName' => 'ALICE', 'title' => 'MS', 'type' => 'ADT'],
-                ],
-                'segments' => [],
-            ],
-        ]);
-
-        $state = [
-            'lastPnrList' => [
-                [
-                    'recordLocator' => 'NYCP02',
-                    'creationOffice' => 'NYC1A0111',
-                    'passengers' => [
-                        ['lastName' => 'FOREIGNER', 'firstName' => 'ALICE', 'title' => 'MS', 'type' => 'ADT'],
-                    ],
-                    'segments' => [],
-                ],
-            ],
-        ];
-
-        $res = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
-            'command' => 'RT1',
-            'state' => $state,
-        ]);
-
-        $res->assertStatus(200);
-        $this->assertTrue($res->json('isError'));
-        $this->assertEquals('RT_UNAUTHORIZED', $res->json('commandType'));
-        $this->assertStringContainsString('ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE', implode(' ', $res->json('outputLines')));
-    }
-
-    public function test_instructor_index_search_is_scoped_to_instructors_office(): void
-    {
-        $instructor = User::where('role', 'instructor')->first();
-        $this->assertNotNull($instructor);
-        $instructor->update(['office_id' => 'LON1A0980']);
-
-        Pnr::create([
-            'record_locator' => 'LONGR1',
-            'user_id' => 'student',
-            'office_id' => 'LON1A0980',
-            'status' => 'CONFIRMED',
-            'data_json' => [
-                'recordLocator' => 'LONGR1',
-                'creationOffice' => 'LON1A0980',
-                'passengers' => [
-                    ['lastName' => 'GARCIA', 'firstName' => 'MARIA', 'title' => 'MS', 'type' => 'ADT'],
-                ],
-                'segments' => [
-                    [
-                        'segmentNumber' => 1,
-                        'airlineCode' => 'BA',
-                        'flightNumber' => '100',
-                        'bookingClass' => 'Y',
-                        'departureDate' => '15DEC',
-                        'departureAirport' => 'LHR',
-                        'arrivalAirport' => 'JFK',
-                        'departureTime' => '1000',
-                        'arrivalTime' => '1300',
-                        'seats' => 1,
-                        'status' => 'HK',
-                    ],
-                ],
-            ],
-        ]);
-
-        Pnr::create([
-            'record_locator' => 'NYCGR2',
-            'user_id' => 'student',
-            'office_id' => 'NYC1A0111',
-            'status' => 'CONFIRMED',
-            'data_json' => [
-                'recordLocator' => 'NYCGR2',
-                'creationOffice' => 'NYC1A0111',
-                'passengers' => [
-                    ['lastName' => 'GARCIA', 'firstName' => 'CARLOS', 'title' => 'MR', 'type' => 'ADT'],
-                ],
-                'segments' => [
-                    [
-                        'segmentNumber' => 1,
-                        'airlineCode' => 'AA',
-                        'flightNumber' => '200',
-                        'bookingClass' => 'Y',
-                        'departureDate' => '15DEC',
-                        'departureAirport' => 'JFK',
-                        'arrivalAirport' => 'MIA',
-                        'departureTime' => '1400',
-                        'arrivalTime' => '1700',
-                        'seats' => 1,
-                        'status' => 'HK',
-                    ],
-                ],
-            ],
-        ]);
-
-        // Search single letter index RT/G
-        $resIndex = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
-            'command' => 'RT/G',
-            'state' => [],
-        ]);
-
-        $resIndex->assertStatus(200);
-        $indexOutput = implode(' ', $resIndex->json('outputLines'));
-        $this->assertStringContainsString('LONGR1', $indexOutput);
-        $this->assertStringNotContainsString('NYCGR2', $indexOutput);
-
-        // Search by surname RT/GARCIA
-        $resSurname = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
-            'command' => 'RT/GARCIA',
-            'state' => [],
-        ]);
-
-        $resSurname->assertStatus(200);
-        $surnameOutput = implode(' ', $resSurname->json('outputLines'));
-        $this->assertStringContainsString('LONGR1', $surnameOutput);
-        $this->assertStringNotContainsString('NYCGR2', $surnameOutput);
-    }
-
-    public function test_instructor_cannot_ticket_foreign_office_pnr_via_ttp(): void
-    {
-        $instructor = User::where('role', 'instructor')->first();
-        $this->assertNotNull($instructor);
-        $instructor->update(['office_id' => 'LON1A0980']);
-
-        Pnr::create([
-            'record_locator' => 'NYCT01',
-            'user_id' => 'student',
-            'office_id' => 'NYC1A0111',
-            'status' => 'CONFIRMED',
-            'data_json' => [
-                'recordLocator' => 'NYCT01',
-                'creationOffice' => 'NYC1A0111',
-                'passengers' => [
-                    ['lastName' => 'WILLIAMS', 'firstName' => 'SARAH', 'title' => 'MS', 'type' => 'ADT'],
-                ],
-                'segments' => [
-                    [
-                        'segmentNumber' => 1,
-                        'airlineCode' => 'BA',
-                        'flightNumber' => '175',
-                        'bookingClass' => 'Y',
-                        'departureDate' => '25DEC',
-                        'departureAirport' => 'LHR',
-                        'arrivalAirport' => 'JFK',
-                        'departureTime' => '1000',
-                        'arrivalTime' => '1300',
-                        'seats' => 1,
-                        'status' => 'HK',
-                    ],
-                ],
-                'contacts' => [
-                    ['id' => 1, 'type' => 'PHONE', 'detail' => 'LON 020-1234-5678'],
-                ],
-                'ticketing' => ['type' => 'TKOK', 'raw' => 'TKOK'],
-            ],
-        ]);
-
-        $state = [
-            'activePnr' => [
-                'recordLocator' => 'NYCT01',
-                'passengers' => [
-                    ['lastName' => 'WILLIAMS', 'firstName' => 'SARAH', 'title' => 'MS', 'type' => 'ADT'],
-                ],
-                'segments' => [
-                    [
-                        'segmentNumber' => 1,
-                        'airlineCode' => 'BA',
-                        'flightNumber' => '175',
-                        'bookingClass' => 'Y',
-                        'departureDate' => '25DEC',
-                        'departureAirport' => 'LHR',
-                        'arrivalAirport' => 'JFK',
-                        'departureTime' => '1000',
-                        'arrivalTime' => '1300',
-                        'seats' => 1,
-                        'status' => 'HK',
-                    ],
-                ],
-                'contacts' => [
-                    ['id' => 1, 'type' => 'PHONE', 'detail' => 'LON 020-1234-5678'],
-                ],
-                'ticketing' => ['type' => 'TKOK', 'raw' => 'TKOK'],
-            ],
-        ];
-
-        $res = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
-            'command' => 'TTP',
-            'state' => $state,
-        ]);
-
-        $res->assertStatus(200);
-        $this->assertTrue($res->json('isError'));
-        $this->assertEquals('TTP_UNAUTHORIZED', $res->json('commandType'));
-        $this->assertStringContainsString('ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE', implode(' ', $res->json('outputLines')));
-
-        $dbPnr = Pnr::find('NYCT01');
-        $this->assertEquals('CONFIRMED', $dbPnr->status);
-    }
-
-    public function test_instructor_cannot_overwrite_foreign_office_pnr_via_et(): void
-    {
-        $instructor = User::where('role', 'instructor')->first();
-        $this->assertNotNull($instructor);
-        $instructor->update(['office_id' => 'LON1A0980']);
-
-        Pnr::create([
-            'record_locator' => 'NYCO01',
-            'user_id' => 'student',
-            'office_id' => 'NYC1A0111',
-            'status' => 'CONFIRMED',
-            'data_json' => [
-                'recordLocator' => 'NYCO01',
-                'creationOffice' => 'NYC1A0111',
-                'passengers' => [
-                    ['lastName' => 'DOE', 'firstName' => 'JOHN', 'title' => 'MR', 'type' => 'ADT'],
-                ],
-                'segments' => [],
-            ],
-        ]);
-
-        $tamperedState = [
-            'activePnr' => [
-                'recordLocator' => 'NYCO01',
-                'passengers' => [
-                    ['lastName' => 'OVERWRITE', 'firstName' => 'ATTEMPT', 'title' => 'MR', 'type' => 'ADT'],
-                ],
-                'segments' => [
-                    [
-                        'segmentNumber' => 1,
-                        'airlineCode' => 'BA',
-                        'flightNumber' => '175',
-                        'bookingClass' => 'Y',
-                        'departureDate' => '15NOV',
-                        'departureAirport' => 'LHR',
-                        'arrivalAirport' => 'JFK',
-                        'departureTime' => '1000',
-                        'arrivalTime' => '1300',
-                        'seats' => 1,
-                        'status' => 'HK',
-                    ],
-                ],
-                'contacts' => [
-                    ['id' => 1, 'type' => 'PHONE', 'detail' => 'LON 123456'],
-                ],
-                'ticketing' => ['type' => 'TKOK', 'raw' => 'TKOK'],
-                'receivedFrom' => 'ATTEMPT',
-            ],
-        ];
-
-        $res = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
-            'command' => 'ET',
-            'state' => $tamperedState,
-        ]);
-
-        $res->assertStatus(200);
-        $this->assertTrue($res->json('isError'));
-        $this->assertEquals('ET_UNAUTHORIZED', $res->json('commandType'));
-        $this->assertStringContainsString('ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE', implode(' ', $res->json('outputLines')));
-
-        $dbPnr = Pnr::find('NYCO01');
-        $this->assertEquals('student', $dbPnr->user_id);
-        $this->assertEquals('NYC1A0111', $dbPnr->office_id);
-        $this->assertEquals('DOE', $dbPnr->data_json['passengers'][0]['lastName']);
-    }
-
-    public function test_instructor_cannot_redisplay_foreign_office_pnr_via_ir(): void
-    {
-        $instructor = User::where('role', 'instructor')->first();
-        $this->assertNotNull($instructor);
-        $instructor->update(['office_id' => 'LON1A0980']);
-
-        Pnr::create([
-            'record_locator' => 'NYCI01',
-            'user_id' => 'student',
-            'office_id' => 'NYC1A0111',
-            'status' => 'CONFIRMED',
-            'data_json' => [
-                'recordLocator' => 'NYCI01',
-                'creationOffice' => 'NYC1A0111',
-                'passengers' => [
-                    ['lastName' => 'SECRET', 'firstName' => 'PERSON', 'title' => 'MR', 'type' => 'ADT'],
-                ],
-                'segments' => [],
-            ],
-        ]);
-
-        $state = [
-            'activePnr' => [
-                'recordLocator' => 'NYCI01',
-                'passengers' => [
-                    ['lastName' => 'TAMPERED', 'firstName' => 'UNSAVED'],
-                ],
-            ],
-        ];
-
-        $res = $this->actingAs($instructor)->postJson('/api/terminal/execute', [
-            'command' => 'IR',
-            'state' => $state,
-        ]);
-
-        $res->assertStatus(200);
-        $this->assertEquals(['IGNORED'], $res->json('outputLines'));
-        $this->assertEmpty($res->json('updatedState.activePnr.recordLocator'));
-        $this->assertEquals('LON1A0980', $res->json('updatedState.officeId'));
     }
 }

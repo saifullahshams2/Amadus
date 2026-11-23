@@ -22,8 +22,8 @@ class TerminalController extends Controller
 
         $user = Auth::user();
 
-        if ($user->role === 'student' && ! $user->is_approved) {
-            return redirect()->route('auth.pending-approval');
+        if (! $user) {
+            return redirect()->route('login');
         }
 
         return view('terminal.index', compact('user'));
@@ -33,12 +33,7 @@ class TerminalController extends Controller
     {
         $user = Auth::user();
 
-        // 1. If unapproved student tries to execute commands, reject
-        if ($user && $user->role === 'student' && ! $user->is_approved) {
-            return response()->json(['error' => 'Cadet account is awaiting instructor approval.'], 403);
-        }
-
-        // 2. Validate input command and state shape
+        // 1. Validate input command and state shape
         $validated = $request->validate([
             'command' => ['required', 'string', 'max:255'],
             'state' => ['nullable', 'array'],

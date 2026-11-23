@@ -39,7 +39,7 @@
                         <span>Amadus</span>
                         <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold">Installer</span>
                     </h1>
-                    <p class="text-xs text-slate-500">First-time system setup, database selection & instructor provisioning</p>
+                    <p class="text-xs text-slate-500">First-time system setup, database selection & user provisioning</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 text-xs font-mono text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-xs self-start sm:self-auto">
@@ -77,7 +77,7 @@
                         <span x-show="step > 3">✓</span>
                         <span x-show="step <= 3">3</span>
                     </div>
-                    <span :class="step === 3 ? 'text-slate-900 font-semibold' : 'text-slate-500'" class="text-xs hidden md:inline">Instructor Account</span>
+                    <span :class="step === 3 ? 'text-slate-900 font-semibold' : 'text-slate-500'" class="text-xs hidden md:inline">User Account</span>
                 </div>
                 <div class="h-0.5 flex-1 mx-3 bg-slate-200" :class="step > 3 ? 'bg-blue-600' : ''"></div>
 
@@ -323,19 +323,19 @@
                     <button type="button" @click="step = 1" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors">
                         Back
                     </button>
-                    <button type="button" @click="proceedToInstructorStep()"
+                    <button type="button" @click="proceedToUserStep()"
                             class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-2 transition-colors shadow-sm">
-                        <span>Continue to Instructor Setup</span>
+                        <span>Continue to User Setup</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- STEP 3: Instructor Account Creation Form -->
+            <!-- STEP 3: User Account Creation Form -->
             <form x-show="step === 3" @submit.prevent="submitInstallation()" class="space-y-5">
                 <div>
-                    <h2 class="text-base font-semibold text-slate-900">Application Domain & Instructor Setup</h2>
-                    <p class="text-xs text-slate-500 mt-1">Configure your primary domain and provision the sole administrative flight instructor account.</p>
+                    <h2 class="text-base font-semibold text-slate-900">Application Domain & User Setup</h2>
+                    <p class="text-xs text-slate-500 mt-1">Configure your primary domain and provision the single application user account.</p>
                 </div>
 
                 <!-- Application URL / Domain Field -->
@@ -356,14 +356,14 @@
                 <!-- Security Note -->
                 <div class="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs flex items-center gap-2.5">
                     <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                    <span><strong>Instructor Exclusivity:</strong> Only this flight instructor account will be generated. Once installed, the installer is locked and cannot be rerun.</span>
+                    <span><strong>Single User:</strong> Only this user account will be generated. Once installed, the installer is locked and cannot be rerun.</span>
                 </div>
 
                 <!-- Form Fields -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Instructor Full Name -->
+                    <!-- User Full Name -->
                     <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">Instructor Full Name <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">Full Name <span class="text-rose-500">*</span></label>
                         <input type="text" name="name" x-model="formData.name" required placeholder="e.g. Captain Sarah Jenkins"
                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-blue-500">
                     </div>
@@ -371,14 +371,14 @@
                     <!-- Username -->
                     <div>
                         <label class="block text-xs font-medium text-slate-700 mb-1">Username <span class="text-rose-500">*</span></label>
-                        <input type="text" name="username" x-model="formData.username" required placeholder="e.g. instructor" autocomplete="username"
+                        <input type="text" name="username" x-model="formData.username" required placeholder="e.g. agent" autocomplete="username"
                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500">
                     </div>
 
                     <!-- Email Address -->
                     <div class="sm:col-span-2">
                         <label class="block text-xs font-medium text-slate-700 mb-1">Email Address <span class="text-rose-500">*</span></label>
-                        <input type="email" name="email" x-model="formData.email" required placeholder="instructor@amadeus.training" autocomplete="email"
+                        <input type="email" name="email" x-model="formData.email" required placeholder="agent@amadeus.training" autocomplete="email"
                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-blue-500">
                     </div>
 
@@ -406,7 +406,7 @@
                     <!-- Agent Duty Sign -->
                     <div>
                         <label class="block text-xs font-medium text-slate-700 mb-1">Agent Sign / Duty Code (6 chars)</label>
-                        <input type="text" name="agent_id" x-model="formData.agent_id" placeholder="IN01GS" maxlength="10"
+                        <input type="text" name="agent_id" x-model="formData.agent_id" placeholder="1234AB" maxlength="10"
                                 class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono uppercase text-amber-700 focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
@@ -423,7 +423,7 @@
                             :disabled="isSubmitting"
                             class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-2 transition-colors shadow-sm">
                         <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                        <span x-text="isSubmitting ? 'Configuring DB & Installing...' : 'Install & Create Instructor Account'"></span>
+                        <span x-text="isSubmitting ? 'Configuring DB & Installing...' : 'Install & Create User Account'"></span>
                     </button>
                 </div>
             </form>
@@ -437,7 +437,7 @@
                 <div>
                     <h2 class="text-lg font-bold text-slate-900">Amadus Installed Successfully!</h2>
                     <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                        Database migrated, reference airports & scenarios loaded, and your primary flight instructor account is active.
+                        Database migrated, reference airports & scenarios loaded, and your user account is active.
                     </p>
                 </div>
 
@@ -463,20 +463,16 @@
                         <span class="font-mono font-bold text-slate-900 uppercase" x-text="installedData.database_driver || dbConfig.driver"></span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-slate-500">Instructor Name:</span>
-                        <span class="font-semibold text-slate-900" x-text="installedInstructor.name"></span>
+                        <span class="text-slate-500">User Name:</span>
+                        <span class="font-semibold text-slate-900" x-text="installedUser.name"></span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-slate-500">Username:</span>
-                        <span class="font-mono text-emerald-700 font-bold" x-text="installedInstructor.username"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Assigned Role:</span>
-                        <span class="font-bold text-amber-700">INSTRUCTOR</span>
+                        <span class="font-mono text-emerald-700 font-bold" x-text="installedUser.username"></span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-slate-500">Office ID / Agent Sign:</span>
-                        <span class="font-mono text-blue-700 font-semibold" x-text="(installedInstructor.office_id || 'LON1A0980') + ' / ' + (installedInstructor.agent_id || 'IN01GS')"></span>
+                        <span class="font-mono text-blue-700 font-semibold" x-text="(installedUser.office_id || 'LON1A0980') + ' / ' + (installedUser.agent_id || '1234AB')"></span>
                     </div>
                 </div>
 
@@ -484,7 +480,7 @@
                 <div class="pt-4 flex items-center justify-center gap-3">
                     <a href="/dashboard" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-2 transition-colors shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                        <span>Open Operations Dashboard</span>
+                        <span>Open Dashboard</span>
                     </a>
                     <a href="{{ route('login') }}" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center gap-2 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
@@ -517,16 +513,16 @@
 
             formData: {
                 app_url: '{{ $defaultAppUrl ?? request()->getSchemeAndHttpHost() }}',
-                name: 'Flight Instructor',
-                username: 'instructor',
-                email: 'instructor@amadeus.training',
+                name: 'Amadus User',
+                username: 'user',
+                email: 'user@amadeus.training',
                 password: '',
                 password_confirmation: '',
                 office_id: 'LON1A0980',
-                agent_id: 'IN01GS',
+                agent_id: '1234AB',
             },
 
-            installedInstructor: {},
+            installedUser: {},
             installedData: {},
 
             resetDbStatus() {
@@ -563,7 +559,7 @@
                 }
             },
 
-            proceedToInstructorStep() {
+            proceedToUserStep() {
                 this.step = 3;
             },
 
@@ -571,17 +567,17 @@
                 this.errorMessage = '';
 
                 if (!this.formData.name || !this.formData.username || !this.formData.email) {
-                    this.errorMessage = 'Please provide all required instructor information.';
+                    this.errorMessage = 'Please provide all required user information.';
                     return;
                 }
 
                 if (!this.formData.password) {
-                    this.errorMessage = 'Please enter a password for the instructor account.';
+                    this.errorMessage = 'Please enter a password for the user account.';
                     return;
                 }
 
                 if (this.formData.password.length < 6) {
-                    this.errorMessage = 'Instructor password must be at least 6 characters.';
+                    this.errorMessage = 'Password must be at least 6 characters.';
                     return;
                 }
 
@@ -600,7 +596,7 @@
                     password: this.formData.password,
                     password_confirmation: this.formData.password_confirmation,
                     office_id: this.formData.office_id || 'LON1A0980',
-                    agent_id: this.formData.agent_id || 'IN01GS',
+                    agent_id: this.formData.agent_id || '1234AB',
                     database_driver: this.dbConfig.driver,
                     db_path: this.dbConfig.database_path,
                     db_host: this.dbConfig.host,
@@ -636,7 +632,7 @@
                     }
 
                     if (data.success) {
-                        this.installedInstructor = data.instructor || {};
+                        this.installedUser = data.user || {};
                         this.installedData = data;
                         this.step = 4;
                     }

@@ -33,10 +33,10 @@ class EnsureAppIsInstalled
 
         if (! $isInstalled) {
             try {
-                if (Schema::hasTable('users') && User::where('role', 'instructor')->exists()) {
-                    $instructor = User::where('role', 'instructor')->first();
-                    if ($instructor) {
-                        $this->installerService->markInstalled($instructor);
+                if (Schema::hasTable('users') && User::query()->exists()) {
+                    $user = User::query()->first();
+                    if ($user) {
+                        $this->installerService->markInstalled($user);
                         $isInstalled = true;
                     }
                 }

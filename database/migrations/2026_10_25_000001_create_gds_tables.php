@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Student lesson progress
+        // Personal lesson progress
         Schema::create('lesson_progress', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('user_id')->index();

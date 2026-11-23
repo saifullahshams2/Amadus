@@ -13,12 +13,12 @@ class InstallAppCommand extends Command
      * @var string
      */
     protected $signature = 'app:install
-                            {--name= : Flight Instructor full name}
-                            {--username= : Instructor login username}
-                            {--email= : Instructor email address}
-                            {--password= : Instructor account password}
+                            {--name= : User full name}
+                            {--username= : User login username}
+                            {--email= : User email address}
+                            {--password= : User account password}
                             {--office=LON1A0980 : Amadeus Office ID}
-                            {--agent=IN01GS : Agent Duty Code}
+                            {--agent=1234AB : Agent Duty Code}
                             {--app-url= : Application URL / Domain (e.g. https://amadus.example.com)}
                             {--force : Force re-installation even if already installed}';
 
@@ -27,7 +27,7 @@ class InstallAppCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Install Amadus Training Platform and provision primary Flight Instructor account';
+    protected $description = 'Install Amadus Training Platform and provision the single application user';
 
     /**
      * Execute the console command.
@@ -40,7 +40,7 @@ class InstallAppCommand extends Command
 
         if ($installerService->isInstalled() && ! $this->option('force')) {
             $this->warn('Application is already marked as installed.');
-            $this->line('Use --force to overwrite and re-provision instructor.');
+            $this->line('Use --force to overwrite and re-provision the user.');
 
             return self::SUCCESS;
         }
@@ -67,17 +67,17 @@ class InstallAppCommand extends Command
 
         $isInteractive = $this->input->isInteractive() && ! app()->runningUnitTests();
 
-        // 2. Gather Instructor details
-        $name = $this->option('name') ?: ($isInteractive ? $this->ask('Enter Instructor Full Name', 'Flight Instructor') : 'Flight Instructor');
-        $username = $this->option('username') ?: ($isInteractive ? $this->ask('Enter Instructor Username', 'instructor') : 'instructor');
-        $email = $this->option('email') ?: ($isInteractive ? $this->ask('Enter Instructor Email', 'instructor@amadeus-gds.demo') : 'instructor@amadeus-gds.demo');
-        $password = $this->option('password') ?: ($isInteractive ? $this->secret('Enter Instructor Password (min 6 chars)') : 'amadeus123');
+        // 2. Gather user details
+        $name = $this->option('name') ?: ($isInteractive ? $this->ask('Enter Full Name', 'Amadus User') : 'Amadus User');
+        $username = $this->option('username') ?: ($isInteractive ? $this->ask('Enter Username', 'user') : 'user');
+        $email = $this->option('email') ?: ($isInteractive ? $this->ask('Enter Email', 'user@amadeus-gds.demo') : 'user@amadeus-gds.demo');
+        $password = $this->option('password') ?: ($isInteractive ? $this->secret('Enter Password (min 6 chars)') : 'amadeus123');
         if (empty($password)) {
             $password = 'amadeus123';
         }
 
         $office = $this->option('office') ?: 'LON1A0980';
-        $agent = $this->option('agent') ?: 'IN01GS';
+        $agent = $this->option('agent') ?: '1234AB';
 
         // 3. Configure Application URL / Domain
         $appUrl = $this->option('app-url');
@@ -97,9 +97,9 @@ class InstallAppCommand extends Command
         $installerService->runMigrationsAndSeeders();
         $this->info('   [OK] Database migrated and reference data seeded.');
 
-        // 5. Create Instructor Account
-        $this->line('4. Provisioning Flight Instructor account...');
-        $instructor = $installerService->createInstructor([
+        // 5. Create the application user account
+        $this->line('4. Provisioning application user account...');
+        $user = $installerService->createUser([
             'name' => $name,
             'username' => $username,
             'email' => $email,
@@ -107,10 +107,10 @@ class InstallAppCommand extends Command
             'office_id' => strtoupper($office),
             'agent_id' => strtoupper($agent),
         ]);
-        $this->info("   [OK] Instructor account [{$instructor->username}] created successfully (Role: instructor).");
+        $this->info("   [OK] User account [{$user->username}] created successfully.");
 
         // 6. Lock Installation
-        $installerService->markInstalled($instructor);
+        $installerService->markInstalled($user);
         $this->info('   [OK] Installation lock file written to storage/installed.');
 
         $this->newLine();
@@ -121,12 +121,11 @@ class InstallAppCommand extends Command
             ['Field', 'Value'],
             [
                 ['Application URL', $appUrl],
-                ['Role', 'INSTRUCTOR'],
-                ['Name', $instructor->name],
-                ['Username', $instructor->username],
-                ['Email', $instructor->email],
-                ['Office ID', $instructor->office_id],
-                ['Agent ID', $instructor->agent_id],
+                ['Name', $user->name],
+                ['Username', $user->username],
+                ['Email', $user->email],
+                ['Office ID', $user->office_id],
+                ['Agent ID', $user->agent_id],
                 ['Status', 'Active / Ready'],
             ]
         );

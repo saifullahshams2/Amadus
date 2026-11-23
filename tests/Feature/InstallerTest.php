@@ -53,7 +53,7 @@ class InstallerTest extends TestCase
         $response->assertSeeText('Amadus');
         $response->assertSeeText('Installer');
         $response->assertSeeText('System Prerequisites & Permissions');
-        $response->assertSeeText('Application Domain & Instructor Setup');
+        $response->assertSeeText('Application Domain & User Setup');
         $response->assertSeeText('Application Domain / URL');
         $response->assertSeeText('SQLite');
         $response->assertSeeText('MySQL');
@@ -62,7 +62,7 @@ class InstallerTest extends TestCase
     public function test_03_installer_validation_rejects_missing_or_mismatched_password(): void
     {
         $response = $this->postJson('/install', [
-            'name' => 'Instructor Test',
+            'name' => 'Installer Test User',
             'username' => 'inst_test',
             'email' => 'invalid-email',
             'password' => '12345',
@@ -73,17 +73,17 @@ class InstallerTest extends TestCase
         $response->assertJsonValidationErrors(['email', 'password']);
     }
 
-    public function test_04_installer_creates_instructor_and_writes_lock_file(): void
+    public function test_04_installer_creates_user_and_writes_lock_file(): void
     {
         $payload = [
             'database_driver' => 'sqlite',
-            'name' => 'Chief Flight Instructor',
-            'username' => 'lead_instructor',
-            'email' => 'lead.instructor@amadeus.test',
+            'name' => 'Chief User',
+            'username' => 'lead_user',
+            'email' => 'lead@amadeus.test',
             'password' => 'Pass@12345',
             'password_confirmation' => 'Pass@12345',
             'office_id' => 'LON1A0980',
-            'agent_id' => 'IN01GS',
+            'agent_id' => '1234AB',
         ];
 
         $response = $this->postJson('/install', $payload);
@@ -91,35 +91,33 @@ class InstallerTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
-            'instructor' => [
-                'username' => 'lead_instructor',
-                'role' => 'instructor',
+            'user' => [
+                'username' => 'lead_user',
                 'office_id' => 'LON1A0980',
-                'agent_id' => 'IN01GS',
+                'agent_id' => '1234AB',
             ],
         ]);
 
-        // Verify User was saved in database with instructor role
-        $instructor = User::where('username', 'lead_instructor')->first();
-        $this->assertNotNull($instructor);
-        $this->assertEquals('instructor', $instructor->role);
-        $this->assertTrue(Hash::check('Pass@12345', $instructor->password));
+        // Verify the single user was saved in the database
+        $user = User::where('username', 'lead_user')->first();
+        $this->assertNotNull($user);
+        $this->assertTrue(Hash::check('Pass@12345', $user->password));
 
         // Verify installation lock file was written
         $this->assertTrue($this->installerService->isInstalled());
         $this->assertFileExists(storage_path('installed'));
     }
 
-    public function test_04b_installer_handles_both_db_credentials_and_instructor_password_without_collision(): void
+    public function test_04b_installer_handles_both_db_credentials_and_user_password_without_collision(): void
     {
         $payload = [
-            'name' => 'Instructor Alpha',
-            'username' => 'instructor_alpha',
+            'name' => 'User Alpha',
+            'username' => 'user_alpha',
             'email' => 'alpha@amadeus.test',
             'password' => 'InstructSecret2026!',
             'password_confirmation' => 'InstructSecret2026!',
             'office_id' => 'LON1A0980',
-            'agent_id' => 'IN01GS',
+            'agent_id' => '1234AB',
             'database_driver' => 'sqlite',
             'db_path' => 'database/database.sqlite',
             'db_host' => '127.0.0.1',
@@ -134,22 +132,21 @@ class InstallerTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
-            'instructor' => [
-                'username' => 'instructor_alpha',
-                'role' => 'instructor',
+            'user' => [
+                'username' => 'user_alpha',
             ],
         ]);
 
-        $instructor = User::where('username', 'instructor_alpha')->first();
-        $this->assertNotNull($instructor);
-        $this->assertTrue(Hash::check('InstructSecret2026!', $instructor->password));
+        $user = User::where('username', 'user_alpha')->first();
+        $this->assertNotNull($user);
+        $this->assertTrue(Hash::check('InstructSecret2026!', $user->password));
     }
 
     public function test_05_installer_redirects_away_when_already_installed(): void
     {
         // Mark as installed
-        $dummyInstructor = User::factory()->create(['role' => 'instructor']);
-        $this->installerService->markInstalled($dummyInstructor);
+        $dummyUser = User::factory()->create();
+        $this->installerService->markInstalled($dummyUser);
 
         // Attempting to visit /install should redirect to login page
         $response = $this->get('/install');
@@ -157,7 +154,7 @@ class InstallerTest extends TestCase
 
         // JSON post to /install should return 400
         $jsonResponse = $this->postJson('/install', [
-            'name' => 'Another Instructor',
+            'name' => 'Another User',
             'username' => 'another',
             'email' => 'another@amadeus.test',
             'password' => 'secret123',
@@ -182,21 +179,21 @@ class InstallerTest extends TestCase
     {
         $exitCode = Artisan::call('app:install', [
             '--name' => 'CLI Flight Instructor',
-            '--username' => 'cli_instructor',
-            '--email' => 'cli.instructor@amadeus.test',
+            '--username' => 'cli_user',
+            '--email' => 'cli@amadeus.test',
             '--password' => 'CliPassword123!',
             '--office' => 'LON1A0980',
-            '--agent' => 'IN01GS',
+            '--agent' => '1234AB',
             '--force' => true,
         ]);
 
         $this->assertEquals(0, $exitCode);
 
-        $cliInstructor = User::where('username', 'cli_instructor')->first();
-        $this->assertNotNull($cliInstructor);
-        $this->assertEquals('instructor', $cliInstructor->role);
-        $this->assertEquals('LON1A0980', $cliInstructor->office_id);
-        $this->assertEquals('IN01GS', $cliInstructor->agent_id);
+        $cliUser = User::where('username', 'cli_user')->first();
+        $this->assertNotNull($cliUser);
+        $this->assertEquals('user', $cliUser->role);
+        $this->assertEquals('LON1A0980', $cliUser->office_id);
+        $this->assertEquals('1234AB', $cliUser->agent_id);
         $this->assertTrue($this->installerService->isInstalled());
     }
 
@@ -227,9 +224,9 @@ class InstallerTest extends TestCase
     {
         $payload = [
             'app_url' => 'https://amadus.aviation.edu',
-            'name' => 'URL Test Instructor',
-            'username' => 'url_instructor',
-            'email' => 'url.instructor@amadeus.test',
+            'name' => 'URL Test User',
+            'username' => 'url_user',
+            'email' => 'url@amadeus.test',
             'password' => 'SecurePass123!',
             'password_confirmation' => 'SecurePass123!',
             'database_driver' => 'sqlite',
@@ -255,7 +252,7 @@ class InstallerTest extends TestCase
         $exitCode = Artisan::call('app:install', [
             '--app-url' => 'https://cli.amadus.aero',
             '--name' => 'CLI URL Instructor',
-            '--username' => 'cli_url_instructor',
+            '--username' => 'cli_url_user',
             '--email' => 'cli.url@amadeus.test',
             '--password' => 'CliPassword123!',
             '--force' => true,
@@ -274,7 +271,7 @@ class InstallerTest extends TestCase
         $this->assertNotNull($handle);
 
         $payload = [
-            'name' => 'Concurrent Instructor',
+            'name' => 'Concurrent User',
             'username' => 'concurrent_inst',
             'email' => 'concurrent@amadeus.test',
             'password' => 'SecurePass123!',
@@ -291,12 +288,11 @@ class InstallerTest extends TestCase
         $this->installerService->releaseInstallLock($handle);
     }
 
-    public function test_13_installer_cannot_reinstall_over_existing_database_instructor(): void
+    public function test_13_installer_cannot_reinstall_over_existing_database_user(): void
     {
-        $existingInstructor = User::factory()->create([
+        $existingUser = User::factory()->create([
             'username' => 'existing_chief',
             'email' => 'chief@academy.test',
-            'role' => 'instructor',
             'password' => Hash::make('OriginalPass123!'),
         ]);
 
@@ -320,7 +316,7 @@ class InstallerTest extends TestCase
         ]);
 
         // Verify credentials in DB were not overwritten
-        $refreshed = $existingInstructor->fresh();
+        $refreshed = $existingUser->fresh();
         $this->assertEquals('chief@academy.test', $refreshed->email);
         $this->assertTrue(Hash::check('OriginalPass123!', $refreshed->password));
     }
@@ -342,11 +338,9 @@ class InstallerTest extends TestCase
         $response->assertSeeText('Installer');
     }
 
-    public function test_15_installer_wizard_redirects_when_database_already_has_instructor(): void
+    public function test_15_installer_wizard_redirects_when_database_already_has_user(): void
     {
-        User::factory()->create([
-            'role' => 'instructor',
-        ]);
+        User::factory()->create();
 
         $this->installerService->uninstall();
         $this->assertFalse($this->installerService->isInstalled());
@@ -370,11 +364,9 @@ class InstallerTest extends TestCase
         $this->assertFalse(File::isDirectory(public_path('database')));
     }
 
-    public function test_17_middleware_heals_missing_installed_lock_when_database_has_instructor(): void
+    public function test_17_middleware_heals_missing_installed_lock_when_database_has_user(): void
     {
-        $instructor = User::factory()->create([
-            'role' => 'instructor',
-        ]);
+        User::factory()->create();
 
         $this->installerService->uninstall();
         $this->assertFalse($this->installerService->isInstalled());

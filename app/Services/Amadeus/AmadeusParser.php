@@ -69,7 +69,6 @@ class AmadeusParser
         $state = $currentState;
 
         $user = ($userId !== 'guest') ? User::where('username', $userId)->first() : null;
-        $isInstructor = $user?->role === 'instructor';
 
         // Bind office and agent identity to authenticated user so client state cannot spoof tenant identity
         if ($user) {
@@ -1903,17 +1902,10 @@ class AmadeusParser
 
             // Commit to database within transaction
             try {
-                DB::transaction(function () use ($rloc, $userId, $user, $isInstructor, $office, $status, $state) {
+                DB::transaction(function () use ($rloc, $userId, $office, $status, $state) {
                     $existingPnr = Pnr::where('record_locator', $rloc)->lockForUpdate()->first();
-                    if ($existingPnr) {
-                        if (! $isInstructor && $existingPnr->user_id !== $userId) {
-                            throw new \RuntimeException("UNAUTHORIZED TO OVERWRITE RECORD LOCATOR: {$rloc}");
-                        }
-
-                        $userOffice = $user?->office_id ?: 'LON1A0980';
-                        if ($isInstructor && $user && $existingPnr->office_id !== $userOffice) {
-                            throw new \RuntimeException("ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE: {$rloc}");
-                        }
+                    if ($existingPnr && $existingPnr->user_id !== $userId) {
+                        throw new \RuntimeException("UNAUTHORIZED TO OVERWRITE RECORD LOCATOR: {$rloc}");
                     }
 
                     Pnr::updateOrCreate(
@@ -1961,10 +1953,7 @@ class AmadeusParser
             if (! empty($state['activePnr']['recordLocator'])) {
                 $dbPnr = Pnr::find($state['activePnr']['recordLocator']);
                 if ($dbPnr) {
-                    $userOffice = $user?->office_id ?: 'LON1A0980';
-                    $allowed = $isInstructor
-                        ? ($user && $dbPnr->office_id === $userOffice)
-                        : ($dbPnr->user_id === $userId);
+                    $allowed = $dbPnr->user_id === $userId;
 
                     if ($allowed) {
                         $state['activePnr'] = $dbPnr->data_json;
@@ -2232,13 +2221,8 @@ class AmadeusParser
                             return new CommandExecutionResult(['SIGN IN REQUIRED TO RETRIEVE A STORED PNR'], $state, true, 'RT_UNAUTHENTICATED');
                         }
 
-                        if (! $isInstructor && $dbPnr->user_id !== $userId) {
+                        if ($dbPnr->user_id !== $userId) {
                             return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER USER'], $state, true, 'RT_UNAUTHORIZED');
-                        }
-
-                        $userOffice = $user?->office_id ?: 'LON1A0980';
-                        if ($isInstructor && $user && $dbPnr->office_id !== $userOffice) {
-                            return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE'], $state, true, 'RT_UNAUTHORIZED');
                         }
                     }
                 }
@@ -2283,12 +2267,7 @@ class AmadeusParser
                 // Alphabetical index (e.g. RT/A)
                 if (strlen($searchQuery) === 1) {
                     $matched = [];
-                    $indexQuery = Pnr::orderBy('updated_at', 'desc');
-                    if (! $isInstructor) {
-                        $indexQuery->where('user_id', $userId);
-                    } else {
-                        $indexQuery->where('office_id', $user?->office_id ?: 'LON1A0980');
-                    }
+                    $indexQuery = Pnr::where('user_id', $userId)->orderBy('updated_at', 'desc');
                     $allPnrs = $indexQuery->limit(50)->get();
                     foreach ($allPnrs as $item) {
                         $p = $item->data_json;
@@ -2338,12 +2317,7 @@ class AmadeusParser
                 }
 
                 // Search by surname (e.g. RT/AHMED or RT/SINGH)
-                $query = Pnr::orderBy('updated_at', 'desc');
-                if (! $isInstructor) {
-                    $query->where('user_id', $userId);
-                } else {
-                    $query->where('office_id', $user?->office_id ?: 'LON1A0980');
-                }
+                $query = Pnr::where('user_id', $userId)->orderBy('updated_at', 'desc');
                 $all = $query->limit(50)->get();
                 $matchedPnrs = [];
 
@@ -2410,13 +2384,8 @@ class AmadeusParser
                         return new CommandExecutionResult(['SIGN IN REQUIRED TO RETRIEVE A STORED PNR'], $state, true, 'RT_UNAUTHENTICATED');
                     }
 
-                    if (! $isInstructor && $dbPnr->user_id !== $userId) {
+                    if ($dbPnr->user_id !== $userId) {
                         return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER USER'], $state, true, 'RT_UNAUTHORIZED');
-                    }
-
-                    $userOffice = $user?->office_id ?: 'LON1A0980';
-                    if ($isInstructor && $user && $dbPnr->office_id !== $userOffice) {
-                        return new CommandExecutionResult(['ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE'], $state, true, 'RT_UNAUTHORIZED');
                     }
                     $state['activePnr'] = $dbPnr->data_json;
 
@@ -2451,13 +2420,8 @@ class AmadeusParser
             if (! empty($state['activePnr']['recordLocator'])) {
                 $existingPnr = Pnr::find($state['activePnr']['recordLocator']);
                 if ($existingPnr) {
-                    if (! $isInstructor && $existingPnr->user_id !== $userId) {
+                    if ($existingPnr->user_id !== $userId) {
                         return new CommandExecutionResult(["UNAUTHORIZED TO TICKET RECORD: {$state['activePnr']['recordLocator']}"], $state, true, 'TTP_UNAUTHORIZED');
-                    }
-
-                    $userOffice = $user?->office_id ?: 'LON1A0980';
-                    if ($isInstructor && $user && $existingPnr->office_id !== $userOffice) {
-                        return new CommandExecutionResult(["ACCESS RESTRICTED: PNR BELONGS TO ANOTHER OFFICE: {$state['activePnr']['recordLocator']}"], $state, true, 'TTP_UNAUTHORIZED');
                     }
                 }
             }

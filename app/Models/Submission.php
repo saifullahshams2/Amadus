@@ -21,14 +21,11 @@ class Submission extends Model
         'status',
         'score',
         'auto_grade_results',
-        'manual_override_score',
-        'instructor_feedback',
         'terminal_logs',
         'pnr_record_locator',
         'pnr_snapshot',
         'time_elapsed_seconds',
         'submitted_at',
-        'reviewed_at',
     ];
 
     protected $casts = [
@@ -36,10 +33,8 @@ class Submission extends Model
         'terminal_logs' => 'array',
         'pnr_snapshot' => 'array',
         'score' => 'integer',
-        'manual_override_score' => 'integer',
         'time_elapsed_seconds' => 'integer',
         'submitted_at' => 'datetime',
-        'reviewed_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -59,13 +54,5 @@ class Submission extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'username');
-    }
-
-    /**
-     * Get final score considering manual override if present.
-     */
-    public function getFinalScoreAttribute(): int
-    {
-        return $this->manual_override_score !== null ? $this->manual_override_score : $this->score;
     }
 }

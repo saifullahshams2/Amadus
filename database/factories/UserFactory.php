@@ -30,8 +30,6 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
-            'role' => 'student',
-            'is_approved' => true,
             'office_id' => 'LON1A0980',
             'agent_id' => '1234AB',
             'remember_token' => Str::random(10),
@@ -45,16 +43,6 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
-        ]);
-    }
-
-    /**
-     * Indicate that the user is pending instructor approval.
-     */
-    public function unapproved(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'is_approved' => false,
         ]);
     }
 }

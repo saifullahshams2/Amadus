@@ -1,9 +1,9 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Trainee Dashboard - Amadus')
+@section('title', 'Dashboard - Amadus')
 
 @section('content')
-<div x-data="studentDashboard()" x-init="init()" class="space-y-6 max-w-7xl mx-auto pb-12">
+<div x-data="userDashboard()" x-init="init()" class="space-y-6 max-w-7xl mx-auto pb-12">
 
     {{-- Breadcrumb header if on a dedicated sub-page --}}
     @if(($currentSection ?? 'dashboard') !== 'dashboard')
@@ -522,12 +522,6 @@
                                 </div>
                             </template>
                         </div>
-                        <template x-if="selectedScenarioModal.instructor_feedback">
-                            <div class="mt-2 pt-2 border-t border-slate-200 text-[11px]">
-                                <span class="text-amber-700 font-bold block mb-0.5">Instructor Feedback:</span>
-                                <p class="text-slate-600 italic" x-text="selectedScenarioModal.instructor_feedback"></p>
-                            </div>
-                        </template>
                     </div>
                 </template>
             </div>
@@ -549,7 +543,7 @@
 </div>
 
 <script>
-function studentDashboard() {
+function userDashboard() {
     const scenariosData = @json($scenarios);
     const analyticsData = @json($analytics);
     const initialPnr = @json($activePnr);

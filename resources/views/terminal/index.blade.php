@@ -24,36 +24,20 @@
             </a>
         </div>
 
-        <!-- Role Status & Account Badges -->
-        @if(Auth::check() && Auth::user()->role === 'student')
-            <div class="p-3 border-b border-slate-200 bg-slate-50 shrink-0">
-                <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
-                    <span class="uppercase tracking-wider">ACCOUNT ACCESS</span>
-                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono font-bold">STUDENT</span>
-                </div>
-                <div class="px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-700 flex items-center justify-between font-mono shadow-xs">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Trainee Terminal</span>
-                    </div>
-                    <span class="text-[10px] text-slate-400">ONLINE</span>
-                </div>
+        <!-- Account Status -->
+        <div class="p-3 border-b border-slate-200 bg-slate-50 shrink-0">
+            <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
+                <span class="uppercase tracking-wider">ACCOUNT ACCESS</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono font-bold">USER</span>
             </div>
-        @elseif(Auth::check() && Auth::user()->role === 'instructor')
-            <div class="p-3 border-b border-slate-200 bg-slate-50 shrink-0">
-                <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
-                    <span class="uppercase tracking-wider">ACCOUNT ACCESS</span>
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-mono font-bold">INSTRUCTOR</span>
+            <div class="px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-700 flex items-center justify-between font-mono shadow-xs">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Trainee Terminal</span>
                 </div>
-                <div class="px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-amber-800 flex items-center justify-between font-mono shadow-xs">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                        <span>Instructor Console</span>
-                    </div>
-                    <span class="text-[10px] text-slate-400">ADMIN</span>
-                </div>
+                <span class="text-[10px] text-slate-400">ONLINE</span>
             </div>
-        @endif
+        </div>
 
         <!-- Scrollable Navigation and Controls in Desktop Sidebar -->
         <div class="flex-1 overflow-y-auto divide-y divide-slate-100">
@@ -214,7 +198,7 @@
                 </div>
                 <div class="truncate">
                     <div class="text-xs font-bold text-slate-800 truncate">{{ $user->name ?? ($user->username ?? 'Guest') }}</div>
-                    <div class="text-[10px] font-mono text-slate-500 truncate uppercase">{{ $user->role ?? 'student' }}</div>
+                    <div class="text-[10px] font-mono text-slate-500 truncate uppercase">{{ $user->username ?? 'user' }}</div>
                 </div>
             </div>
 
@@ -281,36 +265,20 @@
 
                 <!-- Scrollable Body for all moved menu items and terminal types -->
                 <div class="flex-1 overflow-y-auto flex flex-col divide-y divide-slate-100">
-                    <!-- Role Status & Account Badges -->
-                    @if(Auth::check() && Auth::user()->role === 'student')
-                        <div class="p-3 bg-slate-50">
-                            <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
-                                <span class="uppercase tracking-wider">ACCOUNT ACCESS</span>
-                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono font-bold">STUDENT</span>
-                            </div>
-                            <div class="px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-700 flex items-center justify-between font-mono shadow-xs">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span>Trainee Terminal</span>
-                                </div>
-                                <span class="text-[10px] text-slate-400">ONLINE</span>
-                            </div>
+                    <!-- Account Status -->
+                    <div class="p-3 bg-slate-50">
+                        <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
+                            <span class="uppercase tracking-wider">ACCOUNT ACCESS</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono font-bold">USER</span>
                         </div>
-                    @elseif(Auth::check() && Auth::user()->role === 'instructor')
-                        <div class="p-3 bg-slate-50">
-                            <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
-                                <span class="uppercase tracking-wider">ACCOUNT ACCESS</span>
-                                <span class="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-mono font-bold">INSTRUCTOR</span>
+                        <div class="px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-700 flex items-center justify-between font-mono shadow-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span>Trainee Terminal</span>
                             </div>
-                            <div class="px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-amber-800 flex items-center justify-between font-mono shadow-xs">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                                    <span>Instructor Console</span>
-                                </div>
-                                <span class="text-[10px] text-slate-400">ADMIN</span>
-                            </div>
+                            <span class="text-[10px] text-slate-400">ONLINE</span>
                         </div>
-                    @endif
+                    </div>
 
                     <!-- Dashboard Return Button in Mobile Drawer -->
                     <div class="p-3">
@@ -469,7 +437,7 @@
                         </div>
                         <div class="truncate">
                             <div class="text-xs font-bold text-slate-800 truncate">{{ $user->name ?? ($user->username ?? 'Guest') }}</div>
-                            <div class="text-[10px] font-mono text-slate-500 truncate uppercase">{{ $user->role ?? 'student' }}</div>
+                            <div class="text-[10px] font-mono text-slate-500 truncate uppercase">{{ $user->username ?? 'user' }}</div>
                         </div>
                     </div>
 
@@ -486,21 +454,6 @@
 
     <!-- Main Terminal Workspace -->
     <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-[#f8fafc]">
-        @if(session('impersonated_by_instructor'))
-            <div class="bg-amber-500 text-white px-3 sm:px-4 py-2 text-xs flex items-center justify-between shadow-md shrink-0 z-30">
-                <div class="flex items-center space-x-2 font-mono">
-                    <svg class="w-4 h-4 text-white shrink-0 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span><strong>INSTRUCTOR MODE:</strong> Viewing cadet terminal as <strong>{{ $user->username ?? Auth::user()->username }}</strong>.</span>
-                </div>
-                <form action="{{ route('impersonation.exit') }}" method="POST" class="inline">
-                    @csrf
-                    <button type="submit" class="px-2.5 py-1 bg-white text-amber-900 hover:bg-amber-100 rounded text-xs font-bold font-sans transition-colors shadow-xs">
-                        Exit to Instructor Hub &rarr;
-                    </button>
-                </form>
-            </div>
-        @endif
-
         <!-- Top Header: Logo on left for mobile/tablet, 3-line menu icon on right -->
         <header class="h-14 px-3 sm:px-4 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-sm z-20">
             <!-- Left on Tablet & Mobile (< xl: 1280px): Brand Logo -->

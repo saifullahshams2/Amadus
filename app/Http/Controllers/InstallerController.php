@@ -77,7 +77,7 @@ class InstallerController extends Controller
     }
 
     /**
-     * Process installation, configure database, migrate, seed reference data, and create instructor account.
+     * Process installation, configure database, migrate, seed reference data, and create the single user account.
      */
     public function install(Request $request): JsonResponse|RedirectResponse
     {
@@ -134,7 +134,7 @@ class InstallerController extends Controller
             'db_username' => 'nullable|string|max:100',
             'db_password' => 'nullable|string',
 
-            // Instructor account credentials (ONLY instructor is created)
+            // User account credentials (ONLY this user is created)
             'name' => 'required|string|max:255',
             'username' => 'required|string|min:3|max:50|alpha_dash',
             'email' => 'required|email|max:255',
@@ -194,21 +194,21 @@ class InstallerController extends Controller
         // 3. Run database migrations & seed reference catalog
         $this->installerService->runMigrationsAndSeeders();
 
-        // 4. Create the primary flight instructor account (only account created)
-        $instructor = $this->installerService->createInstructor([
+        // 4. Create the single application user account (only account created)
+        $user = $this->installerService->createUser([
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => $validated['password'],
             'office_id' => ! empty($validated['office_id']) ? strtoupper(trim($validated['office_id'])) : 'LON1A0980',
-            'agent_id' => ! empty($validated['agent_id']) ? strtoupper(trim($validated['agent_id'])) : 'IN01GS',
+            'agent_id' => ! empty($validated['agent_id']) ? strtoupper(trim($validated['agent_id'])) : '1234AB',
         ]);
 
         // 5. Mark installation as completed (locks the installer)
-        $this->installerService->markInstalled($instructor, $dbDriver);
+        $this->installerService->markInstalled($user, $dbDriver);
 
-        // 6. Authenticate the new instructor
-        Auth::login($instructor, true);
+        // 6. Authenticate the new user
+        Auth::login($user, true);
         $request->session()->regenerate();
 
         if ($request->wantsJson()) {
@@ -219,19 +219,18 @@ class InstallerController extends Controller
                 'database' => [
                     'driver' => $dbDriver,
                 ],
-                'instructor' => [
-                    'id' => $instructor->id,
-                    'username' => $instructor->username,
-                    'email' => $instructor->email,
-                    'role' => $instructor->role,
-                    'office_id' => $instructor->office_id,
-                    'agent_id' => $instructor->agent_id,
+                'user' => [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'office_id' => $user->office_id,
+                    'agent_id' => $user->agent_id,
                 ],
                 'redirect' => '/dashboard',
             ]);
         }
 
-        return redirect('/dashboard')->with('success', 'Installation completed successfully! Welcome, Instructor '.$instructor->name.'.');
+        return redirect('/dashboard')->with('success', 'Installation completed successfully! Welcome, '.$user->name.'.');
     }
 
     /**
@@ -244,8 +243,7 @@ class InstallerController extends Controller
         }
 
         try {
-            return Schema::hasTable('users')
-                && User::where('role', 'instructor')->exists();
+            return Schema::hasTable('users') && User::query()->exists();
         } catch (\Throwable) {
             return false;
         }
