@@ -141,17 +141,6 @@
                 <div class="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">TERMINAL UTILITIES</div>
 
                 <button type="button"
-                        @click="showVisualInspector = !showVisualInspector"
-                        :class="showVisualInspector ? 'bg-blue-50 border-blue-200 text-blue-700 font-semibold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'"
-                        class="w-full flex items-center justify-between px-3 py-2 rounded-lg border text-xs transition-colors shadow-xs">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                        <span>PNR Visual Inspector</span>
-                    </div>
-                    <span class="text-[10px] font-mono font-bold" x-text="showVisualInspector ? 'ON' : 'OFF'"></span>
-                </button>
-
-                <button type="button"
                         @click="clearTerminal()"
                         class="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-xs transition-colors shadow-xs">
                     <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -380,17 +369,6 @@
                         <div class="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">TERMINAL UTILITIES</div>
 
                         <button type="button"
-                                @click="showVisualInspector = !showVisualInspector"
-                                :class="showVisualInspector ? 'bg-blue-50 border-blue-200 text-blue-700 font-semibold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'"
-                                class="w-full flex items-center justify-between px-3 py-2 rounded-lg border text-xs transition-colors shadow-xs">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                <span>PNR Visual Inspector</span>
-                            </div>
-                            <span class="text-[10px] font-mono font-bold" x-text="showVisualInspector ? 'ON' : 'OFF'"></span>
-                        </button>
-
-                        <button type="button"
                                 @click="clearTerminal()"
                                 class="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-xs transition-colors shadow-xs">
                             <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -483,15 +461,6 @@
                 <!-- Active Work Area pill (Tablet/Mobile) -->
                 <span class="xl:hidden px-2 py-1 rounded bg-blue-50 border border-blue-200 text-blue-700 font-mono font-bold text-[11px]" x-text="'AREA ' + activeArea"></span>
 
-                <!-- PNR Inspector Toggle (Desktop >= xl) -->
-                <button type="button"
-                        @click="showVisualInspector = !showVisualInspector"
-                        :class="showVisualInspector ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'"
-                        class="hidden xl:flex px-2.5 py-1.5 rounded-lg border text-xs items-center gap-1.5 transition-colors shadow-xs">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    <span>PNR Inspector</span>
-                </button>
-
                 <!-- Dashboard Link (Desktop >= xl) -->
                 <a href="{{ route('dashboard') }}" class="hidden xl:flex px-2.5 py-1.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold items-center gap-1 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
@@ -522,7 +491,7 @@
         </header>
 
         <!-- Main Workspace Container -->
-        <div :class="{ 'crt-screen relative': theme === 'crt-green' || theme === 'crt-amber' }" class="flex-1 flex flex-col p-2 sm:p-3 gap-2 min-h-0 overflow-hidden bg-[#f8fafc]">
+        <div class="flex-1 flex flex-col p-2 sm:p-3 gap-2 min-h-0 overflow-hidden bg-[#f8fafc]">
             <!-- Upper Area: Cryptic Terminal Workspace -->
             <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
                 <!-- Terminal Component -->
@@ -553,29 +522,32 @@
                     </div>
 
                     <!-- Monospaced Terminal Output Console -->
-                    <div x-ref="terminalContainer"
-                         @click="if (!window.getSelection()?.toString()) $refs.cmdInput?.focus()"
-                         :class="{
-                            'bg-black text-emerald-400': theme === 'crt-green',
-                            'bg-black text-amber-400': theme === 'crt-amber',
-                            'bg-[#f8fafc] text-slate-800': theme === 'modern'
-                         }"
-                         class="flex-1 p-3 overflow-y-auto font-mono text-[13px] sm:text-[14px] leading-relaxed whitespace-pre-wrap select-text cursor-text">
-                        <template x-for="(line, idx) in currentArea.outputLines" :key="idx">
-                            <div :class="{
-                                'text-blue-600 font-bold': line.isInput && theme === 'modern',
-                                'text-rose-600 font-semibold': line.isError && theme === 'modern',
-                                'text-slate-500': line.isHeader && theme === 'modern',
-                                'underline': line.isInput && (theme === 'crt-green' || theme === 'crt-amber')
-                            }" x-text="line.text"></div>
-                        </template>
+                    <div class="flex-1 min-h-0 relative"
+                         :class="{ 'crt-screen': theme === 'crt-green' || theme === 'crt-amber' }">
+                        <div x-ref="terminalContainer"
+                             @click="if (!window.getSelection()?.toString()) $refs.cmdInput?.focus()"
+                             :class="{
+                                'bg-black text-emerald-400': theme === 'crt-green',
+                                'bg-black text-amber-400': theme === 'crt-amber',
+                                'bg-[#f8fafc] text-slate-800': theme === 'modern'
+                             }"
+                             class="absolute inset-0 p-3 overflow-y-auto font-mono text-[13px] sm:text-[14px] leading-relaxed whitespace-pre-wrap select-text cursor-text">
+                            <template x-for="(line, idx) in currentArea.outputLines" :key="idx">
+                                <div :class="{
+                                    'text-blue-600 font-bold': line.isInput && theme === 'modern',
+                                    'text-rose-600 font-semibold': line.isError && theme === 'modern',
+                                    'text-slate-500': line.isHeader && theme === 'modern',
+                                    'underline': line.isInput && (theme === 'crt-green' || theme === 'crt-amber')
+                                }" x-text="line.text"></div>
+                            </template>
+                        </div>
                     </div>
 
                     <!-- Cryptic Command Input Line -->
                     <form @submit.prevent="submitCommand()"
                           :class="{
-                            'bg-black border-emerald-900 text-emerald-400': theme === 'crt-green',
-                            'bg-black border-amber-900 text-amber-400': theme === 'crt-amber',
+                            'bg-black border-emerald-900 text-emerald-400 crt-screen relative': theme === 'crt-green',
+                            'bg-black border-amber-900 text-amber-400 crt-screen relative': theme === 'crt-amber',
                             'bg-white border-slate-200 text-slate-900': theme === 'modern'
                           }"
                           class="border-t px-3 py-2 flex items-center gap-2 shrink-0">
@@ -597,84 +569,6 @@
                 </div>
             </div>
 
-            <!-- Lower Area: Visual PNR Inspector -->
-            <div x-show="showVisualInspector" class="shrink-0 max-h-[220px] sm:max-h-[190px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-2.5 sm:p-3 text-xs shadow-sm">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-200">
-                    <div class="flex items-center space-x-2 flex-wrap gap-1">
-                        <span class="font-bold text-slate-900 tracking-wide text-[11px] sm:text-xs">ACTIVE PNR INSPECTOR</span>
-                        <span class="text-slate-500 font-mono text-[10px] sm:text-[11px]" x-text="'(Area ' + activeArea + ')'"></span>
-                        <span x-show="activePnr?.recordLocator" class="px-1.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 rounded font-mono font-bold text-[10px] sm:text-xs" x-text="'RLOC: ' + activePnr?.recordLocator"></span>
-                    </div>
-
-                    <!-- Mandatory PRINT Status Badges -->
-                    <div class="flex items-center gap-1 text-[9px] sm:text-[10px] font-mono flex-wrap">
-                        <span class="text-slate-500 mr-0.5 font-bold">PRINT:</span>
-                        <span :class="pnrHasPhone ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'" class="px-1.5 py-0.5 rounded border">P: Phone</span>
-                        <span :class="pnrHasReceivedFrom ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'" class="px-1.5 py-0.5 rounded border">R: RecvFrom</span>
-                        <span :class="pnrHasItinerary ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'" class="px-1.5 py-0.5 rounded border">I: Itinerary</span>
-                        <span :class="pnrHasName ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'" class="px-1.5 py-0.5 rounded border">N: Name</span>
-                        <span :class="pnrHasTicketing ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'" class="px-1.5 py-0.5 rounded border">T: Ticket</span>
-                    </div>
-                </div>
-
-                <!-- Segments, Passengers & TST Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <!-- Booked Segments -->
-                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">FLIGHT SEGMENTS (<span x-text="activePnr?.segments?.length || 0"></span>)</span>
-                        <template x-if="!activePnr?.segments?.length">
-                            <span class="text-slate-400 italic text-[11px]">No segments booked yet (use AN + SS1Y1)</span>
-                        </template>
-                        <div class="space-y-1">
-                            <template x-for="s in activePnr?.segments || []" :key="s.segmentNumber">
-                                <div class="bg-white p-1.5 rounded border border-slate-200 font-mono text-[11px] flex justify-between shadow-xs">
-                                    <span class="text-blue-600 font-semibold" x-text="s.airlineCode + ' ' + s.flightNumber + ' (' + s.bookingClass + ')'"></span>
-                                    <span class="text-slate-700" x-text="s.departureAirport + '-' + s.arrivalAirport + ' ' + s.departureDate"></span>
-                                    <span class="text-emerald-600 font-bold" x-text="'HK' + s.seats"></span>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- Passengers -->
-                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">PASSENGERS (<span x-text="activePnr?.passengers?.length || 0"></span>)</span>
-                        <template x-if="!activePnr?.passengers?.length">
-                            <span class="text-slate-400 italic text-[11px]">No passengers added (use NM1SURNAME/NAME MR)</span>
-                        </template>
-                        <div class="space-y-1">
-                            <template x-for="p in activePnr?.passengers || []" :key="p.id">
-                                <div class="bg-white p-1.5 rounded border border-slate-200 font-mono text-[11px] flex justify-between shadow-xs">
-                                    <span class="text-slate-800 font-medium" x-text="p.lastName + '/' + p.firstName + (p.title ? ' ' + p.title : '')"></span>
-                                    <span class="text-slate-500 text-[10px]" x-text="'(' + p.type + ')'"></span>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- TST & Tickets -->
-                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">STORED FARES & TICKETS</span>
-                        <template x-if="!activePnr?.tsts?.length && !activePnr?.tickets?.length">
-                            <span class="text-slate-400 italic text-[11px]">Unpriced (use FXP to price & store TST)</span>
-                        </template>
-                        <div class="space-y-1">
-                            <template x-for="t in activePnr?.tsts || []" :key="t.tstNumber">
-                                <div class="bg-white p-1.5 rounded border border-slate-200 font-mono text-[11px] flex justify-between shadow-xs">
-                                    <span class="text-amber-700 font-medium" x-text="'TST ' + t.tstNumber + ' (' + t.fareBasis + ')'"></span>
-                                    <span class="text-emerald-700 font-bold" x-text="t.currency + ' ' + t.total.toFixed(2)"></span>
-                                </div>
-                            </template>
-                            <template x-for="tkt in activePnr?.tickets || []" :key="tkt.ticketNumber">
-                                <div class="bg-emerald-50 p-1.5 rounded border border-emerald-200 font-mono text-[11px] flex justify-between">
-                                    <span class="text-emerald-700 font-bold" x-text="'ETKT: ' + tkt.ticketNumber"></span>
-                                    <span class="text-emerald-600 font-semibold" x-text="tkt.coupons.length + ' CPN OPEN'"></span>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -701,9 +595,7 @@ function amadeusApp() {
     return {
         mobileSidebarOpen: false,
         theme: 'modern',
-        showVisualInspector: true,
-        activeArea: 'A',
-        areas: {
+        activeArea: 'A',        areas: {
             A: initialAreaState('A'),
             B: initialAreaState('B'),
             C: initialAreaState('C'),
@@ -722,13 +614,6 @@ function amadeusApp() {
         get activePnr() {
             return this.currentArea.activePnr;
         },
-
-        // PRINT status helpers
-        get pnrHasPhone() { return (this.activePnr?.contacts?.length || 0) > 0; },
-        get pnrHasReceivedFrom() { return !!this.activePnr?.receivedFrom; },
-        get pnrHasItinerary() { return (this.activePnr?.segments?.length || 0) > 0; },
-        get pnrHasName() { return (this.activePnr?.passengers?.length || 0) > 0; },
-        get pnrHasTicketing() { return !!this.activePnr?.ticketing; },
 
         init() {
             this.$nextTick(() => {
