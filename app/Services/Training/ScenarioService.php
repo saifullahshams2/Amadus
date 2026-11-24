@@ -5,6 +5,7 @@ namespace App\Services\Training;
 use App\Models\Scenario;
 use App\Models\Submission;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class ScenarioService
 {
@@ -18,7 +19,7 @@ class ScenarioService
         $scenarios = Scenario::orderBy('created_at', 'asc')->get();
         $submissions = Submission::where('user_id', $userId)->get()->keyBy('scenario_id');
 
-        return $scenarios->map(function (Scenario $sc) use ($submissions) {
+        return $scenarios->map(function (Scenario $sc) use ($submissions, $userId) {
             $sub = $submissions->get($sc->id);
 
             return [
@@ -32,6 +33,7 @@ class ScenarioService
                 'validation_criteria' => $sc->validation_criteria,
                 'time_limit_minutes' => $sc->time_limit_minutes,
                 'created_by' => $sc->created_by,
+                'can_delete' => $sc->created_by === $userId,
                 'status' => $sub?->status ?? 'not_started',
                 'score' => $sub?->score ?? 0,
                 'auto_grade_results' => $sub?->auto_grade_results,
@@ -224,6 +226,81 @@ class ScenarioService
             'checks' => $checks,
             'summary' => "{$passedCount}/{$totalCount} validation criteria met ({$normalizedScore}% score)",
         ];
+    }
+
+    /**
+     * Create a custom training scenario on behalf of a user.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function createScenario(string $userId, array $data): Scenario
+    {
+        $segments = collect($data['flight_segments'] ?? [])
+            ->filter(fn ($seg) => filled($seg['origin'] ?? null) && filled($seg['destination'] ?? null))
+            ->map(fn ($seg) => [
+                'origin' => strtoupper(trim($seg['origin'])),
+                'destination' => strtoupper(trim($seg['destination'])),
+                'date' => strtoupper(trim($seg['date'] ?? '')),
+                'airline' => strtoupper(trim($seg['airline'] ?? '')),
+                'class' => strtoupper(trim($seg['class'] ?? 'Y')),
+            ])
+            ->values()
+            ->all();
+
+        $names = collect($data['passenger_names'] ?? [])
+            ->filter(fn ($name) => filled($name['lastName'] ?? null) || filled($name['firstName'] ?? null))
+            ->map(fn ($name) => [
+                'lastName' => strtoupper(trim($name['lastName'] ?? '')),
+                'firstName' => strtoupper(trim($name['firstName'] ?? '')),
+                'title' => strtoupper(trim($name['title'] ?? '')),
+                'type' => 'ADT',
+            ])
+            ->values()
+            ->all();
+
+        return Scenario::create([
+            'id' => 'SCN-USER-'.strtoupper((string) Str::random(8)),
+            'title' => trim($data['title']),
+            'category' => trim($data['category']),
+            'description' => trim($data['description'] ?? ''),
+            'difficulty' => $data['difficulty'],
+            'passenger_profile' => [
+                'names' => $names,
+                'contactPhone' => trim($data['contact_phone'] ?? ''),
+            ],
+            'flight_segments' => $segments,
+            'validation_criteria' => [
+                'mandatoryPrint' => [
+                    'name' => true,
+                    'itinerary' => count($segments) > 0,
+                    'contact' => true,
+                    'ticketing' => true,
+                    'receivedFrom' => true,
+                ],
+                'minSegments' => max(1, count($segments)),
+                'requireTst' => (bool) ($data['requireTst'] ?? false),
+                'requireETicket' => (bool) ($data['requireETicket'] ?? false),
+            ],
+            'time_limit_minutes' => max(5, (int) ($data['time_limit_minutes'] ?? 20)),
+            'created_by' => $userId,
+        ]);
+    }
+
+    /**
+     * Delete a scenario owned by the given user. Returns false when not found or not owned.
+     */
+    public function deleteScenario(string $userId, string $scenarioId): bool
+    {
+        $scenario = Scenario::where('id', $scenarioId)->first();
+
+        if (! $scenario || $scenario->created_by !== $userId) {
+            return false;
+        }
+
+        $scenario->submissions()->delete();
+        $scenario->delete();
+
+        return true;
     }
 
     /**

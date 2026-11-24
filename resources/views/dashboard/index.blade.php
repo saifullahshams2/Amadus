@@ -225,12 +225,19 @@
                 <p class="text-xs text-slate-500">Practice core flight reservations, passenger profiles, and itinerary management</p>
             </div>
 
-            <!-- Category Filter Tabs -->
-            <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-semibold">
-                <button @click="selectedCategory = 'ALL'" :class="selectedCategory === 'ALL' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">All</button>
-                <button @click="selectedCategory = 'Round-trip'" :class="selectedCategory === 'Round-trip' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Round-trip</button>
-                <button @click="selectedCategory = 'Infant-in-lap'" :class="selectedCategory === 'Infant-in-lap' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Infant-in-lap</button>
-                <button @click="selectedCategory = 'Schedule Exchange'" :class="selectedCategory === 'Schedule Exchange' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Schedule Exchange</button>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <!-- Category Filter Tabs -->
+                <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-semibold">
+                    <button @click="selectedCategory = 'ALL'" :class="selectedCategory === 'ALL' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">All</button>
+                    <button @click="selectedCategory = 'Round-trip'" :class="selectedCategory === 'Round-trip' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Round-trip</button>
+                    <button @click="selectedCategory = 'Infant-in-lap'" :class="selectedCategory === 'Infant-in-lap' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Infant-in-lap</button>
+                    <button @click="selectedCategory = 'Schedule Exchange'" :class="selectedCategory === 'Schedule Exchange' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Schedule Exchange</button>
+                </div>
+
+                <button @click="openCreateModal()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>Create Assignment</span>
+                </button>
             </div>
         </div>
 
@@ -254,6 +261,9 @@
                             <template x-for="(seg, idx) in (sc.flight_segments || [])" :key="idx">
                                 <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200" x-text="seg.origin + ' → ' + seg.destination + ' (' + (seg.airline || 'Any') + ')'"></span>
                             </template>
+                            <template x-if="sc.created_by && sc.created_by !== 'system'">
+                                <span class="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-sans text-[10px] uppercase font-bold">Custom</span>
+                            </template>
                         </div>
                     </div>
 
@@ -265,6 +275,10 @@
                                 <div class="text-lg font-black" :class="sc.score >= 70 ? 'text-emerald-600' : 'text-amber-600'" x-text="sc.score + ' / 100'"></div>
                             </div>
                         </template>
+
+                        <button x-show="sc.can_delete" @click="deleteScenarioNow(sc)" title="Delete this custom assignment" class="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
 
                         <button @click="openScenarioModal(sc)" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors flex items-center gap-1.5 shadow-xs">
                             <span>Briefing & Submit</span>
@@ -405,6 +419,127 @@
         </div>
     </div>
 
+    <!-- Create Assignment Modal -->
+    <div x-show="createModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
+        <div @click.away="createModal = false" class="bg-white border border-slate-200 rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] font-mono text-blue-600 font-bold uppercase">Custom Drill Builder</span>
+                    <h3 class="text-base font-bold text-slate-900">Create New Assignment</h3>
+                </div>
+                <button @click="createModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-base">✕</button>
+            </div>
+
+            <div class="p-5 overflow-y-auto space-y-4 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-slate-700 mb-1">Assignment Title *</label>
+                        <input type="text" x-model="createForm.title" placeholder="e.g. Transatlantic Round-Trip Booking"
+                               class="w-full bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-lg outline-none focus:border-blue-500 transition-colors">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Category *</label>
+                        <select x-model="createForm.category" class="w-full bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-lg outline-none focus:border-blue-500 transition-colors">
+                            <option>Round-trip</option>
+                            <option>One Way</option>
+                            <option>Infant-in-lap</option>
+                            <option>Schedule Exchange</option>
+                            <option>Urgent Ticketing</option>
+                            <option>General Practice</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Difficulty *</label>
+                        <select x-model="createForm.difficulty" class="w-full bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-lg outline-none focus:border-blue-500 transition-colors">
+                            <option>Beginner</option>
+                            <option>Intermediate</option>
+                            <option>Advanced</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Time Limit (minutes)</label>
+                        <input type="number" x-model.number="createForm.time_limit_minutes" min="5" max="180"
+                               class="w-full bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-lg outline-none focus:border-blue-500 transition-colors">
+                    </div>
+
+                    <div class="flex items-end gap-4 pb-1">
+                        <label class="flex items-center gap-1.5 font-semibold text-slate-700">
+                            <input type="checkbox" x-model="createForm.requireTst" class="rounded border-slate-300 text-blue-600"> Require FXP (TST)
+                        </label>
+                        <label class="flex items-center gap-1.5 font-semibold text-slate-700">
+                            <input type="checkbox" x-model="createForm.requireETicket" class="rounded border-slate-300 text-blue-600"> Require TTP
+                        </label>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-slate-700 mb-1">Briefing / Description</label>
+                        <textarea x-model="createForm.description" rows="2" placeholder="Describe the booking task for this drill"
+                                  class="w-full bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded-lg outline-none focus:border-blue-500 transition-colors"></textarea>
+                    </div>
+                </div>
+
+                <div class="border border-slate-200 rounded-lg p-3 space-y-2 bg-slate-50">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-800 uppercase tracking-wide text-[10px]">Passenger Name(s) (NM)</span>
+                        <button @click="createForm.passenger_names.push({ lastName: '', firstName: '', title: 'MR' })" class="text-blue-600 hover:text-blue-800 font-bold text-[11px]">+ Add Passenger</button>
+                    </div>
+                    <template x-for="(pax, idx) in createForm.passenger_names" :key="'pax-'+idx">
+                        <div class="flex items-center gap-2">
+                            <input type="text" x-model="createForm.passenger_names[idx].lastName" placeholder="SURNAME" maxlength="60"
+                                   class="flex-1 bg-white border border-slate-300 px-2 py-1.5 rounded outline-none focus:border-blue-500 font-mono uppercase">
+                            <input type="text" x-model="createForm.passenger_names[idx].firstName" placeholder="FIRSTNAME" maxlength="60"
+                                   class="flex-1 bg-white border border-slate-300 px-2 py-1.5 rounded outline-none focus:border-blue-500 font-mono uppercase">
+                            <select x-model="createForm.passenger_names[idx].title" class="bg-white border border-slate-300 px-1.5 py-1.5 rounded outline-none focus:border-blue-500">
+                                <option>MR</option><option>MRS</option><option>MS</option><option>MSTR</option><option>MISS</option>
+                            </select>
+                            <button @click="createForm.passenger_names.splice(idx, 1)" class="text-rose-400 hover:text-rose-600 font-bold">✕</button>
+                        </div>
+                    </template>
+                    <p class="text-[10px] text-slate-400 italic">Leave empty for a free-form drill.</p>
+                </div>
+
+                <div class="border border-slate-200 rounded-lg p-3 space-y-2 bg-slate-50">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-800 uppercase tracking-wide text-[10px]">Target Flight Segments</span>
+                        <button @click="createForm.flight_segments.push({ origin: '', destination: '', date: '', airline: '', class: 'Y' })" class="text-blue-600 hover:text-blue-800 font-bold text-[11px]">+ Add Segment</button>
+                    </div>
+                    <template x-for="(seg, idx) in createForm.flight_segments" :key="'seg-'+idx">
+                        <div class="flex items-center gap-2">
+                            <input type="text" x-model="createForm.flight_segments[idx].origin" placeholder="LHR" maxlength="3"
+                                   class="w-16 bg-white border border-slate-300 px-2 py-1.5 rounded outline-none focus:border-blue-500 font-mono uppercase text-center" @input="createForm.flight_segments[idx].origin = createForm.flight_segments[idx].origin.toUpperCase()">
+                            <span class="text-slate-400">→</span>
+                            <input type="text" x-model="createForm.flight_segments[idx].destination" placeholder="JFK" maxlength="3"
+                                   class="w-16 bg-white border border-slate-300 px-2 py-1.5 rounded outline-none focus:border-blue-500 font-mono uppercase text-center" @input="createForm.flight_segments[idx].destination = createForm.flight_segments[idx].destination.toUpperCase()">
+                            <input type="text" x-model="createForm.flight_segments[idx].date" placeholder="15NOV" maxlength="7"
+                                   class="w-20 bg-white border border-slate-300 px-2 py-1.5 rounded outline-none focus:border-blue-500 font-mono uppercase text-center" @input="createForm.flight_segments[idx].date = createForm.flight_segments[idx].date.toUpperCase()">
+                            <input type="text" x-model="createForm.flight_segments[idx].airline" placeholder="BA" maxlength="2"
+                                   class="w-14 bg-white border border-slate-300 px-2 py-1.5 rounded outline-none focus:border-blue-500 font-mono uppercase text-center" @input="createForm.flight_segments[idx].airline = createForm.flight_segments[idx].airline.toUpperCase()">
+                            <input type="text" x-model="createForm.flight_segments[idx].class" placeholder="Y" maxlength="1"
+                                   class="w-12 bg-white border border-slate-300 px-2 py-1.5 rounded outline-none focus:border-blue-500 font-mono uppercase text-center" @input="createForm.flight_segments[idx].class = createForm.flight_segments[idx].class.toUpperCase()">
+                            <button @click="createForm.flight_segments.splice(idx, 1)" class="text-rose-400 hover:text-rose-600 font-bold">✕</button>
+                        </div>
+                    </template>
+                    <p class="text-[10px] text-slate-400 italic">Add at least one segment so the drill has a target itinerary.</p>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                <span x-show="createFormError" class="text-rose-600 font-semibold text-[11px]" x-text="createFormError"></span>
+                <span x-show="!createFormError"></span>
+                <div class="flex items-center gap-2">
+                    <button @click="createModal = false" class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded text-xs font-semibold transition-colors">Cancel</button>
+                    <button @click="createScenarioNow()" :disabled="isCreating"
+                            class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                        <span x-text="isCreating ? 'Creating...' : 'Create Assignment'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scenario Briefing & Submission Modal -->
     <div x-show="selectedScenarioModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4" style="display: none;">
         <div @click.away="selectedScenarioModal = null" class="bg-white border border-slate-200 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
@@ -516,8 +651,103 @@ function userDashboard() {
         selectedScenarioModal: null,
         isSubmitting: false,
 
+        createModal: false,
+        isCreating: false,
+        createFormError: '',
+        createForm: {
+            title: '',
+            category: 'Round-trip',
+            difficulty: 'Beginner',
+            description: '',
+            time_limit_minutes: 20,
+            requireTst: false,
+            requireETicket: false,
+            passenger_names: [],
+            flight_segments: []
+        },
+
         init() {
             this.fetchActivePnr();
+        },
+
+        openCreateModal() {
+            this.createForm = {
+                title: '',
+                category: 'Round-trip',
+                difficulty: 'Beginner',
+                description: '',
+                time_limit_minutes: 20,
+                requireTst: false,
+                requireETicket: false,
+                passenger_names: [],
+                flight_segments: []
+            };
+            this.createFormError = '';
+            this.createModal = true;
+        },
+
+        async createScenarioNow() {
+            this.createFormError = '';
+            if (!this.createForm.title.trim()) {
+                this.createFormError = 'Assignment title is required.';
+                return;
+            }
+            if (!this.createForm.flight_segments.length) {
+                this.createFormError = 'Add at least one target flight segment.';
+                return;
+            }
+
+            this.isCreating = true;
+            try {
+                const res = await fetch('/api/dashboard/scenarios', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(this.createForm)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    this.scenarios.push(data.scenario);
+                    this.createModal = false;
+                    this.selectedCategory = 'ALL';
+                    await customAlert(`Assignment "${data.scenario.title}" created. Find it under All or its category tab.`, 'Assignment Created', 'success');
+                } else if (data.errors) {
+                    const first = Object.values(data.errors)[0];
+                    this.createFormError = Array.isArray(first) ? first[0] : String(first);
+                } else {
+                    this.createFormError = data.error || data.message || 'Could not create the assignment.';
+                }
+            } catch (e) {
+                this.createFormError = 'Network error while creating the assignment.';
+            } finally {
+                this.isCreating = false;
+            }
+        },
+
+        async deleteScenarioNow(sc) {
+            if (!sc) return;
+            const confirmed = await customConfirm(`Delete assignment "${sc.title}" and its submission history?`, 'Delete Assignment', { type: 'danger' });
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch(`/api/dashboard/scenarios/${sc.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) {
+                    this.scenarios = this.scenarios.filter(s => s.id !== sc.id);
+                    await customAlert(`Assignment "${sc.title}" deleted.`, 'Assignment Deleted', 'success');
+                } else {
+                    await customAlert(data.error || 'Delete failed.', 'Delete Error', 'error');
+                }
+            } catch (e) {
+                await customAlert('Network error while deleting the assignment.', 'Delete Error', 'error');
+            }
         },
 
         get filteredScenarios() {

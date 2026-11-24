@@ -220,6 +220,62 @@ class DashboardController extends Controller
     }
 
     /**
+     * API: Create a custom training assignment (scenario).
+     */
+    public function createScenarioApi(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:120'],
+            'category' => ['required', 'string', 'max:60'],
+            'difficulty' => ['required', 'in:Beginner,Intermediate,Advanced'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'time_limit_minutes' => ['nullable', 'integer', 'min:5', 'max:180'],
+            'requireTst' => ['nullable', 'boolean'],
+            'requireETicket' => ['nullable', 'boolean'],
+            'passenger_names' => ['nullable', 'array', 'max:9'],
+            'passenger_names.*.lastName' => ['required_with:passenger_names', 'string', 'max:60'],
+            'passenger_names.*.firstName' => ['nullable', 'string', 'max:60'],
+            'passenger_names.*.title' => ['nullable', 'string', 'max:10'],
+            'flight_segments' => ['nullable', 'array', 'max:9'],
+            'flight_segments.*.origin' => ['required_with:flight_segments', 'string', 'size:3'],
+            'flight_segments.*.destination' => ['required_with:flight_segments', 'string', 'size:3'],
+            'flight_segments.*.date' => ['nullable', 'string', 'max:7'],
+            'flight_segments.*.airline' => ['nullable', 'string', 'max:3'],
+            'flight_segments.*.class' => ['nullable', 'string', 'max:2'],
+        ]);
+
+        $scenario = $this->scenarios->createScenario($user->username, $validated);
+
+        return response()->json([
+            'success' => true,
+            'scenario' => $this->scenarios->getScenariosForUser($user->username)
+                ->firstWhere('id', $scenario->id),
+        ], 201);
+    }
+
+    /**
+     * API: Delete a custom training assignment owned by the caller.
+     */
+    public function deleteScenarioApi(string $id): JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+
+        if (! $this->scenarios->deleteScenario($user->username, $id)) {
+            return response()->json(['error' => 'Assignment not found or not owned by you.'], 404);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Helper: Analyze Amadeus cryptic syntax and generate correction hints.
      */
     protected function analyzeSyntax(string $raw): array
