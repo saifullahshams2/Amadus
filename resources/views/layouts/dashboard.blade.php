@@ -94,8 +94,15 @@
 
         </nav>
 
-        <!-- Active Terminal Status Widget -->
+        <!-- Profile Button + Active Terminal Status Widget -->
         <div class="p-3 border-t border-slate-200 bg-slate-50 font-mono text-[11px] space-y-1.5">
+            <a href="{{ route('profile.index') }}" class="mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 text-xs font-bold transition-colors shadow-xs font-sans">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <span>My Profile</span>
+                <span class="ml-auto text-[10px] font-mono text-slate-400">EDIT</span>
+            </a>
+
+            <div class="space-y-1.5">
             <div class="flex items-center justify-between text-slate-600">
                 <span class="text-[10px] uppercase">GDS SESSION:</span>
                 <span class="text-emerald-600 font-bold flex items-center gap-1">
@@ -114,6 +121,7 @@
             <div class="flex items-center justify-between text-slate-600">
                 <span>WORK AREA:</span>
                 <span class="text-blue-600 font-bold">AREA A</span>
+            </div>
             </div>
         </div>
 
@@ -228,6 +236,13 @@
                     </nav>
 
                     <div class="p-3 border-t border-slate-200 bg-slate-50 font-mono text-[11px] space-y-1.5 mt-auto">
+                        <a href="{{ route('profile.index') }}" class="mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 text-xs font-bold transition-colors shadow-xs font-sans">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            <span>My Profile</span>
+                            <span class="ml-auto text-[10px] font-mono text-slate-400">EDIT</span>
+                        </a>
+
+                        <div class="space-y-1.5">
                         <div class="flex items-center justify-between text-slate-600">
                             <span class="text-[10px] uppercase">GDS SESSION:</span>
                             <span class="text-emerald-600 font-bold flex items-center gap-1">
@@ -242,6 +257,7 @@
                         <div class="flex items-center justify-between text-slate-600">
                             <span>AGENT ID:</span>
                             <span class="text-slate-900 font-bold">{{ $user->agent_id ?? '1234AB' }}</span>
+                        </div>
                         </div>
                     </div>
                 </div>

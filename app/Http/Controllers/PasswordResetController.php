@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\MailSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -11,6 +12,8 @@ use Illuminate\Support\Str;
 
 class PasswordResetController extends Controller
 {
+    public function __construct(protected MailSettingsService $mailSettings) {}
+
     /**
      * Display the form to request a password reset link.
      */
@@ -42,6 +45,8 @@ class PasswordResetController extends Controller
             : User::where('username', strtolower($input))->first();
 
         if ($user) {
+            $this->mailSettings->apply();
+
             $token = Password::broker()->createToken($user);
             $user->sendPasswordResetNotification($token);
         }

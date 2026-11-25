@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstallerController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TerminalController;
 use App\Http\Controllers\TrainingController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/{section}', [DashboardController::class, 'section'])->name('dashboard.section');
     Route::get('/terminal', [TerminalController::class, 'index'])->name('terminal.index');
     Route::post('/terminal/execute', [TerminalController::class, 'execute'])->name('terminal.execute')->middleware('throttle:60,1,terminal');
+
+    // User Profile
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile/name', [ProfileController::class, 'updateName'])->name('profile.name.update');
+    Route::put('/profile/display-name', [ProfileController::class, 'updateDisplayName'])->name('profile.display-name.update');
+    Route::put('/profile/email', [ProfileController::class, 'updateEmail'])->name('profile.email.update');
+    Route::get('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::get('/profile/smtp', [ProfileController::class, 'smtp'])->name('profile.smtp');
+    Route::put('/profile/smtp', [ProfileController::class, 'updateSmtp'])->name('profile.smtp.update');
+    Route::post('/profile/smtp/test', [ProfileController::class, 'sendTestEmail'])->name('profile.smtp.test')->middleware('throttle:5,1');
 });
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
