@@ -84,12 +84,12 @@
 
             <a href="{{ route('dashboard.section', 'workspace') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors {{ ($currentSection ?? '') === 'workspace' ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
                 <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                <span>Overview & Active PNR</span>
+                <span>Active PNR</span>
             </a>
 
             <a href="{{ route('dashboard.section', 'drills') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors {{ ($currentSection ?? '') === 'drills' ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
                 <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                <span>Assignments & Drills</span>
+                <span>Drills</span>
             </a>
 
         </nav>
@@ -211,12 +211,12 @@
 
                         <a href="{{ route('dashboard.section', 'workspace') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors {{ ($currentSection ?? '') === 'workspace' ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
                             <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                            <span>Overview & Active PNR</span>
+                            <span>Active PNR</span>
                         </a>
 
                         <a href="{{ route('dashboard.section', 'drills') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors {{ ($currentSection ?? '') === 'drills' ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
                             <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                            <span>Assignments & Drills</span>
+                            <span>Drills</span>
                         </a>
 
                         <div class="pt-2 border-t border-slate-200 mt-2">

@@ -7,22 +7,18 @@
 
     {{-- Breadcrumb header if on a dedicated sub-page --}}
     @if(($currentSection ?? 'dashboard') !== 'dashboard')
-        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div class="flex items-center pb-3 border-b border-slate-200">
             <div class="flex items-center space-x-2 text-xs text-slate-500 font-mono">
                 <a href="{{ route('dashboard') }}" class="hover:text-blue-600 transition-colors font-semibold">DASHBOARD</a>
                 <span>/</span>
                 <span class="font-bold text-slate-900 uppercase">
                     @switch($currentSection)
-                        @case('workspace') OVERVIEW & ACTIVE PNR @break
-                        @case('drills') ASSIGNMENTS & DRILLS @break
+                        @case('workspace') ACTIVE PNR @break
+                        @case('drills') DRILLS @break
                         @default {{ strtoupper($currentSection) }}
                     @endswitch
                 </span>
             </div>
-            <a href="{{ route('dashboard') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                <span>Back to Dashboard</span>
-            </a>
         </div>
     @endif
 
@@ -101,6 +97,10 @@
                         <span>Work on PNR</span>
                         <span>→</span>
                     </a>
+                    <button x-show="activePnr" @click="deleteActivePnrNow()" title="Delete this active PNR" class="px-3 py-1 bg-white hover:bg-rose-50 text-rose-600 text-xs font-semibold rounded-lg border border-rose-200 flex items-center gap-1.5 transition-colors shadow-xs">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <span>Delete PNR</span>
+                    </button>
                 </div>
             </div>
 
@@ -276,7 +276,7 @@
                             </div>
                         </template>
 
-                        <button x-show="sc.can_delete" @click="deleteScenarioNow(sc)" title="Delete this custom assignment" class="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                        <button @click="deleteScenarioNow(sc)" title="Delete this assignment" class="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
 
@@ -413,7 +413,9 @@
             </div>
 
             <!-- Drawer Footer -->
-            <div class="p-3 border-t border-slate-200 bg-slate-50 flex justify-end">
+            <div class="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                <button x-show="activePnr" @click="deleteActivePnrNow()" class="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 font-semibold rounded text-xs border border-rose-200 transition-colors">Delete PNR</button>
+                <span x-show="!activePnr"></span>
                 <button @click="openDrawer = false" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded text-xs">Close Drawer</button>
             </div>
         </div>
@@ -726,8 +728,36 @@ function userDashboard() {
             }
         },
 
-        async deleteScenarioNow(sc) {
-            if (!sc) return;
+        async deleteActivePnrNow() {
+            if (!this.activePnr) return;
+
+            const locator = this.activePnr.recordLocator || '';
+            const confirmed = await customConfirm(`Delete active PNR ${locator}? This removes the stored reservation and cannot be undone.`, 'Delete Active PNR', { type: 'danger' });
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch('/api/dashboard/active-pnr', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ recordLocator: locator })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) {
+                    this.activePnr = null;
+                    this.openDrawer = false;
+                    await customAlert(`Active PNR ${data.deletedRecordLocator || locator} deleted.`, 'PNR Deleted', 'success');
+                } else {
+                    await customAlert(data.error || 'Delete failed. No stored PNR found.', 'Delete Error', 'error');
+                }
+            } catch (e) {
+                await customAlert('Network error while deleting the PNR.', 'Delete Error', 'error');
+            }
+        },
+
+        async deleteScenarioNow(sc) {            if (!sc) return;
             const confirmed = await customConfirm(`Delete assignment "${sc.title}" and its submission history?`, 'Delete Assignment', { type: 'danger' });
             if (!confirmed) return;
 

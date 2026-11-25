@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Pnr;
 use App\Models\Scenario;
 use App\Models\User;
-use App\Services\Training\ScenarioService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -56,8 +55,7 @@ class CustomAssignmentTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonPath('success', true)
-            ->assertJsonPath('scenario.title', 'My Custom Round Trip')
-            ->assertJsonPath('scenario.can_delete', true);
+            ->assertJsonPath('scenario.title', 'My Custom Round Trip');
 
         $scenario = Scenario::where('title', 'My Custom Round Trip')->firstOrFail();
         $this->assertSame('student', $scenario->created_by);
@@ -117,47 +115,29 @@ class CustomAssignmentTest extends TestCase
         $this->assertDatabaseMissing('submissions', ['scenario_id' => $id]);
     }
 
-    public function test_user_cannot_delete_assignment_owned_by_another_user(): void
+    public function test_user_can_delete_assignment_created_by_another_user(): void
     {
         $id = $this->actingAs(User::where('username', 'student')->firstOrFail())
             ->postJson('/api/dashboard/scenarios', $this->payload())
             ->json('scenario.id');
 
         $this->actingAs($this->other)->deleteJson("/api/dashboard/scenarios/{$id}")
-            ->assertStatus(404);
+            ->assertStatus(200)
+            ->assertJsonPath('success', true);
 
-        $this->assertDatabaseHas('scenarios', ['id' => $id]);
+        $this->assertDatabaseMissing('scenarios', ['id' => $id]);
     }
 
-    public function test_system_scenarios_cannot_be_deleted_by_users(): void
+    public function test_system_scenarios_can_be_deleted_by_users(): void
     {
         $this->seed();
 
         $this->actingAs(User::where('username', 'student')->firstOrFail())
             ->deleteJson('/api/dashboard/scenarios/SCN-RT-01')
-            ->assertStatus(404);
+            ->assertStatus(200)
+            ->assertJsonPath('success', true);
 
-        $this->assertDatabaseHas('scenarios', ['id' => 'SCN-RT-01']);
-    }
-
-    public function test_can_delete_flag_is_true_only_for_owner(): void
-    {
-        $user = User::where('username', 'student')->firstOrFail();
-        $id = $this->actingAs($user)->postJson('/api/dashboard/scenarios', $this->payload())->json('scenario.id');
-
-        $own = collect($this->scenariosList('student'))->firstWhere('id', $id);
-        $foreign = collect($this->scenariosList('student2'))->firstWhere('id', $id);
-
-        $this->assertTrue($own['can_delete']);
-        $this->assertFalse($foreign['can_delete']);
-    }
-
-    protected function scenariosList(string $username): array
-    {
-        return app(ScenarioService::class)
-            ->getScenariosForUser($username)
-            ->values()
-            ->all();
+        $this->assertDatabaseMissing('scenarios', ['id' => 'SCN-RT-01']);
     }
 
     protected function storePnr(string $username, string $locator = 'ABC123'): void

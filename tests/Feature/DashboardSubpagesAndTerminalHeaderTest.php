@@ -41,12 +41,12 @@ class DashboardSubpagesAndTerminalHeaderTest extends TestCase
 
         $workspace = $this->actingAs($user)->get('/dashboard/workspace');
         $workspace->assertStatus(200);
-        $workspace->assertSeeText('OVERVIEW & ACTIVE PNR');
+        $workspace->assertSeeText('ACTIVE PNR');
         $workspace->assertSeeText('Current Active PNR Status');
 
         $drills = $this->actingAs($user)->get('/dashboard/drills');
         $drills->assertStatus(200);
-        $drills->assertSeeText('ASSIGNMENTS & DRILLS');
+        $drills->assertSeeText('DRILLS');
         $drills->assertSeeText('Assigned Booking Scenarios & Drills');
     }
 

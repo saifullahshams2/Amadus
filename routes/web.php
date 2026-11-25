@@ -55,6 +55,7 @@ Route::prefix('api')->group(function () {
 
         // Personal Dashboard APIs (Secured behind auth)
         Route::get('/dashboard/active-pnr', [DashboardController::class, 'getActivePnrApi']);
+        Route::delete('/dashboard/active-pnr', [DashboardController::class, 'deleteActivePnrApi'])->middleware('throttle:15,1');
         Route::post('/dashboard/scenarios', [DashboardController::class, 'createScenarioApi'])->middleware('throttle:15,1');
         Route::delete('/dashboard/scenarios/{id}', [DashboardController::class, 'deleteScenarioApi'])->middleware('throttle:15,1');
         Route::post('/dashboard/scenarios/{id}/submit', [DashboardController::class, 'submitScenarioApi'])->middleware('throttle:15,1');

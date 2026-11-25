@@ -157,6 +157,37 @@ class DashboardController extends Controller
     }
 
     /**
+     * API: Delete the caller's active (most recent stored) PNR.
+     */
+    public function deleteActivePnrApi(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+
+        $query = Pnr::where('user_id', $user->username);
+
+        $locator = $request->input('recordLocator');
+        if (is_string($locator) && $locator !== '') {
+            $query->where('record_locator', strtoupper($locator));
+        }
+
+        $pnr = $query->orderBy('updated_at', 'desc')->first();
+
+        if (! $pnr) {
+            return response()->json(['error' => 'No stored PNR found.'], 404);
+        }
+
+        $pnr->delete();
+
+        return response()->json([
+            'success' => true,
+            'deletedRecordLocator' => $pnr->record_locator,
+        ]);
+    }
+
+    /**
      * API: Live Syntax Validator with Actionable Hints.
      */
     public function validateSyntaxApi(Request $request): JsonResponse
@@ -268,8 +299,8 @@ class DashboardController extends Controller
             return response()->json(['error' => 'Unauthenticated.'], 401);
         }
 
-        if (! $this->scenarios->deleteScenario($user->username, $id)) {
-            return response()->json(['error' => 'Assignment not found or not owned by you.'], 404);
+        if (! $this->scenarios->deleteScenario($id)) {
+            return response()->json(['error' => 'Assignment not found.'], 404);
         }
 
         return response()->json(['success' => true]);
