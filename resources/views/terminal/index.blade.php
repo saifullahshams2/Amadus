@@ -33,7 +33,7 @@
             <div class="px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-700 flex items-center justify-between font-mono shadow-xs">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Trainee Terminal</span>
+                    <span>Agent Terminal</span>
                 </div>
                 <span class="text-[10px] text-slate-400">ONLINE</span>
             </div>
@@ -271,7 +271,7 @@
                         <div class="px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-700 flex items-center justify-between font-mono shadow-xs">
                             <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span>Trainee Terminal</span>
+                                <span>Agent Terminal</span>
                             </div>
                             <span class="text-[10px] text-slate-400">ONLINE</span>
                         </div>

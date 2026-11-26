@@ -34,7 +34,7 @@
 
             <div>
                 <label class="block text-slate-600 mb-1 font-semibold">EMAIL ADDRESS <span class="text-rose-500">*</span></label>
-                <input type="email" name="email" value="{{ old('email', $email) }}" required autofocus placeholder="cadet@academy.training"
+                <input type="email" name="email" value="{{ old('email', $email) }}" required autofocus placeholder="agent@airline.com"
                        class="w-full bg-white border border-slate-300 text-slate-900 rounded-lg p-2.5 text-xs sm:text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-slate-400">
             </div>
 
