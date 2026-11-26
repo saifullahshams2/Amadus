@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\MailSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -45,10 +46,20 @@ class PasswordResetController extends Controller
             : User::where('username', strtolower($input))->first();
 
         if ($user) {
-            $this->mailSettings->apply();
+            // Honour the broker's per-account throttle so repeated requests cannot
+            // rotate tokens or spam reset emails, and never surface mail errors.
+            $repository = Password::broker()->getRepository();
 
-            $token = Password::broker()->createToken($user);
-            $user->sendPasswordResetNotification($token);
+            if (! $repository->recentlyCreatedToken($user)) {
+                try {
+                    $this->mailSettings->apply();
+
+                    $token = Password::broker()->createToken($user);
+                    $user->sendPasswordResetNotification($token);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
         }
 
         if ($request->wantsJson() || $request->is('api/*')) {
@@ -96,6 +107,8 @@ class PasswordResetController extends Controller
                     'password' => Hash::make($password),
                     'remember_token' => Str::random(60),
                 ])->save();
+
+                $this->purgeUserSessions($user);
             }
         );
 
@@ -121,5 +134,24 @@ class PasswordResetController extends Controller
         return back()->withInput($request->only('email'))->withErrors([
             'email' => $genericError,
         ]);
+    }
+
+    /**
+     * Remove other database session rows belonging to the user after a reset.
+     */
+    protected function purgeUserSessions(User $user): void
+    {
+        if (config('session.driver') !== 'database') {
+            return;
+        }
+
+        try {
+            DB::connection(config('session.connection'))
+                ->table(config('session.table', 'sessions'))
+                ->where('user_id', $user->getAuthIdentifier())
+                ->delete();
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 }

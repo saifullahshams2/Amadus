@@ -192,9 +192,11 @@ class DashboardController extends Controller
      */
     public function validateSyntaxApi(Request $request): JsonResponse
     {
-        $raw = $request->input('command', '');
+        $validated = $request->validate([
+            'command' => ['nullable', 'string', 'max:255'],
+        ]);
 
-        return response()->json($this->analyzeSyntax($raw));
+        return response()->json($this->analyzeSyntax((string) ($validated['command'] ?? '')));
     }
 
     /**
@@ -226,7 +228,10 @@ class DashboardController extends Controller
 
         $pnrData = $latestPnr->data_json ?? [];
 
-        $activity = TerminalActivityLog::where('user_id', $username)->orderBy('created_at')->get();
+        $activity = TerminalActivityLog::where('user_id', $username)
+            ->orderBy('created_at')
+            ->limit(2000)
+            ->get();
         $terminalLogs = $activity
             ->map(fn (TerminalActivityLog $log) => [
                 'command' => $log->command,
@@ -299,8 +304,8 @@ class DashboardController extends Controller
             return response()->json(['error' => 'Unauthenticated.'], 401);
         }
 
-        if (! $this->scenarios->deleteScenario($id)) {
-            return response()->json(['error' => 'Assignment not found.'], 404);
+        if (! $this->scenarios->deleteScenario($user->username, $id)) {
+            return response()->json(['error' => 'Assignment not found or not deletable by you.'], 404);
         }
 
         return response()->json(['success' => true]);

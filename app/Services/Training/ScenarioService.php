@@ -19,7 +19,7 @@ class ScenarioService
         $scenarios = Scenario::orderBy('created_at', 'asc')->get();
         $submissions = Submission::where('user_id', $userId)->get()->keyBy('scenario_id');
 
-        return $scenarios->map(function (Scenario $sc) use ($submissions) {
+        return $scenarios->map(function (Scenario $sc) use ($submissions, $userId) {
             $sub = $submissions->get($sc->id);
 
             return [
@@ -33,6 +33,7 @@ class ScenarioService
                 'validation_criteria' => $sc->validation_criteria,
                 'time_limit_minutes' => $sc->time_limit_minutes,
                 'created_by' => $sc->created_by,
+                'can_delete' => $sc->created_by !== 'system' && $sc->created_by === $userId,
                 'status' => $sub?->status ?? 'not_started',
                 'score' => $sub?->score ?? 0,
                 'auto_grade_results' => $sub?->auto_grade_results,
@@ -286,13 +287,14 @@ class ScenarioService
     }
 
     /**
-     * Delete a scenario. Returns false when not found.
+     * Delete a custom scenario owned by the given user. Returns false when the
+     * scenario does not exist, is a system drill, or belongs to another user.
      */
-    public function deleteScenario(string $scenarioId): bool
+    public function deleteScenario(string $userId, string $scenarioId): bool
     {
         $scenario = Scenario::where('id', $scenarioId)->first();
 
-        if (! $scenario) {
+        if (! $scenario || $scenario->created_by === 'system' || $scenario->created_by !== $userId) {
             return false;
         }
 

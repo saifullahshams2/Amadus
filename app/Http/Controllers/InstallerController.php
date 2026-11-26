@@ -123,16 +123,16 @@ class InstallerController extends Controller
             // Database parameters (defaults to current driver if omitted for testing compatibility)
             'database_driver' => 'nullable|string|in:sqlite,mysql',
             'driver' => 'nullable|string|in:sqlite,mysql',
-            'db_path' => 'nullable|string',
-            'database_path' => 'nullable|string',
-            'db_host' => 'nullable|string',
-            'host' => 'nullable|string',
+            'db_path' => ['nullable', 'string', 'max:255', $this->noControlCharsRule()],
+            'database_path' => ['nullable', 'string', 'max:255', $this->noControlCharsRule()],
+            'db_host' => ['nullable', 'string', 'max:255', $this->noControlCharsRule()],
+            'host' => ['nullable', 'string', 'max:255', $this->noControlCharsRule()],
             'db_port' => 'nullable|numeric',
             'port' => 'nullable|numeric',
             'db_database' => 'nullable|string|max:100',
             'database' => 'nullable|string|max:100',
-            'db_username' => 'nullable|string|max:100',
-            'db_password' => 'nullable|string',
+            'db_username' => ['nullable', 'string', 'max:100', $this->noControlCharsRule()],
+            'db_password' => ['nullable', 'string', 'max:255', $this->noControlCharsRule()],
 
             // User account credentials (ONLY this user is created)
             'name' => 'required|string|max:255',
@@ -247,5 +247,17 @@ class InstallerController extends Controller
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    /**
+     * Reject values containing control characters (CR/LF/…) to prevent .env injection.
+     */
+    protected function noControlCharsRule(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail): void {
+            if (is_string($value) && preg_match('/[\x00-\x1F\x7F]/', $value)) {
+                $fail("The {$attribute} field contains invalid characters.");
+            }
+        };
     }
 }

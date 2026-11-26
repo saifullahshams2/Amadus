@@ -7,8 +7,7 @@
     <title>@yield('title', 'Profile - Amadus')</title>
     <link rel="icon" type="image/png" href="{{ asset('airplane-ticket.png') }}">
     <link rel="shortcut icon" href="{{ asset('airplane-ticket.png') }}">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         [x-cloak] { display: none !important; }
         html, body {
@@ -57,10 +56,12 @@
                 <span>Change Password</span>
             </a>
 
+            @if ($isOwner ?? false)
             <a href="{{ route('profile.smtp') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors {{ ($profileSection ?? '') === 'smtp' ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
                 <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                 <span>SMTP Settings</span>
             </a>
+            @endif
         </nav>
 
         <!-- Profile Button + Active Terminal Status Widget -->
@@ -139,9 +140,11 @@
                     <a href="{{ route('profile.password') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors {{ ($profileSection ?? '') === 'password' ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
                         <span>Change Password</span>
                     </a>
+                    @if ($isOwner ?? false)
                     <a href="{{ route('profile.smtp') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors {{ ($profileSection ?? '') === 'smtp' ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200 shadow-xs' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">
                         <span>SMTP Settings</span>
                     </a>
+                    @endif
                 </nav>
 
                 <div class="p-3 border-t border-slate-200 bg-slate-50 shrink-0 space-y-2">

@@ -1193,14 +1193,19 @@ class AmadeusParser
             if (str_starts_with($input, 'TKDO')) {
                 $rest = trim(substr($input, 4));
                 $state['activePnr']['ticketing'] = ['type' => 'TKDO', 'raw' => $input, 'date' => $rest];
-                $this->queue->placeOnOfficeQueue(8, 3, $state['activePnr'], $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980'), $userId);
+                // Guests must not persist queue rows; keep the simulation in-memory only.
+                if ($userId !== 'guest') {
+                    $this->queue->placeOnOfficeQueue(8, 3, $state['activePnr'], $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980'), $userId);
+                }
 
                 return new CommandExecutionResult(["OK {$input} - AUTO QUEUED TO Q8C3 (DOMESTIC TICKETING)"], $state, false, 'TICKETING_ELEMENT');
             }
             if (str_starts_with($input, 'TKIN')) {
                 $rest = trim(substr($input, 4));
                 $state['activePnr']['ticketing'] = ['type' => 'TKIN', 'raw' => $input, 'date' => $rest];
-                $this->queue->placeOnOfficeQueue(8, 5, $state['activePnr'], $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980'), $userId);
+                if ($userId !== 'guest') {
+                    $this->queue->placeOnOfficeQueue(8, 5, $state['activePnr'], $user?->office_id ?? ($state['officeId'] ?? 'LON1A0980'), $userId);
+                }
 
                 return new CommandExecutionResult(["OK {$input} - AUTO QUEUED TO Q8C5 (INTL TICKETING)"], $state, false, 'TICKETING_ELEMENT');
             }
@@ -1658,6 +1663,15 @@ class AmadeusParser
                 return new CommandExecutionResult(['SPLIT NOT ALLOWED - MINIMUM 2 PASSENGERS REQUIRED IN ACTIVE PNR'], $state, true, 'SP_ERROR');
             }
 
+            // Every requested passenger index must exist in the active PNR.
+            foreach ($paxIdxs as $idx) {
+                if ($idx < 1 || $idx > $paxCount) {
+                    return new CommandExecutionResult([
+                        "INVALID PASSENGER SELECTION - USE 1 TO {$paxCount}",
+                    ], $state, true, 'SP_ERROR');
+                }
+            }
+
             $state['activeSplit'] = [
                 'paxIndex' => $paxIdxs[0],
                 'allIndexes' => $paxIdxs,
@@ -1680,8 +1694,22 @@ class AmadeusParser
                 return new CommandExecutionResult(['NO ACTIVE SPLIT PENDING FILE (USE SP<PAX> THEN RF P BEFORE EF)'], $state, true, 'EF_ERROR');
             }
 
-            $paxIdx = $state['activeSplit']['paxIndex'];
-            $splitPax = array_splice($state['activePnr']['passengers'], $paxIdx - 1, 1)[0];
+            $paxIdx = (int) ($state['activeSplit']['paxIndex'] ?? 0);
+            $passengers = is_array($state['activePnr']['passengers'] ?? null) ? $state['activePnr']['passengers'] : [];
+
+            if ($paxIdx < 1 || $paxIdx > count($passengers)) {
+                unset($state['activeSplit']);
+
+                return new CommandExecutionResult(['SPLIT FAILED - SELECTED PASSENGER IS NO LONGER IN THE ACTIVE PNR'], $state, true, 'EF_ERROR');
+            }
+
+            $splitPax = array_splice($state['activePnr']['passengers'], $paxIdx - 1, 1)[0] ?? null;
+
+            if (! is_array($splitPax)) {
+                unset($state['activeSplit']);
+
+                return new CommandExecutionResult(['SPLIT FAILED - UNABLE TO FILE PASSENGER'], $state, true, 'EF_ERROR');
+            }
 
             $splitRloc = $this->pnr->generateRecordLocator();
             $parentRloc = $state['activePnr']['recordLocator'] ?? 'PARENT';
@@ -2192,8 +2220,10 @@ class AmadeusParser
         }
 
         if ($input === 'RTQ') {
+            $rloc = $state['activePnr']['recordLocator'] ?? 'NO ACTIVE PNR';
+
             return new CommandExecutionResult([
-                "--- QUEUES CONTAINING ACTIVE PNR ({$state['activePnr']['recordLocator']}) ---",
+                "--- QUEUES CONTAINING ACTIVE PNR ({$rloc}) ---",
                 'Q01 C00 - TICKETING TIME LIMIT',
             ], $state, false, 'RTQ');
         }
@@ -2437,11 +2467,14 @@ class AmadeusParser
                 $state['activePnr']['ticketing'] = ['type' => 'TKOK', 'raw' => 'TKOK'];
 
                 if (! empty($state['activePnr']['recordLocator'])) {
-                    DB::transaction(function () use ($state) {
-                        Pnr::where('record_locator', $state['activePnr']['recordLocator'])->lockForUpdate()->update([
-                            'status' => 'TICKETED',
-                            'data_json' => $state['activePnr'],
-                        ]);
+                    DB::transaction(function () use ($state, $userId) {
+                        Pnr::where('record_locator', $state['activePnr']['recordLocator'])
+                            ->where('user_id', $userId)
+                            ->lockForUpdate()
+                            ->update([
+                                'status' => 'TICKETED',
+                                'data_json' => $state['activePnr'],
+                            ]);
                     });
                 }
             }

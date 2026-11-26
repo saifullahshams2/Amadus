@@ -14,6 +14,11 @@ class PnrValidationResult
 
 class PnrService
 {
+    /**
+     * Maximum number of passengers a single RRN copy may allocate.
+     */
+    public const MAX_COPY_PASSENGERS = 99;
+
     public function createEmptyPnr(string $officeId = 'LON1A0980', string $agentId = '1234AB'): array
     {
         return [
@@ -567,6 +572,13 @@ class PnrService
         // Passenger count: RRN/4
         if (preg_match('/^\/?(\d+)$/', $modifier, $paxM)) {
             $pCount = (int) $paxM[1];
+
+            // Bound the passenger count so a tiny request cannot exhaust worker
+            // memory/CPU by allocating millions of passenger arrays.
+            if ($pCount < 1 || $pCount > self::MAX_COPY_PASSENGERS) {
+                return $newPnr;
+            }
+
             $basePax = $originalPnr['passengers'][0] ?? ['lastName' => 'SMITH', 'firstName' => 'JOHN', 'title' => 'MR', 'type' => 'ADT'];
             $newPaxList = [];
             for ($i = 1; $i <= $pCount; $i++) {

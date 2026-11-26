@@ -44,7 +44,8 @@ class TrainingController extends Controller
         $userId = $user->username;
         $validated = $request->validate([
             'lessonId' => 'required|string',
-            'completedObjectives' => 'required|array',
+            'completedObjectives' => 'required|array|max:50',
+            'completedObjectives.*' => 'required|string|max:64',
             'isComplete' => 'nullable|boolean',
         ]);
 

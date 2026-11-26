@@ -95,35 +95,45 @@ class TicketingService
         $ticket = $pnr['tickets'][0];
         if ($ticketNoArg) {
             foreach ($pnr['tickets'] as $t) {
-                if (str_contains($t['ticketNumber'], $ticketNoArg)) {
+                if (isset($t['ticketNumber']) && str_contains((string) $t['ticketNumber'], (string) $ticketNoArg)) {
                     $ticket = $t;
                     break;
                 }
             }
         }
 
+        // Manual FH ticket entries use a different shape from electronic ticketing
+        // records; render whatever fields are present instead of raising a 500.
+        $ticketNumber = (string) ($ticket['ticketNumber'] ?? 'MANUAL');
+        $passengerName = (string) ($ticket['passengerName'] ?? 'PAX/MANUAL');
+        $pnrLocator = (string) ($ticket['pnrLocator'] ?? ($pnr['recordLocator'] ?? 'N/A'));
+        $issueDate = (string) ($ticket['issueDate'] ?? date('dM'));
+        $officeId = (string) ($ticket['officeId'] ?? ($pnr['creationOffice'] ?? 'N/A'));
+        $fop = (string) ($ticket['fop'] ?? 'CASH');
+        $totalFare = (string) ($ticket['totalFare'] ?? 'N/A');
+
         $lines = [
-            "ELECTRONIC TICKET RECORD: {$ticket['ticketNumber']}",
-            'NAME: '.str_pad($ticket['passengerName'], 26)."RLOC: {$ticket['pnrLocator']}",
-            "ISSUED: {$ticket['issueDate']}  OFFICE: {$ticket['officeId']}  FOP: {$ticket['fop']}",
-            "TOTAL FARE: {$ticket['totalFare']}",
+            "ELECTRONIC TICKET RECORD: {$ticketNumber}",
+            'NAME: '.str_pad($passengerName, 26)."RLOC: {$pnrLocator}",
+            "ISSUED: {$issueDate}  OFFICE: {$officeId}  FOP: {$fop}",
+            "TOTAL FARE: {$totalFare}",
             '------------------------------------------------------------',
             'CPN FLIGHT  CLASS DATE   FROM  TO    STATUS',
         ];
 
-        foreach ($ticket['coupons'] as $c) {
-            $status = ($c['status'] === 'O') ? 'OPEN' : $c['status'];
-            $lines[] = ' '.str_pad((string) $c['couponNo'], 2).' '.
-                str_pad($c['flight'], 8).' '.
-                $c['class'].'   '.
-                str_pad($c['date'], 6).' '.
-                str_pad($c['from'], 5).' '.
-                str_pad($c['to'], 5).' '.
+        foreach (($ticket['coupons'] ?? []) as $c) {
+            $status = (($c['status'] ?? 'O') === 'O') ? 'OPEN' : (string) $c['status'];
+            $lines[] = ' '.str_pad((string) ($c['couponNo'] ?? ''), 2).' '.
+                str_pad((string) ($c['flight'] ?? ''), 8).' '.
+                (string) ($c['class'] ?? '').'   '.
+                str_pad((string) ($c['date'] ?? ''), 6).' '.
+                str_pad((string) ($c['from'] ?? ''), 5).' '.
+                str_pad((string) ($c['to'] ?? ''), 5).' '.
                 $status;
         }
 
         $lines[] = '------------------------------------------------------------';
-        $prefix = substr($ticket['ticketNumber'], 0, 3);
+        $prefix = substr($ticketNumber, 0, 3);
         $lines[] = "VALIDATING CARRIER: {$prefix}";
 
         return new TicketingResult($lines);

@@ -452,7 +452,13 @@ class InstallerService
             $pattern = "/^{$key}=(.*)$/m";
 
             if (preg_match($pattern, $newContent)) {
-                $newContent = preg_replace($pattern, "{$key}={$escapedValue}", $newContent);
+                // Use preg_replace_callback so backslashes/dollar signs in the
+                // value are never interpreted as regex backreferences.
+                $newContent = preg_replace_callback(
+                    $pattern,
+                    fn () => "{$key}={$escapedValue}",
+                    $newContent
+                );
             } else {
                 $newContent .= "\n{$key}={$escapedValue}";
             }
@@ -471,6 +477,10 @@ class InstallerService
         if ($value === null || $value === '') {
             return '';
         }
+
+        // Reject control characters (notably CR/LF) that could inject new .env
+        // keys or break parsing, regardless of quoting.
+        $value = preg_replace('/[\x00-\x1F\x7F]/', '', $value);
 
         if (preg_match('/\s|"|\'|#|\$/', $value)) {
             return '"'.addcslashes($value, '"\\$').'"';

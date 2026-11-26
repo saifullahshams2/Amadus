@@ -71,9 +71,31 @@ class InstallAppCommand extends Command
         $name = $this->option('name') ?: ($isInteractive ? $this->ask('Enter Full Name', 'Amadus User') : 'Amadus User');
         $username = $this->option('username') ?: ($isInteractive ? $this->ask('Enter Username', 'user') : 'user');
         $email = $this->option('email') ?: ($isInteractive ? $this->ask('Enter Email', 'user@amadeus-gds.demo') : 'user@amadeus-gds.demo');
-        $password = $this->option('password') ?: ($isInteractive ? $this->secret('Enter Password (min 6 chars)') : 'amadeus123');
-        if (empty($password)) {
-            $password = 'amadeus123';
+
+        // Never silently provision a known default password. Non-interactive runs
+        // must pass --password explicitly; interactive runs must enter one.
+        $password = $this->option('password');
+        if (! $password && $isInteractive) {
+            $password = $this->secret('Enter Password (min 6 chars)');
+        }
+
+        if (! is_string($password) || strlen($password) < 6) {
+            $this->error('A password of at least 6 characters is required.');
+            $this->line('Re-run with --password=<secret> when using --no-interaction.');
+
+            return self::FAILURE;
+        }
+
+        if (! preg_match('/^[a-zA-Z0-9._-]{3,60}$/', (string) $username) || in_array(strtolower((string) $username), ['guest', 'system'], true)) {
+            $this->error('Invalid username. Use 3-60 letters, numbers, dots, dashes or underscores (reserved: guest, system).');
+
+            return self::FAILURE;
+        }
+
+        if (! filter_var((string) $email, FILTER_VALIDATE_EMAIL)) {
+            $this->error('Invalid email address.');
+
+            return self::FAILURE;
         }
 
         $office = $this->option('office') ?: 'LON1A0980';

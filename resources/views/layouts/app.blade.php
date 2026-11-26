@@ -7,8 +7,7 @@
     <title>@yield('title', 'Amadus')</title>
     <link rel="icon" type="image/png" href="{{ asset('airplane-ticket.png') }}">
     <link rel="shortcut icon" href="{{ asset('airplane-ticket.png') }}">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root {
             --background: #f8fafc;

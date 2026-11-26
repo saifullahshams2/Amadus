@@ -33,15 +33,20 @@ class AuthController extends Controller
             ->orWhere('email', strtolower($loginInput))
             ->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+        // Always run a hash check so a missing account is not distinguishable by
+        // response timing from a wrong password.
+        $hash = $user?->password ?? '$2y$12$rk4Tp22ASWiQZKsmuVnsqu8bvxZCpLsvXwYogF/0sK3UGSCHv9rbq';
+        $passwordValid = Hash::check($credentials['password'], $hash);
+
+        if (! $user || ! $passwordValid) {
             if ($request->wantsJson() || $request->is('api/*')) {
                 return response()->json(['error' => 'Invalid username or password'], 401);
             }
 
-            return back()->withInput()->withErrors(['username' => 'Invalid credentials']);
+            return back()->withInput($request->only('username'))->withErrors(['username' => 'Invalid credentials']);
         }
 
-        Auth::login($user, true);
+        Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
         if ($request->wantsJson() || $request->is('api/*')) {

@@ -55,7 +55,8 @@ class CustomAssignmentTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonPath('success', true)
-            ->assertJsonPath('scenario.title', 'My Custom Round Trip');
+            ->assertJsonPath('scenario.title', 'My Custom Round Trip')
+            ->assertJsonPath('scenario.can_delete', true);
 
         $scenario = Scenario::where('title', 'My Custom Round Trip')->firstOrFail();
         $this->assertSame('student', $scenario->created_by);
@@ -115,29 +116,29 @@ class CustomAssignmentTest extends TestCase
         $this->assertDatabaseMissing('submissions', ['scenario_id' => $id]);
     }
 
-    public function test_user_can_delete_assignment_created_by_another_user(): void
+    public function test_user_cannot_delete_assignment_created_by_another_user(): void
     {
         $id = $this->actingAs(User::where('username', 'student')->firstOrFail())
             ->postJson('/api/dashboard/scenarios', $this->payload())
             ->json('scenario.id');
 
-        $this->actingAs($this->other)->deleteJson("/api/dashboard/scenarios/{$id}")
-            ->assertStatus(200)
-            ->assertJsonPath('success', true);
+        $this->flushSession();
 
-        $this->assertDatabaseMissing('scenarios', ['id' => $id]);
+        $this->actingAs($this->other)->deleteJson("/api/dashboard/scenarios/{$id}")
+            ->assertStatus(404);
+
+        $this->assertDatabaseHas('scenarios', ['id' => $id]);
     }
 
-    public function test_system_scenarios_can_be_deleted_by_users(): void
+    public function test_system_scenarios_cannot_be_deleted_by_users(): void
     {
         $this->seed();
 
         $this->actingAs(User::where('username', 'student')->firstOrFail())
             ->deleteJson('/api/dashboard/scenarios/SCN-RT-01')
-            ->assertStatus(200)
-            ->assertJsonPath('success', true);
+            ->assertStatus(404);
 
-        $this->assertDatabaseMissing('scenarios', ['id' => 'SCN-RT-01']);
+        $this->assertDatabaseHas('scenarios', ['id' => 'SCN-RT-01']);
     }
 
     protected function storePnr(string $username, string $locator = 'ABC123'): void

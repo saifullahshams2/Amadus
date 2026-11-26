@@ -198,7 +198,35 @@ class ProfileTest extends TestCase
         $this->assertTrue($settings->isConfigured());
     }
 
-    public function test_smtp_password_is_kept_when_left_blank(): void
+    public function test_smtp_password_is_kept_when_left_blank_and_host_unchanged(): void
+    {
+        SmtpSetting::create([
+            'enabled' => true,
+            'host' => 'smtp.example.com',
+            'port' => 587,
+            'username' => 'mailer@example.com',
+            'password' => 'original-secret',
+            'encryption' => 'tls',
+            'from_address' => 'no-reply@example.com',
+        ]);
+
+        $this->actingAs($this->user())
+            ->put('/profile/smtp', [
+                'enabled' => '1',
+                'host' => 'smtp.example.com',
+                'port' => '587',
+                'username' => 'mailer@example.com',
+                'encryption' => 'tls',
+                'from_address' => 'no-reply@example.com',
+                'password' => '',
+            ])
+            ->assertRedirect(route('profile.smtp'));
+
+        $settings = SmtpSetting::current();
+        $this->assertSame('original-secret', $settings->password);
+    }
+
+    public function test_smtp_password_is_cleared_when_host_changes_without_new_secret(): void
     {
         SmtpSetting::create([
             'enabled' => true,
@@ -222,8 +250,39 @@ class ProfileTest extends TestCase
             ->assertRedirect(route('profile.smtp'));
 
         $settings = SmtpSetting::current();
-        $this->assertSame('original-secret', $settings->password);
+        $this->assertNull($settings->password);
         $this->assertSame('smtp2.example.com', $settings->host);
+    }
+
+    public function test_smtp_rejects_internal_and_loopback_hosts(): void
+    {
+        foreach (['127.0.0.1', 'localhost', '169.254.169.254', '10.0.0.5', '192.168.1.1'] as $host) {
+            $this->actingAs($this->user())
+                ->put('/profile/smtp', [
+                    'enabled' => '1',
+                    'host' => $host,
+                    'port' => '587',
+                    'encryption' => 'tls',
+                    'from_address' => 'no-reply@example.com',
+                ])
+                ->assertSessionHasErrors('host');
+        }
+    }
+
+    public function test_non_owner_cannot_access_smtp_settings(): void
+    {
+        User::firstOrCreate(
+            ['username' => 'student2'],
+            ['name' => 'Second', 'email' => 'student2@amadeus-gds.demo', 'password' => Hash::make('amadeus123')]
+        );
+
+        $this->actingAs(User::where('username', 'student2')->firstOrFail())
+            ->get('/profile/smtp')
+            ->assertForbidden();
+
+        $this->actingAs(User::where('username', 'student2')->firstOrFail())
+            ->put('/profile/smtp', ['enabled' => '0'])
+            ->assertForbidden();
     }
 
     public function test_smtp_requires_host_and_from_address_when_enabled(): void

@@ -26,7 +26,10 @@ class SecurityHeadersMiddleware
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
 
-        $csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.bunny.net; font-src 'self' https://fonts.bunny.net; img-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; form-action 'self';";
+        // All scripts and styles are bundled locally via Vite; only 'self' is
+        // allowed as a script origin. 'unsafe-inline'/'unsafe-eval' are required
+        // by the inline Blade/Alpine component definitions.
+        $csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.bunny.net; font-src 'self' https://fonts.bunny.net; img-src 'self' data:; connect-src 'self'; base-uri 'self'; frame-ancestors 'self'; form-action 'self';";
         $response->headers->set('Content-Security-Policy', $csp);
 
         return $response;

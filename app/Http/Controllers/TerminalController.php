@@ -40,29 +40,17 @@ class TerminalController extends Controller
         ]);
 
         $command = $validated['command'];
-        $state = $validated['state'] ?? [];
+        $state = is_array($validated['state'] ?? null) ? $validated['state'] : [];
 
-        // Normalise the client-supplied PNR buffer so a partial or wrongly-typed
-        // activePnr cannot become an unhandled exception (HTTP 500) in the parser.
-        // `null` and `[]` are the documented "no active PNR" sentinels and are left
-        // for AmadeusParser::execute() to initialise.
-        if (isset($state['activePnr']) && $state['activePnr'] !== []) {
-            if (! is_array($state['activePnr'])) {
-                throw ValidationException::withMessages([
-                    'state.activePnr' => 'The active PNR state must be an object.',
-                ]);
-            }
-
-            foreach (['passengers', 'segments', 'contacts', 'tickets', 'tsts', 'specialServiceRequests', 'remarks', 'options', 'seatRequests', 'history'] as $key) {
-                if (! array_key_exists($key, $state['activePnr']) || $state['activePnr'][$key] === null) {
-                    $state['activePnr'][$key] = [];
-                } elseif (! is_array($state['activePnr'][$key])) {
-                    throw ValidationException::withMessages([
-                        "state.activePnr.{$key}" => "The {$key} field must be an array.",
-                    ]);
-                }
-            }
+        // Bound the client state payload so it cannot be abused to exhaust
+        // worker resources or introduce deeply nested structures.
+        if (count($state) > 40 || strlen((string) json_encode($state)) > 200_000) {
+            throw ValidationException::withMessages([
+                'state' => 'The terminal state payload is too large.',
+            ]);
         }
+
+        $state = $this->normaliseState($state);
 
         $userId = $user?->username ?? 'guest';
 
@@ -77,7 +65,23 @@ class TerminalController extends Controller
         }
 
         $startTime = microtime(true);
-        $execResult = $this->parser->execute($command, $state, $userId);
+
+        try {
+            $execResult = $this->parser->execute($command, $state, $userId);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            // Malformed client state must not surface as an unhandled HTTP 500.
+            report($e);
+
+            return response()->json([
+                'outputLines' => ['INVALID TERMINAL STATE - REQUEST COULD NOT BE PROCESSED'],
+                'updatedState' => $state,
+                'isError' => true,
+                'commandType' => 'STATE_ERROR',
+            ]);
+        }
+
         $durationMs = (int) round((microtime(true) - $startTime) * 1000);
 
         // Record terminal activity only for authenticated users (prevents guest log flooding)
@@ -102,5 +106,75 @@ class TerminalController extends Controller
             'isError' => $execResult->isError,
             'commandType' => $execResult->commandType,
         ]);
+    }
+
+    /**
+     * Normalise the client-supplied state so nested elements are the expected type.
+     *
+     * @param  array<string, mixed>  $state
+     * @return array<string, mixed>
+     */
+    protected function normaliseState(array $state): array
+    {
+        $pnrArrayKeys = [
+            'passengers', 'segments', 'contacts', 'tickets', 'tsts',
+            'specialServiceRequests', 'remarks', 'options', 'seatRequests', 'history',
+        ];
+
+        foreach ($pnrArrayKeys as $key) {
+            if (array_key_exists($key, $state)) {
+                if (! is_array($state[$key])) {
+                    $state[$key] = [];
+                }
+            }
+        }
+
+        if (array_key_exists('activePnr', $state) && $state['activePnr'] !== [] && $state['activePnr'] !== null) {
+            if (! is_array($state['activePnr'])) {
+                $state['activePnr'] = [];
+            } else {
+                foreach ($pnrArrayKeys as $key) {
+                    if (! array_key_exists($key, $state['activePnr']) || ! is_array($state['activePnr'][$key])) {
+                        $state['activePnr'][$key] = [];
+                    }
+                }
+
+                foreach (['passengers', 'segments', 'contacts', 'tickets', 'tsts'] as $key) {
+                    $state['activePnr'][$key] = array_values(array_filter(
+                        $state['activePnr'][$key],
+                        fn ($element) => is_array($element)
+                    ));
+                }
+            }
+        }
+
+        // Scalar/array expectations for the remaining top-level state keys.
+        foreach (['activeProfile', 'officeBriefing'] as $key) {
+            if (array_key_exists($key, $state) && ! is_array($state[$key]) && $state[$key] !== null) {
+                $state[$key] = [];
+            }
+        }
+
+        foreach (['profilesList', 'lastPnrList'] as $key) {
+            if (array_key_exists($key, $state) && ! is_array($state[$key])) {
+                $state[$key] = [];
+            } elseif (isset($state[$key])) {
+                $state[$key] = array_values(array_filter($state[$key], fn ($element) => is_array($element)));
+            }
+        }
+
+        if (array_key_exists('lastAvailabilityDisplay', $state) && ! is_array($state['lastAvailabilityDisplay']) && $state['lastAvailabilityDisplay'] !== null) {
+            $state['lastAvailabilityDisplay'] = null;
+        }
+
+        if (array_key_exists('activeSplit', $state) && ! is_array($state['activeSplit']) && $state['activeSplit'] !== null) {
+            $state['activeSplit'] = null;
+        }
+
+        if (array_key_exists('lastCommand', $state) && ! is_string($state['lastCommand'])) {
+            $state['lastCommand'] = '';
+        }
+
+        return $state;
     }
 }
