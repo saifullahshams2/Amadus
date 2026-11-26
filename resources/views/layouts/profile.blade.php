@@ -24,13 +24,9 @@
     <aside class="hidden xl:flex xl:flex-col w-64 bg-white border-r border-slate-200 shrink-0 z-30 select-none shadow-sm h-full">
         <!-- Brand Header -->
         <div class="h-14 px-4 flex items-center justify-between border-b border-slate-200 bg-white shrink-0">
-            <a href="{{ route('dashboard') }}" class="flex items-center space-x-2.5">
-                <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-8 h-8 object-contain">
-                <div>
-                    <div class="text-xs font-black tracking-wider uppercase flex items-center gap-1.5">
-                        <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    </div>
+            <a href="{{ route('dashboard') }}" class="flex items-center">
+                <div class="text-xs font-black tracking-wider uppercase">
+                    <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
                 </div>
             </a>
         </div>
@@ -79,10 +75,6 @@
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         ACTIVE
                     </span>
-                </div>
-                <div class="flex items-center justify-between text-slate-600">
-                    <span>OFFICE:</span>
-                    <span class="text-slate-900 font-bold">{{ $user->office_id ?? 'LON1A0980' }}</span>
                 </div>
             </div>
         </div>

@@ -33,7 +33,7 @@ class ScenarioService
                 'validation_criteria' => $sc->validation_criteria,
                 'time_limit_minutes' => $sc->time_limit_minutes,
                 'created_by' => $sc->created_by,
-                'can_delete' => $sc->created_by !== 'system' && $sc->created_by === $userId,
+                'can_delete' => $sc->created_by === 'system' || $sc->created_by === $userId,
                 'status' => $sub?->status ?? 'not_started',
                 'score' => $sub?->score ?? 0,
                 'auto_grade_results' => $sub?->auto_grade_results,
@@ -294,7 +294,7 @@ class ScenarioService
     {
         $scenario = Scenario::where('id', $scenarioId)->first();
 
-        if (! $scenario || $scenario->created_by === 'system' || $scenario->created_by !== $userId) {
+        if (! $scenario || ($scenario->created_by !== 'system' && $scenario->created_by !== $userId)) {
             return false;
         }
 

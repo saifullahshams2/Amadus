@@ -13,13 +13,9 @@
     <aside class="hidden xl:flex xl:flex-col w-64 bg-white border-r border-slate-200 shrink-0 z-30 select-none shadow-sm h-full">
         <!-- Brand Header -->
         <div class="h-14 px-4 flex items-center justify-between border-b border-slate-200 bg-white shrink-0">
-            <a href="{{ route('dashboard') }}" class="flex items-center space-x-2.5">
-                <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-8 h-8 object-contain">
-                <div>
-                    <div class="text-xs font-black tracking-wider uppercase flex items-center gap-1.5">
-                        <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    </div>
+            <a href="{{ route('dashboard') }}" class="flex items-center">
+                <div class="text-xs font-black tracking-wider uppercase">
+                    <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
                 </div>
             </a>
         </div>
@@ -145,13 +141,6 @@
                         class="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-xs transition-colors shadow-xs">
                     <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     <span>Clear Terminal Screen</span>
-                </button>
-
-                <button type="button"
-                        @click="executeCommand('HE')"
-                        class="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 text-xs transition-colors shadow-xs">
-                    <svg class="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span>Display Help (HE)</span>
                 </button>
             </div>
         </div>
@@ -381,13 +370,6 @@
                                 class="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-xs transition-colors shadow-xs">
                             <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             <span>Clear Terminal Screen</span>
-                        </button>
-
-                        <button type="button"
-                                @click="executeCommand('HE')"
-                                class="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 text-xs transition-colors shadow-xs">
-                            <svg class="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span>Display Help (HE)</span>
                         </button>
                     </div>
 

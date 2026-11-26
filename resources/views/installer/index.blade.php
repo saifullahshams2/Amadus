@@ -394,20 +394,6 @@
                         <input type="password" name="password_confirmation" x-model="formData.password_confirmation" required minlength="6" placeholder="••••••••" autocomplete="new-password"
                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-blue-500">
                     </div>
-
-                    <!-- Office ID -->
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">Amadeus Office ID (9 chars)</label>
-                        <input type="text" name="office_id" x-model="formData.office_id" placeholder="LON1A0980" maxlength="10"
-                               class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono uppercase text-blue-600 focus:outline-none focus:border-blue-500">
-                    </div>
-
-                    <!-- Agent Duty Sign -->
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">Agent Sign / Duty Code (6 chars)</label>
-                        <input type="text" name="agent_id" x-model="formData.agent_id" placeholder="1234AB" maxlength="10"
-                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono uppercase text-amber-700 focus:outline-none focus:border-blue-500">
-                    </div>
                 </div>
 
                 <!-- Client-side error prompt -->
@@ -468,10 +454,6 @@
                     <div class="flex justify-between">
                         <span class="text-slate-500">Username:</span>
                         <span class="font-mono text-emerald-700 font-bold" x-text="installedUser.username"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Office ID / Agent Sign:</span>
-                        <span class="font-mono text-blue-700 font-semibold" x-text="(installedUser.office_id || 'LON1A0980') + ' / ' + (installedUser.agent_id || '1234AB')"></span>
                     </div>
                 </div>
 

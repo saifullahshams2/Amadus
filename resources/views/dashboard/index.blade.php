@@ -226,14 +226,6 @@
             </div>
 
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <!-- Category Filter Tabs -->
-                <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-semibold">
-                    <button @click="selectedCategory = 'ALL'" :class="selectedCategory === 'ALL' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">All</button>
-                    <button @click="selectedCategory = 'Round-trip'" :class="selectedCategory === 'Round-trip' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Round-trip</button>
-                    <button @click="selectedCategory = 'Infant-in-lap'" :class="selectedCategory === 'Infant-in-lap' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Infant-in-lap</button>
-                    <button @click="selectedCategory = 'Schedule Exchange'" :class="selectedCategory === 'Schedule Exchange' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 rounded transition-colors">Schedule Exchange</button>
-                </div>
-
                 <button @click="openCreateModal()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     <span>Create Assignment</span>
@@ -242,7 +234,7 @@
         </div>
 
         <div class="divide-y divide-slate-100">
-            <template x-for="sc in filteredScenarios" :key="sc.id">
+            <template x-for="sc in scenarios" :key="sc.id">
                 <div class="p-5 hover:bg-slate-50 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <!-- Left: Scenario Overview -->
                     <div class="space-y-1.5 flex-1">
@@ -276,7 +268,7 @@
                             </div>
                         </template>
 
-                        <button x-show="sc.can_delete" @click="deleteScenarioNow(sc)" title="Delete this assignment" class="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                        <button @click="deleteScenarioNow(sc)" title="Delete this drill" class="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
 
