@@ -121,7 +121,7 @@
                             PHP
                         </div>
                         <div>
-                            <div class="text-xs font-semibold text-slate-900">PHP Version &ge; 8.2.0</div>
+                            <div class="text-xs font-semibold text-slate-900">PHP Version &ge; 8.5.0</div>
                             <div class="text-[11px] text-slate-500">Current: <span class="font-mono text-slate-700 font-semibold">{{ PHP_VERSION }}</span></div>
                         </div>
                     </div>

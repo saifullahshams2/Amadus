@@ -7,7 +7,7 @@
 
 Replicates the authentic **Amadus Selling Platform Connect** cryptic terminal experience with CRT Green, CRT Amber, and Modern Dark themes, global airline/airport datasets, and interactive training drills — powered by **PHP (Laravel 13), Tailwind CSS v4, & Alpine.js**.
 
-[![PHP](https://img.shields.io/badge/PHP-8.3%2B-777bb4?logo=php)](https://php.net/)
+[![PHP](https://img.shields.io/badge/PHP-8.5%2B-777bb4?logo=php)](https://php.net/)
 [![Laravel](https://img.shields.io/badge/Laravel-13-ff2d20?logo=laravel)](https://laravel.com/)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4-38bdf8?logo=tailwind-css)](https://tailwindcss.com/)
 [![Alpine.js](https://img.shields.io/badge/Alpine.js-3.x-8bc0d0?logo=alpine.js)](https://alpinejs.dev/)
@@ -38,7 +38,7 @@ Replicates the authentic **Amadus Selling Platform Connect** cryptic terminal ex
 
 | Component | Minimum | Recommended |
 | :--- | :--- | :--- |
-| **PHP Runtime** | PHP 8.3 | **PHP 8.4** or **8.5** |
+| **PHP Runtime** | PHP 8.5 | **PHP 8.5+** |
 | **PHP Extensions** | `pdo`, `pdo_sqlite` (or `pdo_mysql`), `openssl`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `curl`, `fileinfo` | + `bcmath`, `opcache`, `redis` |
 | **Database** | SQLite 3.35+ (zero-configuration default) | **MySQL 8.0+** or **MariaDB 10.5+** |
 | **Web Server** | PHP built-in CLI server (Dev) | **Nginx 1.20+** or **Apache 2.4+** |

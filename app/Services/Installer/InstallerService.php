@@ -67,7 +67,7 @@ class InstallerService
      */
     public function checkRequirements(): array
     {
-        $minPhpVersion = '8.2.0';
+        $minPhpVersion = '8.5.0';
         $currentPhpVersion = PHP_VERSION;
         $phpSatisfied = version_compare($currentPhpVersion, $minPhpVersion, '>=');
 
