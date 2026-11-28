@@ -524,6 +524,13 @@ class InstallerService
      */
     public function createUser(array $data): User
     {
+        // Single-user application: exactly one account may ever exist.
+        if (User::query()->exists()) {
+            throw new \RuntimeException(
+                'This installation already has a user account. Amadus runs one account per installation.'
+            );
+        }
+
         // Never modify an existing account during installation: a re-opened
         // installer must not be able to take over a provisioned account.
         $existing = User::where('username', $data['username'])
@@ -548,6 +555,11 @@ class InstallerService
 
     /**
      * Mark the application as installed by writing the lock file.
+     *
+     * No account identity (name, email, username) is persisted here: the
+     * database is the single source of truth for users and credentials.
+     * Only the numeric user id is kept so the owner check can resolve the
+     * provisioned account without storing any personal data on disk.
      */
     public function markInstalled(User $user, ?string $dbDriver = null): void
     {
@@ -559,13 +571,7 @@ class InstallerService
             'app_url' => config('app.url'),
             'database_driver' => $driver,
             'installer_locked' => true,
-            'installed_by' => [
-                'id' => $user->id,
-                'username' => $user->username,
-                'email' => $user->email,
-                'office_id' => $user->office_id,
-                'agent_id' => $user->agent_id,
-            ],
+            'owner_user_id' => $user->id,
         ];
 
         File::put(storage_path('installed'), json_encode($payload, JSON_PRETTY_PRINT));

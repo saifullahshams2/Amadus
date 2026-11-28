@@ -289,30 +289,31 @@ class ProfileController extends Controller
 
     /**
      * Determine whether the user is the account owner.
+     *
+     * Ownership is resolved by numeric id so no account identity needs to be
+     * stored on disk. The account is the one provisioned by the installer
+     * (`owner_user_id` in the lock marker), falling back to the oldest account.
      */
     public function isOwner(User $user): bool
     {
-        $ownerUsername = null;
+        $ownerId = null;
 
         $installedPath = storage_path('installed');
         if (is_file($installedPath)) {
             $payload = json_decode((string) file_get_contents($installedPath), true);
-            $ownerUsername = $payload['installed_by']['username'] ?? null;
+            $ownerId = $payload['owner_user_id'] ?? null;
 
-            // Ignore a stale marker that names an account which no longer exists.
-            if (is_string($ownerUsername) && $ownerUsername !== '') {
-                $exists = User::where('username', $ownerUsername)->exists();
-                if (! $exists) {
-                    $ownerUsername = null;
-                }
+            // Ignore a stale marker that points at an account which no longer exists.
+            if (! is_numeric($ownerId) || ! User::whereKey((int) $ownerId)->exists()) {
+                $ownerId = null;
             }
         }
 
-        if (! is_string($ownerUsername) || $ownerUsername === '') {
-            $ownerUsername = User::query()->orderBy('id')->value('username');
+        if ($ownerId === null) {
+            $ownerId = User::query()->orderBy('id')->value('id');
         }
 
-        return $ownerUsername !== null && $user->username === $ownerUsername;
+        return $ownerId !== null && (int) $user->getKey() === (int) $ownerId;
     }
 
     /**

@@ -24,7 +24,6 @@
         <div class="p-3 border-b border-slate-200 bg-slate-50 shrink-0">
             <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
                 <span class="uppercase tracking-wider">ACCOUNT ACCESS</span>
-                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono font-bold">USER</span>
             </div>
             <div class="px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-700 flex items-center justify-between font-mono shadow-xs">
                 <div class="flex items-center gap-2">
@@ -254,7 +253,6 @@
                     <div class="p-3 bg-slate-50">
                         <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
                             <span class="uppercase tracking-wider">ACCOUNT ACCESS</span>
-                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono font-bold">USER</span>
                         </div>
                         <div class="px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-700 flex items-center justify-between font-mono shadow-xs">
                             <div class="flex items-center gap-2">

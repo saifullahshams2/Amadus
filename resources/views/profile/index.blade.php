@@ -17,7 +17,6 @@
             <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono">
                 <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold">{{ $user->username }}</span>
                 <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">{{ $user->email }}</span>
-                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold uppercase">{{ $user->role ?? 'USER' }}</span>
             </div>
         </div>
         <div class="flex items-center gap-3 text-[11px] font-mono text-slate-500 shrink-0">
