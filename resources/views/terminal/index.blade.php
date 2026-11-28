@@ -231,7 +231,6 @@
                 <!-- Drawer Top Header: Logo on Left & Cross Icon on Right -->
                 <div class="h-14 px-4 flex items-center justify-between border-b border-slate-200 bg-white shrink-0">
                     <a href="{{ route('dashboard') }}" @click="mobileSidebarOpen = false" class="flex items-center space-x-2">
-                        <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-7 h-7 object-contain">
                         <div class="text-xs font-black tracking-wider uppercase flex items-center gap-1">
                             <span class="bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -432,14 +431,16 @@
     <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-[#f8fafc]">
         <!-- Top Header: Logo on left for mobile/tablet, 3-line menu icon on right -->
         <header class="h-14 px-3 sm:px-4 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-sm z-20">
-            <!-- Left on Tablet & Mobile (< xl: 1280px): Brand Logo -->
-            <div class="flex items-center space-x-2 xl:hidden">
-                <a href="{{ route('dashboard') }}" class="flex items-center space-x-2">
-                    <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-7 h-7 object-contain">
-                    <span class="font-extrabold bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent text-xs sm:text-sm">
-                        Amadus
-                    </span>
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <!-- Left on Tablet & Mobile (< xl: 1280px): Brand + Surface -->
+            <div class="flex items-center space-x-2 xl:hidden min-w-0">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-2 min-w-0">
+                    <div class="min-w-0">
+                        <div class="font-extrabold bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 bg-clip-text text-transparent text-xs sm:text-sm">
+                            Amadus
+                        </div>
+                        <div class="text-[9px] sm:text-[10px] font-mono text-slate-500 uppercase tracking-wider">Cryptic Terminal</div>
+                    </div>
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
                 </a>
             </div>
 

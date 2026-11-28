@@ -107,9 +107,11 @@
         <div class="fixed inset-y-0 right-0 flex max-w-full">
             <div x-show="mobileNavOpen" x-transition:enter="transform transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transform transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" @click.stop class="w-[80vw] max-w-[80vw] bg-white h-full shadow-2xl flex flex-col justify-between overflow-hidden border-l border-slate-200 select-none relative">
                 <div class="h-14 px-4 flex items-center justify-between border-b border-slate-200 bg-white shrink-0">
-                    <div class="flex items-center space-x-2">
-                        <img src="{{ asset('airplane-ticket.png') }}" alt="Logo" class="w-7 h-7 object-contain">
-                        <span class="text-xs font-black tracking-wider uppercase bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Amadus</span>
+                    <div class="flex items-center space-x-2 min-w-0">
+                        <div class="min-w-0">
+                            <div class="text-xs font-black tracking-wider uppercase bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Amadus</div>
+                            <div class="text-[9px] font-mono text-slate-500 uppercase tracking-wider">My Profile</div>
+                        </div>
                     </div>
                     <button type="button" @click="mobileNavOpen = false" class="p-2 text-slate-500 hover:text-slate-800" aria-label="Close menu">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
